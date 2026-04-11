@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 10% 2%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 4%;
+    --card-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --border: 240 3.7% 15.9%;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-clip-padding backdrop-filter backdrop-blur-xl bg-opacity-10 border border-white/10;
+  }
+  
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent bg-[linear-gradient(90deg,#D4AF37,#F1E5AC,#D4AF37)];
+    background-size: 200% auto;
+    animation: shimmer 4s linear infinite;
+  }
+}
+
+@keyframes shimmer {
+  to { background-position: 200% center; }
+}
+
+body {
+  @apply bg-brand-dark text-white antialiased selection:bg-brand-gold selection:text-black;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
