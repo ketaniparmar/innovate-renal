@@ -1,106 +1,122 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/ui/Navbar";
 import Link from "next/link";
-import { ShieldCheck, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-// 1. TYPOGRAPHY OPTIMIZATION
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
-// 2. ENTERPRISE SEO METADATA
 export const metadata: Metadata = {
-  title: "Innovate India | Advanced Dialysis Infrastructure & AI Planning",
-  description: "Authorized distributor of Diacare Solutions in Gujarat. Premium dialysis equipment, turnkey hospital setups, zero-downtime AMC contracts, and AI-driven DPR tools.",
-  keywords: ["Dialysis Machine Gujarat", "Diacare Solutions Distributor", "RO Plant Hospital", "Turnkey Dialysis Setup", "HDG AMC Service", "Innovate India"],
-  openGraph: {
-    title: "Innovate India | Healthcare Infrastructure Platform",
-    description: "Next-generation procurement, predictive maintenance, and AI feasibility tools for modern renal care facilities.",
-    url: "https://innovate-india.com",
-    siteName: "Innovate India",
-    images: [
-      {
-        url: "https://innovate-india.com/og-image.jpg", // Add a premium dark-themed 1200x630 image here
-        width: 1200,
-        height: 630,
-      },
-    ],
-    locale: "en_IN",
-    type: "website",
+  title: {
+    default: "Innovate India",
+    template: "%s | Innovate India",
   },
+  description:
+    "Advanced dialysis infrastructure, AI-powered DPR tools, and certified Diacare service network across Gujarat.",
+  keywords: [
+    "Dialysis setup",
+    "Hospital infrastructure",
+    "DPR generator",
+    "Dialysis machines India",
+    "RO plant dialysis",
+  ],
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${inter.className} bg-[#010810] text-white antialiased min-h-screen flex flex-col selection:bg-[#D4AF37] selection:text-[#010810]`}>
-        
-        {/* GLOBAL CONTENT WRAPPER */}
-        <main className="flex-1">
+      <body
+        className={`${inter.className} bg-[#010810] text-white antialiased relative`}
+      >
+        {/* GLOBAL BACKGROUND EFFECTS */}
+        <div className="fixed inset-0 -z-10">
+          <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#D4AF37]/10 blur-[140px] rounded-full" />
+          <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#3B82F6]/10 blur-[140px] rounded-full" />
+        </div>
+
+        {/* NAVBAR */}
+        <Navbar />
+
+        {/* MAIN CONTENT */}
+        <main className="min-h-[calc(100vh-80px)] pt-20">
           {children}
         </main>
 
-        {/* GLOBAL PREMIUM FOOTER */}
-        <footer className="border-t border-white/5 bg-[#010810] pt-20 pb-10 relative overflow-hidden">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-[#D4AF37]/5 blur-[150px] rounded-full pointer-events-none" />
+        {/* FOOTER */}
+        <footer className="border-t border-white/5 bg-[#010810] relative overflow-hidden">
           
-          <div className="max-w-[1280px] mx-auto px-6 relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-              
-              {/* Brand Col */}
-              <div className="lg:col-span-2">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-8 h-8 rounded bg-gradient-to-br from-[#D4AF37] to-yellow-600 flex items-center justify-center font-bold text-[#010810]">
-                    II
-                  </div>
-                  <span className="font-bold text-xl tracking-tight">Innovate India</span>
+          {/* subtle glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-[#D4AF37]/10 blur-[120px]" />
+
+          <div className="max-w-[1280px] mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-3 gap-10 relative z-10">
+            
+            {/* BRAND */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-[#D4AF37] rounded flex items-center justify-center text-[#010810] font-bold text-sm">
+                  II
                 </div>
-                <p className="text-gray-400 text-sm leading-relaxed max-w-sm mb-6">
-                  Architecting the future of renal care. From AI-driven feasibility reports to zero-downtime maintenance networks.
-                </p>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02]">
-                  <ShieldCheck size={14} className="text-[#D4AF37]" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-300">
-                    Authorized Diacare Distributor
-                  </span>
-                </div>
+                <span className="font-bold text-lg">Innovate India</span>
               </div>
-
-              {/* Links Col 1 */}
-              <div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Platform</p>
-                <ul className="space-y-4">
-                  <li><Link href="/sales" className="text-sm text-gray-400 hover:text-[#D4AF37] transition-colors">Acquisition Suite</Link></li>
-                  <li><Link href="/service" className="text-sm text-gray-400 hover:text-[#3B82F6] transition-colors">Care Network (AMC)</Link></li>
-                  <li><Link href="/solutions" className="text-sm text-gray-400 hover:text-white transition-colors">Turnkey Solutions</Link></li>
-                  <li><Link href="/tools" className="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2">AI Engine <span className="px-1.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-[8px] font-bold uppercase">Beta</span></Link></li>
-                </ul>
-              </div>
-
-              {/* Links Col 2 */}
-              <div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Connect</p>
-                <ul className="space-y-4">
-                  <li><Link href="/contact" className="text-sm text-gray-400 hover:text-white transition-colors">Request Quotation</Link></li>
-                  <li><Link href="/contact" className="text-sm text-gray-400 hover:text-white transition-colors">Emergency Support</Link></li>
-                  <li><Link href="/client-portal" className="text-sm text-gray-400 hover:text-white transition-colors">Client Portal Login</Link></li>
-                  <li><a href="https://wa.me/91XXXXXXXXXX" target="_blank" rel="noreferrer" className="text-sm text-[#25D366] hover:text-green-400 transition-colors flex items-center gap-1">WhatsApp Chat <ArrowRight size={12}/></a></li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-xs text-gray-600 font-medium">
-                © {new Date().getFullYear()} Innovate India. All rights reserved.
+              <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
+                Advanced dialysis infrastructure, AI-powered DPR systems, and
+                zero-downtime service network across Gujarat.
               </p>
-              <div className="flex gap-6 text-xs text-gray-600 font-medium">
-                <Link href="/privacy" className="hover:text-gray-400 transition-colors">Privacy Policy</Link>
-                <Link href="/terms" className="hover:text-gray-400 transition-colors">Terms of Service</Link>
-              </div>
             </div>
+
+            {/* NAV LINKS */}
+            <div className="flex flex-col gap-3 text-sm">
+              <span className="text-gray-500 uppercase text-xs tracking-widest mb-2">
+                Navigation
+              </span>
+              <Link href="/solutions" className="text-gray-400 hover:text-white">
+                Solutions
+              </Link>
+              <Link href="/sales" className="text-gray-400 hover:text-white">
+                Equipment
+              </Link>
+              <Link href="/service" className="text-gray-400 hover:text-white">
+                Service
+              </Link>
+              <Link href="/tools" className="text-gray-400 hover:text-white">
+                AI Tools
+              </Link>
+            </div>
+
+            {/* CTA BLOCK */}
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex flex-col justify-between">
+              <div>
+                <p className="text-xs text-[#D4AF37] uppercase tracking-widest mb-2">
+                  Start Project
+                </p>
+                <h3 className="text-xl font-bold mb-4">
+                  Build Your Dialysis Center
+                </h3>
+                <p className="text-sm text-gray-400 mb-6">
+                  Get a custom DPR and equipment plan within minutes.
+                </p>
+              </div>
+
+              <Link href="/contact">
+                <button className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-[#010810] py-3 rounded-full text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                  Get Consultation <ArrowRight size={16} />
+                </button>
+              </Link>
+            </div>
+          </div>
+
+          {/* BOTTOM BAR */}
+          <div className="border-t border-white/5 py-6 text-center text-xs text-gray-500">
+            © 2026 Innovate India — Authorized Diacare Partner (Gujarat)
           </div>
         </footer>
       </body>

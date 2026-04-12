@@ -183,7 +183,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Support Hotline</p>
-                    <p className="text-sm text-gray-300 font-medium">+91 (XX) XXXX-XXXX</p>
+                    <p className="text-sm text-gray-300 font-medium">+91 9879576332</p>
                   </div>
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function ContactPage() {
 
       {/* FIXED WHATSAPP FLOATING BUTTON */}
       <a 
-        href="https://wa.me/91XXXXXXXXXX" 
+        href="https://wa.me/919879576332" 
         target="_blank" 
         rel="noreferrer"
         className="fixed bottom-8 right-8 z-50 flex items-center gap-3 group"
