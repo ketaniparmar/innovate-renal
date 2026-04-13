@@ -3,7 +3,8 @@
 import React from "react";
 import HeroSplit from "@/components/ui/HeroSplit";
 import { GlassCard } from "@/components/ui/GlassCard";
-import DialysisCostCalculator from "@/components/ui/DialysisCostCalculator";
+// Using relative path to prevent Vercel module resolution errors
+import DialysisCostCalculator from "../components/ui/DialysisCostCalculator";
 import { ShieldCheck, Cpu, Stethoscope, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
