@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { IndianRupee, Download, Activity, Target, ShieldCheck, X, User, Building2, Phone, Loader2, CheckCircle2 } from "lucide-react";
+import { IndianRupee, Download, Activity, Target, ShieldCheck, X, User, Building2, Phone, Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion, AnimatePresence } from "framer-motion";
 
