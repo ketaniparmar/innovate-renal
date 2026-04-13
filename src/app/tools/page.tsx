@@ -21,7 +21,6 @@ import { GlassCard } from "@/components/ui/GlassCard";
 
 /* ---------------- TYPES & CONFIG ---------------- */
 
-// Vercel-Safe TypeScript Interfaces
 interface DPRData {
   beds: number;
   space: number;
@@ -71,7 +70,7 @@ export default function SaaSPlatform() {
     setIsGenerating(true);
     setDprData(null);
 
-    // Simulate AI processing time for premium feel
+    // Simulate AI processing time
     setTimeout(() => {
       setIsGenerating(false);
       setDprData({
@@ -110,8 +109,18 @@ export default function SaaSPlatform() {
             onClick={() => setActiveTab("ai-engine")} 
             highlight 
           />
-          <SidebarItem icon={<Users size={18} />} label="CRM Pipeline" />
-          <SidebarItem icon={<ShieldCheck size={18} />} label="AMC System" />
+          <SidebarItem 
+            icon={<Users size={18} />} 
+            label="CRM Pipeline" 
+            active={activeTab === "crm"} 
+            onClick={() => setActiveTab("crm")} 
+          />
+          <SidebarItem 
+            icon={<ShieldCheck size={18} />} 
+            label="AMC System" 
+            active={activeTab === "amc"} 
+            onClick={() => setActiveTab("amc")} 
+          />
         </nav>
 
         <div className="p-4 border-t border-white/5">
@@ -145,7 +154,39 @@ export default function SaaSPlatform() {
         <div className="flex-1 overflow-y-auto p-6 lg:p-10 z-10">
           <AnimatePresence mode="wait">
 
-            {/* VIEW 1: AI ENGINE */}
+            {/* VIEW 1: OVERVIEW */}
+            {activeTab === "overview" && (
+              <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <PageHeader title="Business Intelligence" desc="Real-time Sales Pipeline & Care Network Metrics." />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                  <StatCard title="Active Leads" value="24" />
+                  <StatCard title="Live AMCs" value="42" highlight />
+                  <StatCard title="Pipeline Value" value="₹4.2Cr" gold />
+                </div>
+
+                <GlassCard accentColor="white" hover={false} className="p-0 overflow-hidden border-white/10">
+                  <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                    <h3 className="font-bold text-sm uppercase tracking-widest">Recent Activity</h3>
+                  </div>
+                  <div className="divide-y divide-white/5">
+                    {LEADS.map((lead, i) => (
+                      <div key={i} className="flex justify-between items-center p-6 hover:bg-white/[0.02] transition-colors">
+                        <div>
+                          <p className="font-bold text-white mb-1">{lead.name}</p>
+                          <p className="text-xs text-gray-500">{lead.type}</p>
+                        </div>
+                        <span className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-full border ${STATUS_STYLES[lead.status]}`}>
+                          {lead.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </GlassCard>
+              </motion.div>
+            )}
+
+            {/* VIEW 2: AI ENGINE */}
             {activeTab === "ai-engine" && (
               <motion.div key="ai" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                 <PageHeader title="AI Planning Engine" desc="Instant dialysis DPR, ROI & feasibility modeling." />
@@ -199,36 +240,39 @@ export default function SaaSPlatform() {
               </motion.div>
             )}
 
-            {/* VIEW 2: OVERVIEW */}
-            {activeTab === "overview" && (
-              <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                <PageHeader title="Business Intelligence" desc="Real-time Sales Pipeline & Care Network Metrics." />
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                  <StatCard title="Active Leads" value="24" />
-                  <StatCard title="Live AMCs" value="42" highlight />
-                  <StatCard title="Pipeline Value" value="₹4.2Cr" gold />
-                </div>
-
-                <GlassCard accentColor="white" hover={false} className="p-0 overflow-hidden border-white/10">
-                  <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-                    <h3 className="font-bold text-sm uppercase tracking-widest">Recent Activity</h3>
+            {/* VIEW 3: CRM PIPELINE */}
+            {activeTab === "crm" && (
+              <motion.div key="crm" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <PageHeader title="CRM Pipeline" desc="Manage hospital leads and quotation requests." />
+                
+                <GlassCard accentColor="gold" hover={false} className="p-0 overflow-hidden border-white/10">
+                  <div className="p-6 border-b border-white/5 bg-white/[0.02]">
+                    <h3 className="font-bold text-sm uppercase tracking-widest text-[#D4AF37]">Active Deals</h3>
                   </div>
-                  <div className="divide-y divide-white/5">
-                    {LEADS.map((lead, i) => (
-                      <div key={i} className="flex justify-between items-center p-6 hover:bg-white/[0.02] transition-colors">
-                        <div>
-                          <p className="font-bold text-white mb-1">{lead.name}</p>
-                          <p className="text-xs text-gray-500">{lead.type}</p>
-                        </div>
-                        <span className={`px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-full border ${STATUS_STYLES[lead.status]}`}>
-                          {lead.status}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="p-8 text-center text-gray-500 min-h-[300px] flex flex-col items-center justify-center">
+                    <Users size={48} className="mb-4 opacity-20" />
+                    <p className="font-bold text-white mb-2">Lead Database Connected</p>
+                    <p className="text-sm">New leads from the /contact page will automatically route here.</p>
                   </div>
                 </GlassCard>
+              </motion.div>
+            )}
 
+            {/* VIEW 4: AMC SYSTEM */}
+            {activeTab === "amc" && (
+              <motion.div key="amc" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <PageHeader title="AMC Management" desc="Monitor active maintenance contracts and machine uptime." />
+                
+                <GlassCard accentColor="blue" hover={false} className="p-0 overflow-hidden border-white/10">
+                  <div className="p-6 border-b border-white/5 bg-white/[0.02]">
+                    <h3 className="font-bold text-sm uppercase tracking-widest text-[#3B82F6]">Contract Status</h3>
+                  </div>
+                  <div className="p-8 text-center text-gray-500 min-h-[300px] flex flex-col items-center justify-center">
+                    <ShieldCheck size={48} className="mb-4 opacity-20" />
+                    <p className="font-bold text-white mb-2">Service Network Online</p>
+                    <p className="text-sm">Engineer dispatching and ticket tracking module is ready.</p>
+                  </div>
+                </GlassCard>
               </motion.div>
             )}
 
