@@ -1,189 +1,242 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { 
-  IndianRupee, RefreshCcw, Layers, TrendingUp, 
-  Activity, PieChart, Download, AlertCircle, 
-  CheckCircle2, Building2, Landmark 
-} from "lucide-react";
+import React, { useState } from "react";
+import { IndianRupee, RefreshCcw, Layers, TrendingUp, Activity, PieChart, Download } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { LeadCaptureModal } from "./LeadCaptureModal"; // Ensure path is correct
+import { motion } from "framer-motion";
 
 export default function DialysisCostCalculator() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Core Inputs
-  const [machines, setMachines] = useState(10);
-  const [sessionsPerDay, setSessionsPerDay] = useState(24); 
-  const [revenuePerSession, setRevenuePerSession] = useState(2200);
+  const [machines, setMachines] = useState(5);
+  const [sessionsPerDay, setSessionsPerDay] = useState(12); // Realistic start for 5 machines
+  const [days, setDays] = useState(26);
   const [mode, setMode] = useState<"reuse" | "single">("reuse");
-  const [scenario, setScenario] = useState<"private" | "govt">("private");
+  const [reuseCycles, setReuseCycles] = useState(8);
+  const [revenuePerSession, setRevenuePerSession] = useState(2500);
 
-  // Constants & Fixed Costs
-  const days = 26;
-  const staffCost = 180000;
-  const rentCost = scenario === "govt" ? 20000 : 80000; // Subsidized rent for Govt models
-  const miscFixed = 70000;
-  const fixedMonthlyCost = staffCost + rentCost + miscFixed;
+  /* ---------- ACTUAL COST DATA FROM CLINICAL RECORDS ---------- */
+  
+  // Variable OPEX per Session
+  const electricityCost = 80; 
+  const clinicalConsumables = 115;
+  const disinfectionCost = 20;
+  const sundriesMisc = 125;
+  
+  const dialyzerBase = 1200;
+  const tubingBase = 250;
+  const dialyzerPerSession = mode === "reuse" ? 70 : dialyzerBase;
+  const tubingPerSession = mode === "reuse" ? 20 : tubingBase;
 
-  // OPEX Logic
-  const varCostBase = 340; // Power + Clinical Consumables + Disinfection + Sundries
-  const dialyzerCost = mode === "reuse" ? 70 : 1200;
-  const tubingCost = mode === "reuse" ? 20 : 250;
-  const costPerSession = varCostBase + dialyzerCost + tubingCost;
+  const costPerSession = electricityCost + clinicalConsumables + disinfectionCost + sundriesMisc + dialyzerPerSession + tubingPerSession;
 
-  // Monthly Calculations
+  /* ---------- FIXED MONTHLY COSTS ---------- */
+  const staffCost = 180000;   // Nurses + technicians
+  const rentCost = 80000;
+  const maintenanceCost = 40000;
+  const adminCost = 30000;
+  
+  const fixedMonthlyCost = staffCost + rentCost + maintenanceCost + adminCost;
+
+  /* ---------- UTILIZATION & VOLUME ---------- */
   const totalSessions = sessionsPerDay * days;
-  const monthlyRevenue = totalSessions * (scenario === "govt" ? 1100 : revenuePerSession);
+  const maxCapacity = machines * 3 * days; // 3 shifts max
+  const utilization = ((totalSessions / maxCapacity) * 100).toFixed(1);
+
+  /* ---------- FINANCIALS (EBITDA) ---------- */
+  const monthlyRevenue = totalSessions * revenuePerSession;
   const monthlyVariableCost = totalSessions * costPerSession;
+  
   const monthlyEBITDA = monthlyRevenue - (monthlyVariableCost + fixedMonthlyCost);
   const profitMargin = monthlyRevenue > 0 ? ((monthlyEBITDA / monthlyRevenue) * 100).toFixed(1) : "0.0";
 
-  // CAPEX & Investor Intelligence
+  /* ---------- CAPEX & BREAK-EVEN ---------- */
   const machineCapex = machines * 650000;
   const roPlant = machines > 10 ? 450000 : 250000;
-  const infra = scenario === "govt" ? 200000 : 500000;
-  const totalCapex = machineCapex + roPlant + infra;
-
-  const breakEvenMonths = monthlyEBITDA > 0 ? (totalCapex / monthlyEBITDA).toFixed(1) : "∞";
-  const annualProfit = monthlyEBITDA * 12;
-  const roiPercentage = totalCapex > 0 ? ((annualProfit / totalCapex) * 100).toFixed(1) : "0";
-  const fiveYearProfit = (monthlyEBITDA * 60) - totalCapex;
+  const infra = 500000;
   
-  // Viability Logic
-  const isViable = Number(breakEvenMonths) < 16 && monthlyEBITDA > 0;
+  const totalCapex = machineCapex + roPlant + infra;
+  const breakEvenMonths = monthlyEBITDA > 0 ? (totalCapex / monthlyEBITDA).toFixed(1) : "∞";
 
   return (
-    <div className="w-full">
-      <GlassCard accent={mode === "reuse" ? "gold" : "blue"} interactive={false} className="max-w-6xl mx-auto p-8 lg:p-12 border-white/5">
-        
-        {/* TOP: SCENARIO & REUSE TOGGLES */}
-        <div className="flex flex-col md:flex-row justify-between gap-6 mb-12">
-          <div className="flex bg-[#010810] p-1.5 rounded-2xl border border-white/5">
-            <button onClick={() => setScenario("private")} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${scenario === "private" ? "bg-white text-black" : "text-gray-500 hover:text-white"}`}>
-              <Building2 size={14} /> Private Center
-            </button>
-            <button onClick={() => setScenario("govt")} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${scenario === "govt" ? "bg-[#D4AF37] text-black shadow-lg" : "text-gray-500 hover:text-white"}`}>
-              <Landmark size={14} /> Govt (PMBJP/PPP)
-            </button>
+    /* FIXED: Changed accentColor to accent, and hover to interactive */
+    <GlassCard accent={mode === "reuse" ? "gold" : "blue"} interactive={false} className="max-w-6xl mx-auto p-8 lg:p-12 relative overflow-hidden">
+      
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02] mb-4">
+             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Investor Level DPR</span>
           </div>
-
-          <div className="flex bg-[#010810] p-1.5 rounded-2xl border border-white/5">
-            <button onClick={() => setMode("reuse")} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === "reuse" ? "bg-[#D4AF37] text-black shadow-lg" : "text-gray-500 hover:text-white"}`}>
-              <RefreshCcw size={14} /> Reuse Logic (8x)
-            </button>
-            <button onClick={() => setMode("single")} className={`flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${mode === "single" ? "bg-blue-500 text-white shadow-lg" : "text-gray-500 hover:text-white"}`}>
-              <Layers size={14} /> Single Use
-            </button>
-          </div>
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Dialysis Financial Engine</h2>
+          <p className="text-sm text-gray-400 mt-2">
+            Complete business feasibility including CAPEX, fixed overheads, and break-even timelines.
+          </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-16">
-          
-          {/* LEFT: FINANCIAL PARAMETERS */}
-          <div className="space-y-10">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-8">Infrastructure Matrix</p>
-              <div className="space-y-8">
-                <Slider label="Installed Capacity (Machines)" min={3} max={30} value={machines} onChange={setMachines} unit="Units" />
-                <Slider label="Operational Volume (Sessions/Day)" min={5} max={100} value={sessionsPerDay} onChange={setSessionsPerDay} unit="Tx" />
-                {scenario === "private" && (
-                  <Slider label="Target Revenue per Session" min={1200} max={4000} value={revenuePerSession} onChange={setRevenuePerSession} unit="₹" />
-                )}
-              </div>
-            </div>
+        {/* MODE TOGGLE */}
+        <div className="flex bg-[#010810] p-1.5 rounded-xl border border-white/10 shrink-0">
+          <button
+            onClick={() => setMode("reuse")}
+            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+              mode === "reuse"
+                ? "bg-[#D4AF37] text-[#010810] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                : "text-gray-500 hover:text-white"
+            }`}
+          >
+            <RefreshCcw size={14} /> Reuse (8x)
+          </button>
+          <button
+            onClick={() => setMode("single")}
+            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+              mode === "single"
+                ? "bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]"
+                : "text-gray-500 hover:text-white"
+            }`}
+          >
+            <Layers size={14} /> Single Use
+          </button>
+        </div>
+      </div>
 
-            <div className="p-6 bg-[#010810] rounded-2xl border border-white/5">
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37] mb-4">OPEX Breakdown</p>
-              <div className="space-y-3">
-                <Row label="Staff & Overheads (Monthly)" value={fixedMonthlyCost} isCurrency />
-                <Row label="Clinical Cost (Per Session)" value={costPerSession} isCurrency />
-                <Row label="Total Project CAPEX" value={totalCapex} isCurrency highlight />
+      <div className="grid lg:grid-cols-2 gap-12">
+        
+        {/* LEFT: CONTROLS */}
+        <div className="space-y-6">
+          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-6 flex items-center gap-2">
+              <Activity size={14} /> Core Capacity Parameters
+            </h3>
+            
+            <div className="space-y-6">
+              <div>
+                <div className="flex justify-between text-sm mb-3">
+                  <span className="text-gray-300 font-medium">Installed Machines</span>
+                  <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded">{machines} Units</span>
+                </div>
+                <input type="range" min="3" max="30" step="1" value={machines} onChange={(e) => setMachines(Number(e.target.value))} className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]" />
               </div>
-            </div>
-          </div>
 
-          {/* RIGHT: INVESTOR INTELLIGENCE DASHBOARD */}
-          <div className="flex flex-col h-full">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className={`p-5 rounded-2xl border flex flex-col items-center justify-center text-center ${isViable ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1">Viability</p>
-                <div className={`flex items-center gap-1 font-black text-sm ${isViable ? "text-green-400" : "text-red-400"}`}>
-                  {isViable ? <CheckCircle2 size={14}/> : <AlertCircle size={14}/>} {isViable ? "VIABLE" : "MARGINAL"}
+              <div>
+                <div className="flex justify-between text-sm mb-3">
+                  <span className="text-gray-300 font-medium">Charge per Session (Revenue)</span>
+                  <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded flex items-center gap-1">
+                    <IndianRupee size={12} /> {revenuePerSession}
+                  </span>
+                </div>
+                <input type="range" min="1200" max="4000" step="50" value={revenuePerSession} onChange={(e) => setRevenuePerSession(Number(e.target.value))} className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Sessions / Day</label>
+                  <input type="number" value={sessionsPerDay} onChange={(e) => setSessionsPerDay(Number(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none transition-colors" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Days / Month</label>
+                  <input type="number" value={days} onChange={(e) => setDays(Number(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none transition-colors" />
                 </div>
               </div>
-              <KPI label="Annual ROI" value={`${roiPercentage}%`} color="gold" />
-              <KPI label="Break-even" value={`${breakEvenMonths} Mo`} color="white" />
             </div>
+          </div>
 
-            <div className="bg-[#010810] border border-white/5 rounded-3xl p-10 mb-8 flex-1 flex flex-col justify-center items-center text-center relative overflow-hidden group">
-               <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent pointer-events-none" />
-               <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 mb-4">5-Year Projected Net Profit</p>
-               <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-white flex items-baseline gap-2">
-                 <span className="text-2xl text-gray-600">₹</span>
-                 {(fiveYearProfit / 10000000).toFixed(2)}
-                 <span className="text-2xl text-gray-600">Cr</span>
-               </h2>
-               <div className="mt-8 flex items-center gap-4">
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
-                    <TrendingUp size={14} className="text-green-400"/> {profitMargin}% Margin
-                  </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/10" />
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
-                    <Activity size={14} className="text-blue-400"/> {totalSessions} Sessions/Mo
-                  </span>
-               </div>
+          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5 shadow-inner">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-4">Per Session Base OPEX</h3>
+            <div className="space-y-3">
+              <Row label="Power (HD + RO)" value={electricityCost} />
+              <Row label="Clinical Consumables" value={clinicalConsumables} />
+              <Row label="Disinfection & Sundries" value={disinfectionCost + sundriesMisc} />
+              <Row label={mode === "reuse" ? "Dialyzer & Tubing (8x)" : "Dialyzer & Tubing (Single)"} value={dialyzerPerSession + tubingPerSession} highlight />
             </div>
-
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-[#010810] py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(212,175,55,0.2)]"
-            >
-              <Download size={16} /> Unlock Official DPR & Detailed Audit
-            </button>
+            <div className="border-t border-white/10 mt-4 pt-4 flex justify-between items-center font-bold">
+              <span className="text-sm uppercase tracking-widest text-white">Total Variable OPEX</span>
+              <span className="flex items-center text-xl text-[#D4AF37]">
+                <IndianRupee size={16} className="opacity-70 mr-1" /> {costPerSession}
+              </span>
+            </div>
           </div>
         </div>
-      </GlassCard>
 
-      <LeadCaptureModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        contextData={{ machines, breakeven: breakEvenMonths, profit: (fiveYearProfit / 10000000).toFixed(2) }} 
-      />
-    </div>
+        {/* RIGHT: OUTPUT DASHBOARD */}
+        <div className="flex flex-col h-full">
+          <div className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-3xl p-8 flex-1 flex flex-col relative overflow-hidden">
+            <div className={`absolute top-0 inset-x-0 h-1 ${mode === "reuse" ? "bg-[#D4AF37]" : "bg-[#3B82F6]"}`} />
+            
+            {/* KPI ROW */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <KPI label="Utilization" value={`${utilization}%`} />
+              <KPI label="Break-even" value={`${breakEvenMonths} mo`} />
+              <KPI label="Monthly Tx" value={totalSessions} />
+            </div>
+
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 flex items-center gap-2">
+              <PieChart size={14} /> Total Monthly Revenue
+            </p>
+            <p className="text-4xl font-black flex items-center text-white mb-6 tracking-tighter">
+              <IndianRupee size={28} className="opacity-50 mr-1" />
+              {(monthlyRevenue / 100000).toFixed(2)} Lakhs
+            </p>
+
+            <div className={`p-6 rounded-2xl border ${monthlyEBITDA > 0 ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"}`}>
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-1 ${monthlyEBITDA > 0 ? "text-green-400" : "text-red-400"}`}>
+                    Net Monthly EBITDA
+                  </p>
+                  <p className="text-4xl font-black flex items-center text-white tracking-tighter">
+                    <IndianRupee size={28} className="opacity-50 mr-1" />
+                    {(monthlyEBITDA / 100000).toFixed(2)} L
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Margin</p>
+                  <p className={`text-2xl font-bold flex items-center gap-1 ${monthlyEBITDA > 0 ? "text-green-400" : "text-red-400"}`}>
+                    <TrendingUp size={20} /> {profitMargin}%
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* CAPEX DISPLAY */}
+            <div className="mt-auto pt-6">
+              <div className="p-5 bg-white/5 rounded-xl border border-white/10 flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Project CAPEX</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Machines, RO & Infrastructure</p>
+                </div>
+                <p className="text-2xl font-bold flex items-center text-white">
+                  <IndianRupee size={20} className="mr-1 opacity-70" /> {(totalCapex / 100000).toFixed(2)} L
+                </p>
+              </div>
+            </div>
+
+          </div>
+          
+          <button className="mt-6 w-full bg-white text-black hover:bg-gray-200 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+            <Download size={16} /> Generate Investor PDF Report
+          </button>
+        </div>
+      </div>
+    </GlassCard>
   );
 }
 
 /* ---------- SUB-COMPONENTS ---------- */
 
-function Slider({ label, min, max, value, onChange, unit }: any) {
+function Row({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-end">
-        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</label>
-        <span className="text-xl font-black text-white">{value} <span className="text-[10px] text-gray-600">{unit}</span></span>
-      </div>
-      <input type="range" min={min} max={max} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]" />
-    </div>
-  );
-}
-
-function Row({ label, value, isCurrency, highlight }: any) {
-  return (
-    <div className={`flex justify-between text-[11px] font-bold uppercase tracking-widest ${highlight ? "text-white mt-2 pt-2 border-t border-white/5" : "text-gray-500"}`}>
+    <div className={`flex justify-between items-center text-sm ${highlight ? "text-white font-bold" : "text-gray-400"}`}>
       <span>{label}</span>
-      <span className={highlight ? "text-[#D4AF37]" : "text-gray-300"}>
-        {isCurrency ? "₹ " : ""}{value.toLocaleString()}
+      <span className="flex items-center">
+        <IndianRupee size={12} className="opacity-50 mr-1" /> {value}
       </span>
     </div>
   );
 }
 
-function KPI({ label, value, color }: any) {
+function KPI({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 text-center">
-      <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-black ${color === 'gold' ? 'text-[#D4AF37]' : 'text-white'}`}>{value}</p>
+    <div className="bg-black/40 border border-white/10 rounded-xl p-4 text-center shadow-inner">
+      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-xl font-bold text-white">{value}</p>
     </div>
   );
 }
