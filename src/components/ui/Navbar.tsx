@@ -4,42 +4,47 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ArrowRight, Zap } from "lucide-react";
+import { Menu, X, ArrowRight, Zap, ShieldCheck, Activity } from "lucide-react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  // Close mobile menu on route change
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  // Updated SaaS Navigation Structure
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "AI Planner", href: "/tools" }, 
+    { name: "AI Planner", href: "/tools", icon: <Zap size={12} /> },
     { name: "Solutions", href: "/solutions" },
-    { name: "Case Studies", href: "/success-stories" },
+    { name: "Success Stories", href: "/success-stories" },
     { name: "Infrastructure", href: "/sales" },
     { name: "Operations", href: "/service" },
   ];
 
   return (
-    <header className="fixed top-0 left-0 w-full z-[100] backdrop-blur-xl bg-[#010810]/80 border-b border-white/5">
+    <header className="fixed top-0 left-0 w-full z-[100] backdrop-blur-md bg-[#010810]/80 border-b border-white/5">
       <div className="max-w-[1280px] mx-auto px-6 h-20 flex items-center justify-between">
 
-        {/* LOGO */}
+        {/* BRAND IDENTITY */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-[#D4AF37] to-yellow-600 flex items-center justify-center text-[#010810] font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#D4AF37] to-yellow-600 flex items-center justify-center text-[#010810] font-black text-sm shadow-[0_0_20px_rgba(212,175,55,0.3)]">
             II
           </div>
-          <span className="font-bold text-xl tracking-tighter text-white group-hover:text-[#D4AF37] transition-colors">
-            Innovate IndAI
-          </span>
+          <div className="flex flex-col">
+            <span className="font-bold text-lg tracking-tighter text-white group-hover:text-[#D4AF37] transition-colors leading-none">
+              Innovate IndAI
+            </span>
+            <span className="text-[8px] uppercase tracking-[0.3em] text-gray-500 font-bold mt-1">
+              Infrastructure OS
+            </span>
+          </div>
         </Link>
 
-        {/* DESKTOP NAV */}
-        <nav className="hidden lg:flex items-center gap-8 text-[10px] font-bold tracking-[0.15em] uppercase">
+        {/* JOURNEY-BASED NAV (Desktop) */}
+        <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link, i) => {
             const isActive = pathname === link.href;
             const isPlanner = link.name === "AI Planner";
@@ -47,68 +52,83 @@ export default function Navbar() {
               <Link
                 key={i}
                 href={link.href}
-                className={`transition-colors relative group py-2 flex items-center gap-1.5 ${
-                  isActive ? "text-white" : isPlanner ? "text-[#D4AF37]" : "text-gray-400 hover:text-white"
+                className={`text-[10px] font-bold tracking-[0.2em] uppercase transition-all relative py-2 flex items-center gap-1.5 ${
+                  isActive 
+                    ? "text-white" 
+                    : isPlanner 
+                      ? "text-[#D4AF37] hover:text-white" 
+                      : "text-gray-500 hover:text-white"
                 }`}
               >
-                {isPlanner && <Zap size={12} className="animate-pulse" />}
+                {link.icon && <span className={isPlanner ? "animate-pulse" : ""}>{link.icon}</span>}
                 {link.name}
-                <span className={`absolute left-0 -bottom-1 h-[2px] transition-all duration-300 ${
-                    isActive ? "w-full bg-[#D4AF37]" : "w-0 bg-white group-hover:w-full"
-                }`} />
+                {isActive && (
+                  <motion.div 
+                    layoutId="nav-underline"
+                    className="absolute left-0 -bottom-1 h-[2px] w-full bg-[#D4AF37]" 
+                  />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* CTA BUTTON (Fixed Hydration Error) */}
+        {/* HIGH-INTENT PRIMARY ACTION */}
         <div className="hidden md:flex items-center gap-4">
           <Link 
             href="/tools"
-            className="bg-[#D4AF37] hover:bg-yellow-500 text-[#010810] px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.25)]"
+            className="bg-[#D4AF37] hover:bg-yellow-500 text-[#010810] px-7 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.15em] transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(212,175,55,0.2)] hover:shadow-[0_0_35px_rgba(212,175,55,0.4)]"
           >
-            Generate DPR <ArrowRight size={14} />
+            Run ROI Model <ArrowRight size={14} />
           </Link>
         </div>
 
-        {/* MOBILE MENU BUTTON */}
-        <button onClick={() => setOpen(!open)} className="lg:hidden text-white p-2 focus:outline-none">
+        {/* MOBILE TOGGLE */}
+        <button 
+          onClick={() => setOpen(!open)} 
+          className="lg:hidden text-white p-2 hover:bg-white/5 rounded-lg transition-colors"
+        >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* MOBILE MENU DROPDOWN */}
+      {/* MOBILE JOURNEY OVERLAY */}
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-[#010810] border-t border-white/5 overflow-hidden"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="lg:hidden bg-[#010810] border-t border-white/5 absolute top-20 left-0 w-full shadow-2xl"
           >
-            <div className="px-6 py-6 space-y-2">
-              {navLinks.map((link, i) => (
-                <Link
-                  key={i}
-                  href={link.href}
-                  className={`block px-4 py-3.5 rounded-xl transition-colors text-xs font-bold tracking-widest uppercase ${
-                    pathname === link.href ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
+            <div className="px-6 py-10 space-y-6">
+              <div className="grid grid-cols-1 gap-4">
+                {navLinks.map((link, i) => (
+                  <Link
+                    key={i}
+                    href={link.href}
+                    className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                      pathname === link.href 
+                        ? "bg-[#D4AF37]/10 border-[#D4AF37]/30 text-white" 
+                        : "bg-white/[0.02] border-white/5 text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-xs font-bold uppercase tracking-widest flex items-center gap-3">
+                      {link.icon} {link.name}
+                    </span>
+                    <ArrowRight size={14} className="opacity-30" />
+                  </Link>
+                ))}
+              </div>
               
-              {/* MOBILE CTA BUTTON (Fixed Hydration Error) */}
-              <div className="pt-4">
+              <div className="pt-6 border-t border-white/5">
                 <Link 
                   href="/tools" 
-                  className="w-full bg-[#D4AF37] text-[#010810] py-4 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                  className="w-full bg-[#D4AF37] text-[#010810] py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2"
                 >
-                  Generate Custom DPR <ArrowRight size={16} />
+                  Generate My DPR <Zap size={16} />
                 </Link>
               </div>
-
             </div>
           </motion.div>
         )}
