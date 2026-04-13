@@ -36,7 +36,7 @@ export default function InfrastructurePage() {
         <div className="grid lg:grid-cols-2 gap-8 mb-24">
           
           {/* Pillar 1: HD Machines */}
-          <GlassCard accentColor="gold" hover={false} className="p-8 md:p-12">
+          <GlassCard accent="gold" interactive={false} className="p-8 md:p-12">
             <div className="flex items-center justify-between mb-8">
               <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center border border-[#D4AF37]/20">
                 <Activity className="text-[#D4AF37]" size={32} />
@@ -62,7 +62,7 @@ export default function InfrastructurePage() {
           </GlassCard>
 
           {/* Pillar 2: RO Plants */}
-          <GlassCard accentColor="blue" hover={false} className="p-8 md:p-12">
+          <GlassCard accent="blue" interactive={false} className="p-8 md:p-12">
             <div className="flex items-center justify-between mb-8">
               <div className="w-16 h-16 rounded-2xl bg-[#3B82F6]/10 flex items-center justify-center border border-[#3B82F6]/20">
                 <Droplets className="text-[#3B82F6]" size={32} />

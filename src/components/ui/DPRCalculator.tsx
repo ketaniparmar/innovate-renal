@@ -90,7 +90,7 @@ export default function DPRCalculator() {
 
   return (
     <>
-      <GlassCard accentColor={mode === "reuse" ? "gold" : "blue"} hover={false} className="max-w-6xl mx-auto p-8 lg:p-10 relative z-10 print-friendly">
+      <GlassCard accent={mode === "reuse" ? "gold" : "blue"} interactive={false} className="max-w-6xl mx-auto p-8 lg:p-10 relative z-10 print-friendly">
 
         {/* HEADER */}
         <div className="flex items-center gap-3 mb-8 border-b border-white/10 pb-6">

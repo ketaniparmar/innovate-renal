@@ -34,7 +34,7 @@ export default function SuccessStoriesPage() {
 
         {/* ================= CASE STUDY 1: DAHEJ ================= */}
         <div className="mb-32">
-          <GlassCard accentColor="gold" hover={false} className="p-8 md:p-12">
+          <GlassCard accent="gold" interactive={false} className="p-8 md:p-12">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               
               {/* Left Content */}
@@ -89,7 +89,7 @@ export default function SuccessStoriesPage() {
 
         {/* ================= CASE STUDY 2: NOVA LIFELINE ================= */}
         <div className="mb-24">
-          <GlassCard accentColor="blue" hover={false} className="p-8 md:p-12">
+          <GlassCard accent="blue" interactive={false} className="p-8 md:p-12">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               
               {/* Left Content */}

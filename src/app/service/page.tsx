@@ -36,7 +36,7 @@ export default function ServicePage() {
         <div className="grid lg:grid-cols-3 gap-8 mb-24">
           
           {/* Tier 1: Emergency */}
-          <GlassCard accentColor="white" hover={false} className="p-8 flex flex-col h-full">
+          <GlassCard accent="white" interactive={false} className="p-8 flex flex-col h-full">
             <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20 mb-6">
               <ShieldAlert className="text-red-400" size={28} />
             </div>
@@ -57,7 +57,7 @@ export default function ServicePage() {
 
           {/* Tier 2: Comprehensive AMC */}
           <div className="lg:-mt-6 lg:mb-6">
-            <GlassCard accentColor="gold" hover={false} className="p-8 flex flex-col h-full relative overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.1)] border-[#D4AF37]/30">
+            <GlassCard accent="gold" interactive={false} className="p-8 flex flex-col h-full relative overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.1)] border-[#D4AF37]/30">
               <div className="absolute top-0 right-0 bg-[#D4AF37] text-black text-[9px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-bl-xl">
                 Most Popular
               </div>
@@ -82,7 +82,7 @@ export default function ServicePage() {
           </div>
 
           {/* Tier 3: Non-Comprehensive */}
-          <GlassCard accentColor="blue" hover={false} className="p-8 flex flex-col h-full">
+          <GlassCard accent="blue" interactive={false} className="p-8 flex flex-col h-full">
             <div className="w-14 h-14 rounded-2xl bg-[#3B82F6]/10 flex items-center justify-center border border-[#3B82F6]/20 mb-6">
               <Wrench className="text-[#3B82F6]" size={28} />
             </div>

@@ -84,7 +84,7 @@ export default function StartProjectPage() {
         </div>
 
         {/* Form Container */}
-        <GlassCard accentColor="gold" hover={false} className="p-8 md:p-12 relative min-h-[400px] flex flex-col">
+        <GlassCard accent="gold" interactive={false} className="p-8 md:p-12 relative min-h-[400px] flex flex-col">
           <AnimatePresence mode="wait">
             
             {/* STEP 1: INTENT */}

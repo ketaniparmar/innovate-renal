@@ -102,7 +102,7 @@ export default function SolutionsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {processSteps.map((step, i) => (
-            <GlassCard key={i} accentColor="gold" className="flex flex-col h-full relative">
+            <GlassCard key={i} accent="gold" className="flex flex-col h-full relative">
               <div className="absolute top-6 right-6 text-5xl font-black text-white/[0.03] pointer-events-none">
                 {step.num}
               </div>
@@ -118,7 +118,7 @@ export default function SolutionsPage() {
 
       {/* 💰 DPR SECTION (HIGH VALUE) */}
       <section className="max-w-[1280px] mx-auto px-6 mb-32">
-        <GlassCard accentColor="gold" className="p-0 border-0 bg-white/[0.01]">
+        <GlassCard accent="gold" className="p-0 border-0 bg-white/[0.01]">
           <div className="grid md:grid-cols-2 gap-12 items-center p-8 lg:p-16">
             <div>
               <div className="inline-flex items-center gap-2 text-[#D4AF37] mb-4">

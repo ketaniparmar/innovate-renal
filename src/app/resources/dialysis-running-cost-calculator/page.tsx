@@ -76,7 +76,7 @@ export default function CalculatorSEOPage() {
 
         {/* RIGHT: INTERACTIVE TOOL SIDE */}
         <div className="order-1 lg:order-2 lg:sticky lg:top-32 relative z-10">
-          <GlassCard accentColor="blue" hover={false} className="p-8 md:p-12 shadow-[0_0_50px_rgba(59,130,246,0.15)] border-[#3B82F6]/30 bg-white/[0.01]">
+          <GlassCard accent="blue" interactive={false} className="p-8 md:p-12 shadow-[0_0_50px_rgba(59,130,246,0.15)] border-[#3B82F6]/30 bg-white/[0.01]">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-12 h-12 bg-[#3B82F6]/20 rounded-xl flex items-center justify-center">
                 <Calculator className="text-[#3B82F6]" size={24} />
