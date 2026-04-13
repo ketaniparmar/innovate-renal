@@ -14,7 +14,8 @@ import {
   Activity,
   Loader2,
   Download,
-  Zap
+  Zap,
+  TrendingUp
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 
