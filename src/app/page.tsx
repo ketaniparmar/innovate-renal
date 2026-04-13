@@ -56,7 +56,7 @@ export default function SaasHomepage() {
           >
             Plan, finance, and launch dialysis centers with AI-driven ROI modeling, 
             authorized OEM procurement, and zero-downtime operations.
-          </p>
+          </motion.p>
 
           <motion.div 
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
