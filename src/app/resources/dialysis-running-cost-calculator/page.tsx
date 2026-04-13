@@ -1,204 +1,126 @@
 "use client";
-import { motion } from "framer-motion";
+
 import React, { useState } from "react";
-import { IndianRupee, RefreshCcw, Layers, TrendingUp, Activity, PieChart } from "lucide-react";
+import { Calculator, IndianRupee, Info, CheckCircle2, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
 
-export default function DialysisCostCalculator() {
-  const [sessionsPerDay, setSessionsPerDay] = useState(20);
-  const [days, setDays] = useState(30);
-  const [mode, setMode] = useState<"reuse" | "single">("reuse");
-  const [reuseCycles, setReuseCycles] = useState(6);
-  const [revenuePerSession, setRevenuePerSession] = useState(2500);
-
-  // Base Costs
-  const baseDialyzerPrice = 1200;
-  const dialyzerCost = mode === "reuse" ? baseDialyzerPrice / reuseCycles : baseDialyzerPrice;
-  const tubingCost = 250;
-  const staffCost = 400;
-  const electricity = 150;
-  const misc = 200;
-
-  // Calculations
-  const costPerSession = dialyzerCost + tubingCost + staffCost + electricity + misc;
-  const totalSessions = sessionsPerDay * days;
+export default function CalculatorSEOPage() {
+  const [beds, setBeds] = useState(5);
   
-  const monthlyCost = totalSessions * costPerSession;
-  const monthlyRevenue = totalSessions * revenuePerSession;
-  const monthlyProfit = monthlyRevenue - monthlyCost;
-  const profitMargin = monthlyRevenue > 0 ? ((monthlyProfit / monthlyRevenue) * 100).toFixed(1) : "0.0";
+  // SEO-friendly dynamic math (Simulated base logic)
+  const estCost = (beds * 7.5).toFixed(1); 
 
   return (
-    <GlassCard accentColor={mode === "reuse" ? "gold" : "blue"} hover={false} className="max-w-5xl mx-auto p-8 lg:p-12">
-      
-      {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02] mb-4">
-             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Financial Modeling</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Dialysis ROI Engine</h2>
-          <p className="text-sm text-gray-400 mt-2">
-            Calculate operational OPEX, EBITDA, and margins based on clinical workflow.
-          </p>
-        </div>
-
-        {/* MODE TOGGLE */}
-        <div className="flex bg-[#010810] p-1.5 rounded-xl border border-white/10 shrink-0">
-          <button
-            onClick={() => setMode("reuse")}
-            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
-              mode === "reuse"
-                ? "bg-[#D4AF37] text-[#010810] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                : "text-gray-500 hover:text-white"
-            }`}
-          >
-            <RefreshCcw size={14} /> Reuse
-          </button>
-          <button
-            onClick={() => setMode("single")}
-            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
-              mode === "single"
-                ? "bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-                : "text-gray-500 hover:text-white"
-            }`}
-          >
-            <Layers size={14} /> Single Use
-          </button>
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-12">
+    <main className="min-h-screen bg-[#010810] pt-32 pb-32 text-white overflow-hidden">
+      <div className="max-w-[1280px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start relative">
         
-        {/* LEFT: CONTROLS */}
-        <div className="space-y-8">
+        {/* Background Ambient Glow */}
+        <div className="absolute top-20 right-20 w-[600px] h-[600px] bg-[#3B82F6]/10 blur-[150px] rounded-full pointer-events-none" />
+
+        {/* LEFT: SEO CONTENT SIDE */}
+        <article className="order-2 lg:order-1 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-600/30 bg-gray-500/10 mb-6">
+             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Resource Hub</span>
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-8 leading-[1.1]">
+            Dialysis Center <br/> <span className="text-[#3B82F6]">Setup Cost 2026.</span>
+          </h1>
           
-          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-6 flex items-center gap-2">
-              <Activity size={14} /> Volume & Pricing Parameters
-            </h3>
+          <div className="prose prose-invert prose-lg max-w-none text-gray-400 leading-relaxed">
+            <p className="mb-8">
+              Planning a new dialysis unit in India requires balancing high-quality clinical care with strict financial sustainability. 
+              The average initial capital expenditure to start a standard 5-bed dialysis center ranges from <strong>₹35 Lakhs to ₹50 Lakhs</strong>, largely dependent on your choice of RO plant capacity and mandatory civil compliance works.
+            </p>
             
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between text-sm mb-3">
-                  <span className="text-gray-300 font-medium">Charge per Session (Revenue)</span>
-                  <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded flex items-center gap-1">
-                    <IndianRupee size={12} /> {revenuePerSession}
-                  </span>
-                </div>
-                <input
-                  type="range" min="1500" max="5000" step="100" value={revenuePerSession}
-                  onChange={(e) => setRevenuePerSession(Number(e.target.value))}
-                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                />
-              </div>
+            <h3 className="text-2xl text-white font-extrabold mt-12 mb-6 tracking-tight">Breakdown of Major Expenses</h3>
+            <ul className="space-y-4 mb-12 list-none pl-0">
+              <li className="flex gap-4 items-start">
+                <CheckCircle2 className="text-[#3B82F6] shrink-0 mt-1" size={20} /> 
+                <span><strong className="text-gray-200">Medical Equipment:</strong> Procurement of Hemodialysis machines (e.g., Diacare) and high-flux dialyzers.</span>
+              </li>
+              <li className="flex gap-4 items-start">
+                <CheckCircle2 className="text-[#3B82F6] shrink-0 mt-1" size={20} /> 
+                <span><strong className="text-gray-200">Water Treatment:</strong> Double-pass medical RO systems (500 LPH minimum) are now the industry standard for patient safety.</span>
+              </li>
+              <li className="flex gap-4 items-start">
+                <CheckCircle2 className="text-[#3B82F6] shrink-0 mt-1" size={20} /> 
+                <span><strong className="text-gray-200">Regulatory Compliance:</strong> NABH zoning configurations, PPCB approvals, and fire-safety certifications.</span>
+              </li>
+            </ul>
 
-              <div>
-                <div className="flex justify-between text-sm mb-3">
-                  <span className="text-gray-300 font-medium">Sessions per Day</span>
-                  <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded">{sessionsPerDay}</span>
-                </div>
-                <input
-                  type="range" min="5" max="100" value={sessionsPerDay}
-                  onChange={(e) => setSessionsPerDay(Number(e.target.value))}
-                  className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                />
-              </div>
-
-              {mode === "reuse" && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
-                  <div className="flex justify-between text-sm mb-3 mt-2">
-                    <span className="text-[#D4AF37] font-medium">Dialyzer Reuse Cycles</span>
-                    <span className="text-[#D4AF37] font-bold bg-[#D4AF37]/10 px-2 py-0.5 rounded">{reuseCycles}x</span>
-                  </div>
-                  <input
-                    type="range" min="2" max="12" value={reuseCycles}
-                    onChange={(e) => setReuseCycles(Number(e.target.value))}
-                    className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]"
-                  />
-                  <p className="text-[10px] text-gray-500 mt-2 italic">Dialyzer cost drops to ₹{(baseDialyzerPrice / reuseCycles).toFixed(0)} per session.</p>
-                </motion.div>
-              )}
+            <div className="bg-[#3B82F6]/10 border border-[#3B82F6]/20 p-8 rounded-[2rem] mt-8">
+              <h4 className="text-[#3B82F6] font-bold mb-3 text-lg">Strategic Pro Tip for Investors</h4>
+              <p className="m-0 text-sm leading-relaxed text-gray-300">
+                AMC costs can consume up to 15% of your annual OPEX. Opting for a Comprehensive Maintenance Contract (CMC) at the time of initial purchase locks in your operating expenses and can save nearly ₹2 Lakhs per machine over a 5-year lifecycle.
+              </p>
             </div>
-          </div>
 
-          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-4">Cost Breakdown (Per Session)</h3>
-            <div className="space-y-3">
-              <Row label="Dialyzer (Variable)" value={dialyzerCost} />
-              <Row label="Blood Tubing & Fluids" value={tubingCost} />
-              <Row label="Clinical Staffing" value={staffCost} />
-              <Row label="Power & Maintenance" value={electricity + misc} />
-            </div>
-            <div className="border-t border-white/10 mt-4 pt-4 flex justify-between items-center font-bold">
-              <span className="text-sm uppercase tracking-widest text-white">Total OPEX / Session</span>
-              <span className="flex items-center text-xl text-[#D4AF37]">
-                <IndianRupee size={16} className="opacity-70 mr-1" /> {costPerSession.toFixed(0)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT: OUTPUT DASHBOARD */}
-        <div className="flex flex-col gap-6">
-          <div className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-3xl p-8 flex-1 flex flex-col justify-center relative overflow-hidden">
-            <div className={`absolute top-0 inset-x-0 h-1 ${mode === "reuse" ? "bg-[#D4AF37]" : "bg-[#3B82F6]"}`} />
-            
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 flex items-center gap-2">
-              <PieChart size={14} /> Estimated Monthly Revenue
-            </p>
-            <p className="text-4xl font-black flex items-center text-white mb-8 tracking-tighter">
-              <IndianRupee size={28} className="opacity-50 mr-1" />
-              {(monthlyRevenue / 100000).toFixed(2)} Lakhs
-            </p>
-
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 flex items-center gap-2">
-              <Activity size={14} /> Monthly Operating Cost
-            </p>
-            <p className="text-3xl font-bold flex items-center text-gray-300 mb-8 tracking-tighter">
-              <IndianRupee size={24} className="opacity-50 mr-1" />
-              {(monthlyCost / 100000).toFixed(2)} Lakhs
-            </p>
-
-            <div className={`mt-auto p-6 rounded-2xl border ${monthlyProfit > 0 ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"}`}>
-              <div className="flex justify-between items-end">
+            {/* CROSS-LINK TO THE OPEX CALCULATOR */}
+            <Link href="/resources/dialysis-running-cost-calculator" className="block mt-12">
+              <div className="bg-white/[0.02] hover:bg-white/[0.05] border border-white/10 p-6 rounded-2xl flex items-center justify-between transition-colors group cursor-pointer shadow-lg">
                 <div>
-                  <p className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-1 ${monthlyProfit > 0 ? "text-green-400" : "text-red-400"}`}>
-                    Net Profit (EBITDA)
-                  </p>
-                  <p className="text-4xl font-black flex items-center text-white tracking-tighter">
-                    <IndianRupee size={28} className="opacity-50 mr-1" />
-                    {(monthlyProfit / 100000).toFixed(2)} L
-                  </p>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1">Next Step</div>
+                  <h4 className="text-white font-bold text-lg group-hover:text-[#D4AF37] transition-colors">Calculate OPEX & Margins</h4>
+                  <p className="text-sm text-gray-500 mt-1">Compare Reuse vs Single-Use running costs.</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Margin</p>
-                  <p className={`text-2xl font-bold flex items-center gap-1 ${monthlyProfit > 0 ? "text-green-400" : "text-red-400"}`}>
-                    <TrendingUp size={20} /> {profitMargin}%
-                  </p>
+                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#D4AF37]/10 transition-colors shrink-0">
+                  <ArrowRight className="text-gray-400 group-hover:text-[#D4AF37] group-hover:translate-x-1 transition-all" size={20} />
                 </div>
+              </div>
+            </Link>
+
+          </div>
+        </article>
+
+        {/* RIGHT: INTERACTIVE TOOL SIDE */}
+        <div className="order-1 lg:order-2 lg:sticky lg:top-32 relative z-10">
+          <GlassCard accentColor="blue" hover={false} className="p-8 md:p-12 shadow-[0_0_50px_rgba(59,130,246,0.15)] border-[#3B82F6]/30 bg-white/[0.01]">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-12 h-12 bg-[#3B82F6]/20 rounded-xl flex items-center justify-center">
+                <Calculator className="text-[#3B82F6]" size={24} />
+              </div>
+              <h2 className="text-2xl font-bold uppercase tracking-widest text-white">Setup Estimator</h2>
+            </div>
+
+            <div className="mb-12">
+              <div className="flex justify-between items-end mb-6">
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Required Capacity</label>
+                <span className="text-4xl font-black text-white tracking-tighter">{beds} <span className="text-xl text-gray-500">Beds</span></span>
+              </div>
+              <input 
+                type="range" min="3" max="50" value={beds} 
+                onChange={(e) => setBeds(parseInt(e.target.value))}
+                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#3B82F6]"
+              />
+              <div className="flex justify-between mt-4 text-[10px] text-gray-600 font-bold uppercase tracking-widest">
+                <span>Min: 3 Units</span>
+                <span>Max: 50 Units</span>
               </div>
             </div>
 
-          </div>
-          
-          <button className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all">
-            Download Financial Model PDF
-          </button>
+            <div className="bg-[#010810] rounded-2xl p-8 border border-white/10 mb-10 shadow-inner">
+              <p className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-[0.2em] mb-2">Estimated CAPEX (India)</p>
+              <div className="flex items-baseline gap-2">
+                <IndianRupee size={32} className="text-white opacity-50" />
+                <span className="text-5xl font-black text-white tracking-tighter">{estCost}L</span>
+              </div>
+            </div>
+
+            <Link href="/contact">
+              <button className="w-full bg-[#3B82F6] text-[#010810] py-4 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-blue-500 transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] flex items-center justify-center gap-3 group">
+                Request Detailed Budget <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </Link>
+
+            <p className="text-[10px] text-gray-500 text-center mt-8 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+              <Info size={14} className="text-gray-600" /> Includes Machines, RO & Basic Infrastructure
+            </p>
+          </GlassCard>
         </div>
 
       </div>
-    </GlassCard>
-  );
-}
-
-function Row({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex justify-between items-center text-gray-400 text-sm">
-      <span>{label}</span>
-      <span className="flex items-center font-medium text-gray-200">
-        <IndianRupee size={12} className="opacity-50 mr-1" /> {value.toFixed(0)}
-      </span>
-    </div>
+    </main>
   );
 }
