@@ -57,6 +57,7 @@ export default function DialysisCostCalculator() {
   const breakEvenMonths = monthlyEBITDA > 0 ? (totalCapex / monthlyEBITDA).toFixed(1) : "∞";
 
   return (
+    /* FIXED: Changed accentColor to accent, and hover to interactive */
     <GlassCard accent={mode === "reuse" ? "gold" : "blue"} interactive={false} className="max-w-6xl mx-auto p-8 lg:p-12 relative overflow-hidden">
       
       {/* HEADER */}
