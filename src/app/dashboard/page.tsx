@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+// FIXED: Added ArrowRight to the import list
 import { 
   LayoutDashboard, Zap, Users, Wrench, BarChart3, 
   Search, Bell, Settings, TrendingUp, Activity, 
-  ChevronRight, MoreVertical, IndianRupee, Clock
+  ChevronRight, MoreVertical, IndianRupee, Clock, ArrowRight
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -109,7 +110,7 @@ export default function SaasDashboard() {
             <p className="text-gray-400 mt-1">Real-time intelligence on your dialysis infrastructure pipeline.</p>
           </div>
 
-          {/* 1. KPI TOP ROW (From your sketch) */}
+          {/* 1. KPI TOP ROW */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <KpiCard title="Active Deals Value" value="₹ 4.2 Cr" trend="+12%" icon={<IndianRupee />} accent="gold" />
             <KpiCard title="Avg. Profit Margin" value="28.4%" trend="+2.1%" icon={<TrendingUp />} accent="blue" />
@@ -118,7 +119,7 @@ export default function SaasDashboard() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* 2. CHART AREA (From your sketch) */}
+            {/* 2. CHART AREA */}
             <div className="lg:col-span-2 bg-[#0A1118] border border-white/5 rounded-3xl p-6 relative overflow-hidden">
               <div className="flex justify-between items-center mb-6">
                 <div>
@@ -128,9 +129,7 @@ export default function SaasDashboard() {
                 <button className="text-gray-400 hover:text-white"><MoreVertical size={16}/></button>
               </div>
               
-              {/* Mock SVG Graph to simulate your curved line sketch */}
               <div className="h-64 w-full relative flex items-end">
-                {/* Background Grid Lines */}
                 <div className="absolute inset-0 flex flex-col justify-between border-b border-l border-white/10 pb-6 pl-6">
                   {[1,2,3,4].map(i => <div key={i} className="w-full border-t border-white/5 border-dashed" />)}
                   <div className="flex justify-between w-full absolute bottom-0 left-6 text-[10px] text-gray-500 px-2 mt-2">
@@ -138,7 +137,6 @@ export default function SaasDashboard() {
                   </div>
                 </div>
                 
-                {/* The "Golden Curve" */}
                 <svg className="w-full h-full absolute inset-0 pl-6 pb-6 overflow-visible" preserveAspectRatio="none">
                   <path 
                     d="M 0 200 Q 100 200, 300 100 T 800 20" 
@@ -147,14 +145,13 @@ export default function SaasDashboard() {
                     strokeWidth="3"
                     className="drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]"
                   />
-                  {/* Break-even point marker */}
                   <circle cx="300" cy="100" r="6" fill="#0A1118" stroke="#D4AF37" strokeWidth="2" className="drop-shadow-[0_0_8px_rgba(212,175,55,1)]" />
                   <text x="320" y="95" fill="white" fontSize="12" fontWeight="bold">Break-even</text>
                 </svg>
               </div>
             </div>
 
-            {/* AI Assistant Quick Panel (Bonus based on Step 1 plan) */}
+            {/* AI Assistant Quick Panel */}
             <div className="bg-gradient-to-b from-[#3B82F6]/10 to-[#0A1118] border border-[#3B82F6]/20 rounded-3xl p-6 flex flex-col">
               <div className="flex items-center gap-2 mb-6">
                 <Zap className="text-[#3B82F6]" size={20} />
@@ -177,7 +174,7 @@ export default function SaasDashboard() {
             </div>
           </div>
 
-          {/* 3. PIPELINE TABLE (From your sketch) */}
+          {/* 3. PIPELINE TABLE */}
           <div className="bg-[#0A1118] border border-white/5 rounded-3xl overflow-hidden">
             <div className="p-6 border-b border-white/5 flex justify-between items-center">
               <h3 className="font-bold text-lg">Active Deals Pipeline</h3>
