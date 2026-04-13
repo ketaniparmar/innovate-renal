@@ -6,7 +6,6 @@ import {
   ArrowRight, Activity, Zap, ShieldCheck, 
   Database, Network, TrendingUp, Building2, MessageSquare
 } from "lucide-react";
-import Link from "next/link";
 
 // Utilizing the Design System components we established
 import { GlassCard } from "@/components/ui/GlassCard";
@@ -21,7 +20,6 @@ export default function SaasHomepage() {
       
       {/* ================= 1. THE SPLIT HERO SECTION ================= */}
       <section className="relative min-h-[90vh] flex items-center justify-center pt-20 px-6">
-        {/* Deep ambient glows */}
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#D4AF37]/10 blur-[120px] rounded-full pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#3B82F6]/10 blur-[120px] rounded-full pointer-events-none" />
 
@@ -62,12 +60,9 @@ export default function SaasHomepage() {
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
             className="flex flex-col sm:flex-row gap-6 items-center justify-center w-full max-w-md mx-auto"
           >
-            <Link href="/tools" className="w-full">
-              <OsButton label="Run Financial Model" variant="primary" />
-            </Link>
-            <Link href="/start" className="w-full">
-              <OsButton label="Start Turnkey Setup" variant="glass" showIcon={false} />
-            </Link>
+            {/* FIXED HYDRATION: Passed href directly to OsButton */}
+            <OsButton label="Run Financial Model" variant="primary" href="/tools" />
+            <OsButton label="Start Turnkey Setup" variant="glass" showIcon={false} href="/start" />
           </motion.div>
         </div>
       </section>
@@ -93,7 +88,7 @@ export default function SaasHomepage() {
       <section className="py-32 px-6 max-w-[1280px] mx-auto">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           
-          {/* Left: AI Chat Interface (Alden Health Style) */}
+          {/* Left: AI Chat Interface */}
           <div>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter mb-6">Intelligence at the core.</h2>
             <p className="text-gray-400 text-lg leading-relaxed mb-10">
@@ -122,7 +117,7 @@ export default function SaasHomepage() {
             </GlassCard>
           </div>
 
-          {/* Right: Live ROI Simulator (Impilo Health Style) */}
+          {/* Right: Live ROI Simulator */}
           <GlassCard accent="gold" className="p-8 md:p-10 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/10 blur-[80px] rounded-full pointer-events-none" />
             <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37] mb-8 flex items-center gap-2">
@@ -148,9 +143,8 @@ export default function SaasHomepage() {
               </p>
             </div>
 
-            <Link href="/tools">
-              <OsButton label="Launch Full DPR Engine" variant="primary" />
-            </Link>
+            {/* FIXED HYDRATION */}
+            <OsButton label="Launch Full DPR Engine" variant="primary" href="/tools" />
           </GlassCard>
         </div>
       </section>
@@ -224,9 +218,8 @@ export default function SaasHomepage() {
           </p>
           
           <div className="relative z-10 w-full max-w-xs">
-             <Link href="/tools">
-               <OsButton label="Generate Custom DPR" variant="primary" />
-             </Link>
+            {/* FIXED HYDRATION */}
+            <OsButton label="Generate Custom DPR" variant="primary" href="/tools" />
           </div>
         </GlassCard>
       </section>
