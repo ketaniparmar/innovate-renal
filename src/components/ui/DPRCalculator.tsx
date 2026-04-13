@@ -16,7 +16,7 @@ interface InputProps {
 interface CardProps {
   title: string;
   value: string | number;
-  highlight?: boolean;
+  highlight?: "gold" | "blue" | boolean; // <-- Added the string options here
   isCurrency?: boolean;
 }
 
@@ -280,7 +280,7 @@ function Input({ label, value, setValue, prefix }: InputProps) {
   );
 }
 
-function StatCard({ title, value, highlight, isCurrency }: CardProps & { highlight?: "gold" | "blue" }) {
+function StatCard({ title, value, highlight, isCurrency }: CardProps) {
   const isGold = highlight === "gold";
   const isBlue = highlight === "blue";
 
