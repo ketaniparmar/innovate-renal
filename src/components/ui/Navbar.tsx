@@ -17,7 +17,7 @@ export default function Navbar() {
   // Updated SaaS Navigation Structure
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "AI Planner", href: "/tools" }, // Pushed to priority #2
+    { name: "AI Planner", href: "/tools" }, 
     { name: "Solutions", href: "/solutions" },
     { name: "Case Studies", href: "/success-stories" },
     { name: "Infrastructure", href: "/sales" },
@@ -61,12 +61,13 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* CTA BUTTON */}
+        {/* CTA BUTTON (Fixed Hydration Error) */}
         <div className="hidden md:flex items-center gap-4">
-          <Link href="/tools">
-            <button className="bg-[#D4AF37] hover:bg-yellow-500 text-[#010810] px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.25)]">
-              Generate DPR <ArrowRight size={14} />
-            </button>
+          <Link 
+            href="/tools"
+            className="bg-[#D4AF37] hover:bg-yellow-500 text-[#010810] px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.25)]"
+          >
+            Generate DPR <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -97,11 +98,17 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
-              <Link href="/tools" className="block pt-4">
-                <button className="w-full bg-[#D4AF37] text-[#010810] py-4 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+              
+              {/* MOBILE CTA BUTTON (Fixed Hydration Error) */}
+              <div className="pt-4">
+                <Link 
+                  href="/tools" 
+                  className="w-full bg-[#D4AF37] text-[#010810] py-4 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                >
                   Generate Custom DPR <ArrowRight size={16} />
-                </button>
-              </Link>
+                </Link>
+              </div>
+
             </div>
           </motion.div>
         )}
