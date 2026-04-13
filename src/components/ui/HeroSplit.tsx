@@ -5,11 +5,13 @@ import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
 import { ArrowRight, ShieldCheck, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // <-- Added for whole-pane routing
 
 export default function HeroSplit() {
+  const router = useRouter(); // <-- Initialize router
   const [hoveredSide, setHoveredSide] = useState<"left" | "right" | null>(null);
 
-  // GPU-Accelerated Mouse Tracking (Zero React Re-renders)
+  // GPU-Accelerated Mouse Tracking
   const leftX = useMotionValue(0);
   const leftY = useMotionValue(0);
   const rightX = useMotionValue(0);
@@ -37,31 +39,28 @@ export default function HeroSplit() {
           {/* Pulse Ring */}
           <div className="absolute inset-2 rounded-full border border-white/5 animate-ping" />
 
-          {/* Core Medallion */}
+          {/* Core Medallion - CHANGED: bg-white so dark logos are highly visible */}
           <motion.div
             animate={{
               rotate: hoveredSide === "left" ? -10 : hoveredSide === "right" ? 10 : 0,
               scale: hoveredSide ? 1.05 : 1,
               boxShadow:
                 hoveredSide === "left"
-                  ? "0 0 60px rgba(212,175,55,0.3)"
+                  ? "0 0 60px rgba(212,175,55,0.4)"
                   : hoveredSide === "right"
-                  ? "0 0 60px rgba(59,130,246,0.3)"
+                  ? "0 0 60px rgba(59,130,246,0.4)"
                   : "0 0 40px rgba(0,0,0,0.8)",
               borderColor:
                 hoveredSide === "left"
                   ? "rgba(212,175,55,0.8)"
                   : hoveredSide === "right"
                   ? "rgba(59,130,246,0.8)"
-                  : "rgba(255,255,255,0.15)",
+                  : "rgba(255,255,255,0.3)",
             }}
             transition={spring}
-            className="relative w-full h-full rounded-full border flex items-center justify-center bg-[#010810]/80 backdrop-blur-xl overflow-hidden"
+            className="relative w-full h-full rounded-full border-[3px] flex items-center justify-center bg-white overflow-hidden shadow-2xl"
           >
-            {/* Glass Reflection */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50" />
-            
-            <div className="relative w-[60%] h-[60%]">
+            <div className="relative w-[70%] h-[70%]">
               <Image
                 src="/indai-icon.png"
                 alt="IndAI Core"
@@ -73,7 +72,7 @@ export default function HeroSplit() {
           </motion.div>
         </div>
 
-        {/* TRUST METRICS (Hidden on small mobile to prevent overlap) */}
+        {/* TRUST METRICS */}
         <div className="hidden md:flex gap-6 text-[10px] font-bold uppercase tracking-widest text-gray-500 bg-[#010810]/60 px-6 py-2 rounded-full backdrop-blur-md border border-white/5">
           <div>120+ Centers</div>
           <div className="w-px h-full bg-white/10" />
@@ -85,6 +84,7 @@ export default function HeroSplit() {
 
       {/* ================= LEFT SIDE (SALES) ================= */}
       <motion.div
+        onClick={() => router.push('/sales')} // <-- MAKES WHOLE PANE CLICKABLE
         onMouseEnter={() => setHoveredSide("left")}
         onMouseLeave={() => setHoveredSide(null)}
         onMouseMove={(e) => {
@@ -131,22 +131,22 @@ export default function HeroSplit() {
           </p>
 
           <div className="flex flex-wrap items-center gap-6">
-            <Link href="/tools" className="z-20">
+            {/* Added stopPropagation so clicking this button goes to /tools instead of /sales */}
+            <Link href="/tools" className="z-20" onClick={(e) => e.stopPropagation()}>
               <button className="bg-[#D4AF37] hover:bg-yellow-500 text-[#010810] px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(212,175,55,0.2)] transition-all">
                 Get Project Cost
               </button>
             </Link>
-            <Link href="/sales" className="z-20">
-              <button className="text-white hover:text-[#D4AF37] flex items-center gap-2 text-xs font-bold uppercase tracking-widest group/btn transition-colors">
-                Explore Equipment <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-              </button>
-            </Link>
+            <div className="z-20 text-white group-hover:text-[#D4AF37] flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-colors">
+              Explore Equipment <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </div>
           </div>
         </div>
       </motion.div>
 
       {/* ================= RIGHT SIDE (SERVICE) ================= */}
       <motion.div
+        onClick={() => router.push('/service')} // <-- MAKES WHOLE PANE CLICKABLE
         onMouseEnter={() => setHoveredSide("right")}
         onMouseLeave={() => setHoveredSide(null)}
         onMouseMove={(e) => {
@@ -186,21 +186,20 @@ export default function HeroSplit() {
             <span className="text-white">Running.</span>
           </h1>
 
-          <p className="text-gray-400 text-sm md:text-base mb-10 max-w-md leading-relaxed">
+          <p className="text-gray-400 text-sm md:text-base mb-10 max-w-md leading-relaxed md:ml-auto">
             Unbroken engineering support, zero-risk AMC contracts, and predictive maintenance protocols.
           </p>
 
           <div className="flex flex-wrap items-center justify-start md:justify-end gap-6 flex-row-reverse">
-            <Link href="/contact" className="z-20">
+            {/* Added stopPropagation so clicking this button goes to /contact instead of /service */}
+            <Link href="/contact" className="z-20" onClick={(e) => e.stopPropagation()}>
               <button className="bg-[#3B82F6] hover:bg-blue-500 text-white px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.2)] transition-all">
                 Request Engineer
               </button>
             </Link>
-            <Link href="/service" className="z-20">
-              <button className="text-white hover:text-[#3B82F6] flex items-center gap-2 text-xs font-bold uppercase tracking-widest flex-row-reverse group/btn transition-colors">
-                AMC Plans <ArrowRight size={16} className="rotate-180 group-hover/btn:-translate-x-1 transition-transform" />
-              </button>
-            </Link>
+            <div className="z-20 text-white group-hover:text-[#3B82F6] flex items-center gap-2 text-xs font-bold uppercase tracking-widest flex-row-reverse transition-colors">
+              AMC Plans <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform" />
+            </div>
           </div>
         </div>
       </motion.div>
