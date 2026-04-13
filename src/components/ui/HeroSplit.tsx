@@ -18,7 +18,7 @@ export default function HeroSplit() {
   const leftGlow = useMotionTemplate`radial-gradient(500px circle at ${leftX}px ${leftY}px, rgba(212,175,55,0.15), transparent 80%)`;
   const rightGlow = useMotionTemplate`radial-gradient(500px circle at ${rightX}px ${rightY}px, rgba(59,130,246,0.15), transparent 80%)`;
 
-  const spring = { type: "spring", stiffness: 300, damping: 40 };
+  const spring = { type: "spring" as const, stiffness: 300, damping: 40 };
 
   return (
     <section className="relative w-full min-h-[calc(100vh-80px)] flex flex-col md:flex-row overflow-hidden bg-[#010810] border-b border-white/5">
