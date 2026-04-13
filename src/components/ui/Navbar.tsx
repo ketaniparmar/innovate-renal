@@ -15,13 +15,13 @@ export default function Navbar() {
     setOpen(false);
   }, [pathname]);
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "AI Planner", href: "/tools", icon: <Zap size={12} /> },
-    { name: "Solutions", href: "/solutions" },
-    { name: "Success Stories", href: "/success-stories" },
-    { name: "Infrastructure", href: "/sales" },
-    { name: "Operations", href: "/service" },
+// src/components/ui/Navbar.tsx (Updated Links)
+const navLinks = [
+  { name: "DPR Engine", href: "/tools", icon: <Zap size={12} /> },
+  { name: "ROI Simulator", href: "/tools#simulator" },
+  { name: "Solutions", href: "/solutions" },
+  { name: "Case Studies", href: "/success-stories" },
+  { name: "AMC Intel", href: "/service" },
   ];
 
   return (
