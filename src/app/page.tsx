@@ -3,9 +3,9 @@
 import React from "react";
 import HeroSplit from "@/components/ui/HeroSplit";
 import { GlassCard } from "@/components/ui/GlassCard";
+import DialysisCostCalculator from "@/components/ui/DialysisCostCalculator";
 import { ShieldCheck, Cpu, Stethoscope, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 
 // --- TYPES ---
 interface MetricProps {
@@ -47,7 +47,6 @@ export default function HomePage() {
             Trusted by Healthcare Leaders & Institutions
           </p>
 
-          {/* Premium Logo Strip: Replace the text spans with <Image src="..." /> when ready */}
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24">
             <span className="text-2xl font-black tracking-tighter text-white opacity-40 hover:opacity-100 transition-opacity cursor-default">NABH</span>
             <span className="text-2xl font-bold tracking-widest text-white opacity-40 hover:opacity-100 transition-opacity cursor-default">DIACARE</span>
@@ -100,12 +99,21 @@ export default function HomePage() {
 
       </section>
 
+      {/* ================= ROI ENGINE (CALCULATOR) ================= */}
+      <section className="py-24 px-6 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-[#D4AF37]/5 blur-[120px] rounded-full pointer-events-none" />
+        
+        <div className="relative z-10">
+          <DialysisCostCalculator />
+        </div>
+      </section>
+
       {/* ================= MICRO CONVERSION ================= */}
       <section className="py-16 border-t border-white/5 text-center bg-gradient-to-b from-white/[0.02] to-transparent">
-        <p className="text-gray-400 mb-4 text-sm font-medium">Not sure where to start your planning?</p>
-        <Link href="/tools">
+        <p className="text-gray-400 mb-4 text-sm font-medium">Want to explore full setup costs?</p>
+        <Link href="/resources/dialysis-cost-calculator-india">
           <button className="inline-flex items-center gap-2 text-[#D4AF37] font-bold text-sm uppercase tracking-widest hover:gap-4 transition-all bg-[#D4AF37]/10 px-6 py-3 rounded-full border border-[#D4AF37]/20 hover:bg-[#D4AF37]/20">
-            Try AI Cost Calculator <ArrowRight size={16} />
+            View Capital Setup Estimator <ArrowRight size={16} />
           </button>
         </Link>
       </section>
@@ -151,7 +159,7 @@ export default function HomePage() {
   );
 }
 
-/* ================= COMPONENTS ================= */
+/* ================= SUB-COMPONENTS ================= */
 
 function Metric({ value, label, highlight }: MetricProps) {
   return (
