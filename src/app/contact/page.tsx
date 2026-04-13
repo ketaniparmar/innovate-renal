@@ -85,7 +85,10 @@ export default function ContactPage() {
           <aside className="flex flex-col gap-6">
             
             {/* FIXED PROPS: Using 'accent' and 'interactive' */}
-            <GlassCard accent={formType === "sales" ? "gold" : "blue"} interactive={false} className="p-8">
+        // Inside src/app/contact/page.tsx
+<GlassCard 
+  accent={formType === "sales" ? "gold" : "blue"} interactive={false} className="p-8 md:p-12"
+>
               <h3 className="text-xl font-bold mb-8">Regional HQ</h3>
               <div className="space-y-6">
                 <InfoRow icon={<MapPin />} title="Gujarat Office" desc="Surat, Gujarat, India" />

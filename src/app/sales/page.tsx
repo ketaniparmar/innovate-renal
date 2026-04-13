@@ -141,16 +141,17 @@ function FeatureItem({ label, active, blue }: { label: string, active?: boolean,
   );
 }
 
+// Inside src/app/sales/page.tsx (at the bottom)
 function FeatureRow({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
   return (
-    <div className="flex gap-6 items-start group">
-      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-white group-hover:border-[#D4AF37]/50 transition-colors">
-        {/* FIXED: TypeScript safe icon cloning for build stability */}
-        {React.cloneElement(icon as React.ReactElement<any>, { size: 24, className: "group-hover:text-[#D4AF37] transition-colors" })}
+    <div className="flex gap-4 items-start">
+      <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-white">
+        {/* FIXED: Added 'as any' to allow the size prop */}
+        {React.isValidElement(icon) && React.cloneElement(icon as any, { size: 18 })}
       </div>
       <div>
-        <h4 className="font-bold text-white text-xl mb-2 tracking-tight">{title}</h4>
-        <p className="text-sm text-gray-500 leading-relaxed max-w-md">{desc}</p>
+        <h4 className="font-bold text-white text-lg mb-1">{title}</h4>
+        <p className="text-sm text-gray-400 leading-relaxed">{desc}</p>
       </div>
     </div>
   );
