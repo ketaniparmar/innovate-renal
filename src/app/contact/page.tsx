@@ -6,6 +6,7 @@ import {
   MapPin, Phone, Mail, MessageCircle, ArrowRight, 
   CheckCircle2, Loader2, ShieldCheck, Activity, Wrench
 } from "lucide-react";
+import { GlassCard } from "@/components/ui/GlassCard";
 
 export default function ContactPage() {
   const [formType, setFormType] = useState<"sales" | "service">("sales");
@@ -14,19 +15,18 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus("submitting");
-    // Simulate API call to backend/CRM
-    setTimeout(() => {
-      setFormStatus("success");
-    }, 2000);
+    setTimeout(() => setFormStatus("success"), 2000);
   };
 
   const themeColor = formType === "sales" ? "#D4AF37" : "#3B82F6";
-  const themeGlow = formType === "sales" ? "focus:border-[#D4AF37]/50 focus:ring-[#D4AF37]/20" : "focus:border-[#3B82F6]/50 focus:ring-[#3B82F6]/20";
+  const themeGlow = formType === "sales" 
+    ? "focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20" 
+    : "focus:border-[#3B82F6]/50 focus:ring-1 focus:ring-[#3B82F6]/20";
 
   return (
-    <div className="min-h-screen bg-[#010810] text-white selection:bg-gray-800 selection:text-white pt-24 pb-32 relative overflow-hidden">
+    <main className="min-h-screen bg-[#010810] text-white pt-32 pb-32 relative overflow-hidden">
       
-      {/* Background Ambient Orbs */}
+      {/* Dynamic Ambient Glow */}
       <div 
         className="absolute top-0 right-0 w-[800px] h-[800px] blur-[150px] rounded-full pointer-events-none transition-colors duration-1000"
         style={{ backgroundColor: formType === "sales" ? 'rgba(212,175,55,0.05)' : 'rgba(59,130,246,0.05)' }}
@@ -34,30 +34,33 @@ export default function ContactPage() {
 
       <div className="max-w-[1280px] mx-auto px-6 relative z-10">
         
-        {/* HEADER */}
-        <div className="mb-16 text-center md:text-left">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-4">Connect with Innovate India.</h1>
-          <p className="text-gray-400 text-lg max-w-2xl">
-            Select your requirement below. Our regional specialists will route your request and respond within 2 hours.
+        <header className="mb-16 text-center md:text-left">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter mb-6 leading-tight">
+            Connect with <br className="md:hidden"/> <span className="text-white">Innovate India.</span>
+          </h1>
+          <p className="text-gray-400 text-lg max-w-2xl leading-relaxed">
+            Select your requirement below. Our regional specialists will route your request to the appropriate engineering or sales team and respond within 2 hours.
           </p>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* LEFT: FORM AREA */}
           <div className="lg:col-span-2">
             
             {/* Intent Switcher */}
-            <div className="flex p-1 bg-white/[0.02] border border-white/5 rounded-2xl mb-8 w-full md:w-fit backdrop-blur-md">
+            <div className="flex p-1.5 bg-white/[0.02] border border-white/10 rounded-2xl mb-10 w-full md:w-fit backdrop-blur-md">
               <button 
+                type="button"
                 onClick={() => { setFormType("sales"); setFormStatus("idle"); }}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all ${formType === "sales" ? "bg-[#D4AF37] text-[#010810] shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-gray-400 hover:text-white"}`}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${formType === "sales" ? "bg-[#D4AF37] text-[#010810] shadow-[0_0_20px_rgba(212,175,55,0.3)]" : "text-gray-500 hover:text-white"}`}
               >
                 <Activity size={16} /> Request Quote
               </button>
               <button 
+                type="button"
                 onClick={() => { setFormType("service"); setFormStatus("idle"); }}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-wider transition-all ${formType === "service" ? "bg-[#3B82F6] text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]" : "text-gray-400 hover:text-white"}`}
+                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${formType === "service" ? "bg-[#3B82F6] text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]" : "text-gray-500 hover:text-white"}`}
               >
                 <Wrench size={16} /> Book Service
               </button>
@@ -69,18 +72,19 @@ export default function ContactPage() {
                 <motion.div 
                   key="success"
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                  className="bg-white/[0.02] border border-white/5 p-12 rounded-3xl flex flex-col items-center justify-center text-center min-h-[400px]"
+                  className="bg-white/[0.02] border border-white/5 p-12 rounded-[2.5rem] flex flex-col items-center justify-center text-center min-h-[450px]"
                 >
-                  <div className="w-20 h-20 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-6">
-                    <CheckCircle2 size={40} className="text-green-400" />
+                  <div className="w-24 h-24 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-8">
+                    <CheckCircle2 size={48} className="text-green-500" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-2">Request Received</h3>
-                  <p className="text-gray-400 max-w-md mb-8">
-                    Your {formType === "sales" ? "quotation request" : "service ticket"} has been securely logged. A specialist will contact you shortly.
+                  <h3 className="text-3xl font-extrabold mb-4 tracking-tighter">Request Received</h3>
+                  <p className="text-gray-400 max-w-md mb-10 leading-relaxed">
+                    Your {formType === "sales" ? "quotation request" : "service ticket"} has been securely logged. A specialist from our Gujarat office will contact you shortly.
                   </p>
                   <button 
+                    type="button"
                     onClick={() => setFormStatus("idle")}
-                    className="text-sm font-bold uppercase tracking-wider text-gray-500 hover:text-white transition-colors"
+                    className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors border border-white/10 px-6 py-3 rounded-full hover:bg-white/5"
                   >
                     Submit Another Request
                   </button>
@@ -88,31 +92,33 @@ export default function ContactPage() {
               ) : (
                 <motion.form 
                   key="form"
-                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                   onSubmit={handleSubmit}
-                  className="bg-white/[0.02] border border-white/5 p-8 md:p-10 rounded-3xl backdrop-blur-sm"
+                  className="bg-white/[0.02] border border-white/5 p-8 md:p-12 rounded-[2.5rem] backdrop-blur-sm relative overflow-hidden"
                 >
+                  <div className="absolute top-0 inset-x-0 h-1 transition-colors duration-500" style={{ backgroundColor: themeColor }} />
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Facility / Hospital Name *</label>
-                      <input required type="text" className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:ring-1 transition-all ${themeGlow}`} placeholder="e.g. Apex Lifeline" />
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Facility Name *</label>
+                      <input required type="text" className={`w-full bg-[#010810] border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none transition-all placeholder:text-gray-700 ${themeGlow}`} placeholder="e.g. Apex Lifeline" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Contact Person *</label>
-                      <input required type="text" className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:ring-1 transition-all ${themeGlow}`} placeholder="Your Name" />
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Contact Person *</label>
+                      <input required type="text" className={`w-full bg-[#010810] border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none transition-all placeholder:text-gray-700 ${themeGlow}`} placeholder="Your Name" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Phone Number *</label>
-                      <input required type="tel" className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:ring-1 transition-all ${themeGlow}`} placeholder="+91" />
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Phone Number *</label>
+                      <input required type="tel" className={`w-full bg-[#010810] border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none transition-all placeholder:text-gray-700 ${themeGlow}`} placeholder="+91" />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">
                         {formType === "sales" ? "Requirement Type *" : "Service Type *"}
                       </label>
-                      <select required className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:ring-1 transition-all appearance-none ${themeGlow}`}>
+                      <select required className={`w-full bg-[#010810] border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none transition-all appearance-none ${themeGlow}`}>
                         {formType === "sales" ? (
                           <>
                             <option value="">Select Equipment...</option>
@@ -134,17 +140,18 @@ export default function ContactPage() {
                     </div>
                   </div>
 
-                  <div className="mb-8">
-                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Additional Details</label>
-                    <textarea rows={4} className={`w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none focus:ring-1 transition-all resize-none ${themeGlow}`} placeholder="Please provide any specific models, bed capacity, or urgent notes..." />
+                  <div className="mb-10">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Additional Details</label>
+                    <textarea rows={4} className={`w-full bg-[#010810] border border-white/10 rounded-xl px-5 py-4 text-sm text-white focus:outline-none transition-all resize-none placeholder:text-gray-700 ${themeGlow}`} placeholder="Please provide any specific models, bed capacity, or urgent notes..." />
                   </div>
 
                   <button 
+                    type="submit"
                     disabled={formStatus === "submitting"}
-                    className="w-full py-4 rounded-xl text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-                    style={{ backgroundColor: themeColor, color: formType === "sales" ? "#010810" : "#ffffff", boxShadow: `0 0 20px ${themeColor}40` }}
+                    className="w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                    style={{ backgroundColor: themeColor, color: formType === "sales" ? "#010810" : "#ffffff", boxShadow: `0 0 30px ${themeColor}40` }}
                   >
-                    {formStatus === "submitting" ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : <>{formType === "sales" ? "Submit Quotation Request" : "Dispatch Service Request"} <ArrowRight size={18} /></>}
+                    {formStatus === "submitting" ? <><Loader2 size={18} className="animate-spin" /> Processing Data...</> : <>{formType === "sales" ? "Submit Quotation Request" : "Dispatch Service Request"} <ArrowRight size={18} /></>}
                   </button>
                 </motion.form>
               )}
@@ -152,55 +159,55 @@ export default function ContactPage() {
           </div>
 
           {/* RIGHT: CONTACT INFO & TRUST ANCHORS */}
-          <div className="flex flex-col gap-6">
-            <div className="bg-white/[0.02] border border-white/5 p-8 rounded-3xl backdrop-blur-sm">
-              <h3 className="text-xl font-bold mb-6">Regional Headquarters</h3>
+          <aside className="flex flex-col gap-6">
+            <GlassCard accentColor={formType === "sales" ? "gold" : "blue"} hover={false} className="p-8 border-white/5">
+              <h3 className="text-2xl font-bold mb-8 tracking-tight">Regional HQ</h3>
               
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
-                    <MapPin size={16} className="text-gray-400" />
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-gray-400">
+                    <MapPin size={20} />
                   </div>
-                  <div>
+                  <div className="pt-1">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Gujarat Office</p>
-                    <p className="text-sm text-gray-300 leading-relaxed">Surat, Gujarat<br/>India</p>
+                    <p className="text-sm text-white leading-relaxed">Surat, Gujarat<br/>India</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
-                    <Mail size={16} className="text-gray-400" />
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-gray-400">
+                    <Mail size={20} />
                   </div>
-                  <div>
+                  <div className="pt-1">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Direct Email</p>
-                    <p className="text-sm text-gray-300 font-medium">info@innovate-india.com</p>
+                    <p className="text-sm text-white font-medium">info@innovate-india.com</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
-                    <Phone size={16} className="text-gray-400" />
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-gray-400">
+                    <Phone size={20} />
                   </div>
-                  <div>
+                  <div className="pt-1">
                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Support Hotline</p>
-                    <p className="text-sm text-gray-300 font-medium">+91 9879576332</p>
+                    <p className="text-sm text-white font-medium">+91 9879576332</p>
                   </div>
                 </div>
               </div>
-            </div>
+            </GlassCard>
 
             {/* Compliance / Authority Card */}
-            <div className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 p-8 rounded-3xl relative overflow-hidden">
-              <ShieldCheck size={80} className="absolute -right-4 -bottom-4 text-white/5 pointer-events-none" />
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle2 size={20} className="text-[#D4AF37]" />
-                <h4 className="font-bold text-white">Authorized Partner</h4>
+            <div className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
+              <ShieldCheck size={120} className="absolute -right-8 -bottom-8 text-white/[0.03] pointer-events-none" />
+              <div className="flex items-center gap-3 mb-4 relative z-10">
+                <CheckCircle2 size={24} className="text-[#D4AF37]" />
+                <h4 className="font-bold text-white text-lg tracking-tight">Authorized Partner</h4>
               </div>
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className="text-sm text-gray-400 leading-relaxed relative z-10">
                 Innovate India is an officially authorized distributor of Diacare Solutions. All equipment and parts are 100% genuine OEM.
               </p>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
 
@@ -209,16 +216,16 @@ export default function ContactPage() {
         href="https://wa.me/919879576332" 
         target="_blank" 
         rel="noreferrer"
-        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 group"
+        className="fixed bottom-8 right-8 z-50 flex items-center gap-4 group"
       >
-        <div className="bg-[#25D366] text-[#010810] px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 shadow-lg">
+        <div className="bg-[#25D366] text-[#010810] px-5 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 shadow-[0_0_20px_rgba(37,211,102,0.2)]">
           Chat on WhatsApp
         </div>
-        <div className="w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center text-[#010810] shadow-[0_0_20px_rgba(37,211,102,0.4)] hover:scale-110 transition-transform">
-          <MessageCircle size={28} />
+        <div className="w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center text-[#010810] shadow-[0_0_30px_rgba(37,211,102,0.4)] group-hover:scale-110 transition-transform duration-300">
+          <MessageCircle size={32} />
         </div>
       </a>
 
-    </div>
+    </main>
   );
 }

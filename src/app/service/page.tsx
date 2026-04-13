@@ -201,11 +201,17 @@ export default function ServicePage() {
           {/* PREMIUM TIER (Highlighted) */}
           <GlassCard accentColor="blue" hover={false} className="border-[#3B82F6]/50 shadow-[0_0_40px_rgba(59,130,246,0.15)] relative scale-100 md:scale-105 z-10">
             <div className="absolute top-0 inset-x-0 h-1 bg-[#3B82F6]" />
-            <div className="absolute top-6 right-6 bg-[#3B82F6]/20 text-[#3B82F6] text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">
-              Highly Recommended
+            
+            {/* FIX: Flexbox container to prevent text overlap */}
+            <div className="flex justify-between items-start gap-4 mb-4 mt-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#3B82F6] mt-2">
+                Zero Risk Coverage
+              </span>
+              <div className="bg-[#3B82F6]/20 text-[#3B82F6] text-[8px] md:text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest text-right shrink-0">
+                Highly Recommended
+              </div>
             </div>
             
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#3B82F6] mb-2 block mt-2">Zero Risk Coverage</span>
             <h3 className="text-3xl font-extrabold mb-4 text-white">Comprehensive CMC</h3>
             <p className="text-blue-200/70 mb-8 text-sm leading-relaxed border-b border-white/10 pb-8">
               Absolute peace of mind. All repairs, travel, and major spare parts are fully covered.
