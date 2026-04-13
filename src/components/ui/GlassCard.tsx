@@ -1,47 +1,37 @@
+// src/components/ui/GlassCard.tsx
 "use client";
 
-import React from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 interface GlassCardProps {
   children: React.ReactNode;
+  accent?: "gold" | "blue" | "none";
   className?: string;
-  hover?: boolean;
-  accentColor?: "gold" | "blue" | "white";
+  interactive?: boolean;
 }
 
-export function GlassCard({ 
-  children, 
-  className, 
-  hover = true, 
-  accentColor = "gold" 
-}: GlassCardProps) {
-  
-  // Dynamic hover colors based on the journey
-  const accentBorder = {
-    gold: "rgba(212, 175, 55, 0.3)",
-    blue: "rgba(59, 130, 246, 0.3)",
-    white: "rgba(255, 255, 255, 0.2)"
-  };
+export function GlassCard({ children, accent = "none", className = "", interactive = false }: GlassCardProps) {
+  const accentBorder = 
+    accent === "gold" ? "group-hover:border-gold/30" : 
+    accent === "blue" ? "group-hover:border-blue/30" : "";
 
   return (
-    <motion.div
-      whileHover={hover ? { 
-        translateY: -8, 
-        borderColor: accentBorder[accentColor],
-        boxShadow: "0 20px 40px rgba(0,0,0,0.4)" 
-      } : {}}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className={cn(
-        "glass rounded-[2.5rem] p-8 border border-white/5 relative overflow-hidden group",
-        className
-      )}
+    <motion.div 
+      whileHover={interactive ? { y: -5 } : {}}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={`relative group rounded-3xl bg-glass-light border border-glass-border backdrop-blur-xl overflow-hidden shadow-glass-inset ${className} ${accentBorder}`}
     >
-      {/* Subtle Inner Highlight */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
+      {/* Subtle top gradient line based on accent */}
+      {accent !== "none" && (
+        <div className={`absolute top-0 left-0 w-full h-[2px] opacity-50 ${accent === "gold" ? "bg-gradient-to-r from-transparent via-gold to-transparent" : "bg-gradient-to-r from-transparent via-blue to-transparent"}`} />
+      )}
       
-      <div className="relative z-10">
+      {/* Glow effect on hover */}
+      {interactive && accent !== "none" && (
+        <div className={`absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl pointer-events-none ${accent === "gold" ? "shadow-glow-gold" : "shadow-glow-blue"}`} />
+      )}
+      
+      <div className="relative z-10 p-6 md:p-8">
         {children}
       </div>
     </motion.div>
