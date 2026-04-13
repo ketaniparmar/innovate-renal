@@ -133,7 +133,8 @@ function FeatureRow({ icon, title, desc }: { icon: React.ReactNode, title: strin
   return (
     <div className="flex gap-4 items-start">
       <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/10 text-white">
-        {React.cloneElement(icon as React.ReactElement, { size: 18 })}
+        {/* FIXED: Added <any> to the cast so TypeScript allows the size prop */}
+        {React.cloneElement(icon as React.ReactElement<any>, { size: 18 })}
       </div>
       <div>
         <h4 className="font-bold text-white text-lg mb-1">{title}</h4>
