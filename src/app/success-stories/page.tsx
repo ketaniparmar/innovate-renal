@@ -169,7 +169,8 @@ function KPI({ icon, label, value, color }: { icon: React.ReactNode, label: stri
   return (
     <div className={`p-4 rounded-xl border bg-[#010810] ${isGold ? "border-[#D4AF37]/20" : "border-[#3B82F6]/20"}`}>
       <div className={`flex items-center gap-2 mb-2 ${isGold ? "text-[#D4AF37]" : "text-[#3B82F6]"}`}>
-        {React.cloneElement(icon as React.ReactElement, { size: 16 } as any)}
+        {/* FIXED: Added type-safe cloneElement */}
+        {React.cloneElement(icon as React.ReactElement<any>, { size: 16 })}
         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{label}</p>
       </div>
       <p className="text-2xl font-black text-white">{value}</p>
