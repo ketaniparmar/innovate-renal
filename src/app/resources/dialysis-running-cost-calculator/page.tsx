@@ -1,5 +1,5 @@
 "use client";
-
+import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { IndianRupee, RefreshCcw, Layers, TrendingUp, Activity, PieChart } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
