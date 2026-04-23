@@ -53,8 +53,8 @@ export default function SaasHomepage() {
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-6 items-center justify-center w-full max-w-lg"
           >
-            // Inside src/app/page.tsx
-<OsButton label="Run Financial Model" variant="primary" href="/tools" /> // REMOVED #simulator
+
+<OsButton label="Run Financial Model" variant="primary" href="/tools" /> 
             <OsButton label="View Success Stories" variant="glass" href="/success-stories" />
           </motion.div>
         </div>
