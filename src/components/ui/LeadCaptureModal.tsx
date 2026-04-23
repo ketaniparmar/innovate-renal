@@ -23,6 +23,7 @@ interface LeadCaptureModalProps {
 export function LeadCaptureModal({ isOpen, onClose, source = "ROI Simulator", contextData }: LeadCaptureModalProps) {
   const [step, setStep] = useState<"analyzing" | "capture" | "processing" | "success">("analyzing");
   const [formData, setFormData] = useState({ name: "", hospital: "", phone: "" });
+  const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/919879576332"); // Fallback URL
 
   // Reset logic when modal opens
   useEffect(() => {
@@ -42,12 +43,20 @@ export function LeadCaptureModal({ isOpen, onClose, source = "ROI Simulator", co
     const bep = contextData?.breakeven || "N/A";
     const profit = contextData?.profit || "N/A";
 
-    const whatsappMessage = `*🚨 New Project Lead via ${source}*%0A%0A*Name:* ${formData.name}%0A*Hospital:* ${formData.hospital}%0A*Phone:* ${formData.phone}%0A%0A*Simulation Data:*%0A→ Capacity: ${machines} Units%0A→ BEP: ${bep} Months%0A→ 5-Year Profit: ₹ ${profit} Cr%0A%0A_Awaiting technical audit._`;
+    // 1. Create the raw message
+    const rawMessage = `*🚨 New Project Lead via ${source}*\n\n*Name:* ${formData.name}\n*Hospital:* ${formData.hospital}\n*Phone:* ${formData.phone}\n\n*Simulation Data:*\n→ Capacity: ${machines} Units\n→ BEP: ${bep} Months\n→ 5-Year Profit: ₹ ${profit} Cr\n\n_Awaiting technical audit._`;
+    
+    // 2. Safely encode it for URLs (Fixes broken links on mobile)
+    const encodedMessage = encodeURIComponent(rawMessage);
+    const finalUrl = `https://wa.me/919879576332?text=${encodedMessage}`;
+    
+    // 3. Save it to state so the manual button can use it if auto-popup is blocked
+    setWhatsappUrl(finalUrl);
 
     setTimeout(() => {
       setStep("success");
-      // Open WhatsApp after simulation delay
-      window.open(`https://wa.me/919879576332?text=${whatsappMessage}`, '_blank');
+      // Try to auto-open (may be blocked by browser popup blockers, which is why we save it to state above)
+      window.open(finalUrl, '_blank');
     }, 2000);
   };
 
@@ -115,9 +124,9 @@ export function LeadCaptureModal({ isOpen, onClose, source = "ROI Simulator", co
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <FormInput icon={<User size={16}/>} placeholder="Full Name" value={formData.name} onChange={(v) => setFormData({...formData, name: v})} />
-                      <FormInput icon={<Building2 size={16}/>} placeholder="Hospital / Organization" value={formData.hospital} onChange={(v) => setFormData({...formData, hospital: v})} />
-                      <FormInput icon={<Phone size={16}/>} placeholder="WhatsApp Number" value={formData.phone} onChange={(v) => setFormData({...formData, phone: v})} />
+                      <FormInput type="text" icon={<User size={16}/>} placeholder="Full Name" value={formData.name} onChange={(v) => setFormData({...formData, name: v})} />
+                      <FormInput type="text" icon={<Building2 size={16}/>} placeholder="Hospital / Organization" value={formData.hospital} onChange={(v) => setFormData({...formData, hospital: v})} />
+                      <FormInput type="tel" icon={<Phone size={16}/>} placeholder="WhatsApp Number" value={formData.phone} onChange={(v) => setFormData({...formData, phone: v})} />
 
                       <div className="pt-6">
                         <button className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-black py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)]">
@@ -149,8 +158,9 @@ export function LeadCaptureModal({ isOpen, onClose, source = "ROI Simulator", co
                     </p>
                     
                     <div className="space-y-4 w-full">
+                      {/* FIXED: Now uses the securely encoded URL containing all the user data! */}
                       <button 
-                        onClick={() => window.open(`https://wa.me/919879576332`, '_blank')}
+                        onClick={() => window.open(whatsappUrl, '_blank')}
                         className="w-full bg-[#25D366] hover:bg-green-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-[0_0_30px_rgba(37,211,102,0.3)] flex items-center justify-center gap-3"
                       >
                         <MessageSquare size={16} /> Discuss Audit on WhatsApp
@@ -176,12 +186,27 @@ export function LeadCaptureModal({ isOpen, onClose, source = "ROI Simulator", co
   );
 }
 
-/* HELPER COMPONENT: Styled Input */
-function FormInput({ icon, placeholder, value, onChange }: any) {
+/* HELPER COMPONENT: Strictly Typed Form Input */
+interface FormInputProps {
+  icon: React.ReactNode;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  type: string;
+}
+
+function FormInput({ icon, placeholder, value, onChange, type }: FormInputProps) {
   return (
     <div className="relative group">
       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#D4AF37] transition-colors">{icon}</div>
-      <input required type="text" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} className="w-full bg-[#010810] border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all placeholder:text-gray-700" />
+      <input 
+        required 
+        type={type} 
+        placeholder={placeholder} 
+        value={value} 
+        onChange={(e) => onChange(e.target.value)} 
+        className="w-full bg-[#010810] border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all placeholder:text-gray-700" 
+      />
     </div>
   );
 }
