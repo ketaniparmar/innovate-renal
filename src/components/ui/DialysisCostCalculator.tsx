@@ -1,217 +1,257 @@
 "use client";
 
-import React, { useState } from "react";
-import { IndianRupee, RefreshCcw, Layers, TrendingUp, Activity, PieChart, Download } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { IndianRupee, Layers, TrendingUp, TrendingDown, Activity, PieChart, Download, AlertTriangle, ShieldCheck } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion } from "framer-motion";
 
 export default function DialysisCostCalculator() {
-  const [machines, setMachines] = useState(5);
-  const [sessionsPerDay, setSessionsPerDay] = useState(12); // Realistic start for 5 machines
-  const [days, setDays] = useState(26);
-  const [mode, setMode] = useState<"reuse" | "single">("reuse");
-  const [reuseCycles, setReuseCycles] = useState(8);
-  const [revenuePerSession, setRevenuePerSession] = useState(2500);
+  // --- 1. INFRASTRUCTURE & OPERATION STATE ---
+  const [machines, setMachines] = useState(10);
+  const [sessionsPerDay, setSessionsPerDay] = useState(2.5);
+  const [downtime, setDowntime] = useState(5);
+  const days = 26; // Fixed clinical standard
 
-  /* ---------- ACTUAL COST DATA FROM CLINICAL RECORDS ---------- */
+  // --- 2. POLICY & MODE STATE ---
+  const [stateJurisdiction, setStateJurisdiction] = useState("Gujarat");
+  const [mode, setMode] = useState<"reuse" | "single">("single");
+
+  const strictStates = ["Gujarat", "Tamil Nadu", "Karnataka", "Telangana"];
+  const isStrictState = strictStates.includes(stateJurisdiction);
+
+  // Auto-lock mode based on state compliance
+  useEffect(() => {
+    if (isStrictState) {
+      setMode("single");
+    }
+  }, [stateJurisdiction, isStrictState]);
+
+  // --- 3. PAYOR MIX STATE (Relative Weighting) ---
+  const [pmjay, setPmjay] = useState(50);
+  const [privateMix, setPrivateMix] = useState(30);
+  const [tpa, setTpa] = useState(20);
+
+  // --- 4. THE FINANCIAL ENGINE ---
   
-  // Variable OPEX per Session
-  const electricityCost = 80; 
-  const clinicalConsumables = 115;
-  const disinfectionCost = 20;
-  const sundriesMisc = 125;
+  // A. Revenue Logic
+  const totalMix = pmjay + privateMix + tpa;
+  const pmjayWt = pmjay / totalMix;
+  const privateWt = privateMix / totalMix;
+  const tpaWt = tpa / totalMix;
+
+  const weightedAvgRevenue = (pmjayWt * 1300) + (privateWt * 2500) + (tpaWt * 2000);
+  const monthlySessions = machines * sessionsPerDay * days;
+  const maxCapacitySessions = machines * 3 * days; 
+  const utilization = ((monthlySessions / maxCapacitySessions) * 100).toFixed(1);
   
-  const dialyzerBase = 1200;
-  const tubingBase = 250;
-  const dialyzerPerSession = mode === "reuse" ? 70 : dialyzerBase;
-  const tubingPerSession = mode === "reuse" ? 20 : tubingBase;
+  const grossMonthlyRevenue = monthlySessions * weightedAvgRevenue;
 
-  const costPerSession = electricityCost + clinicalConsumables + disinfectionCost + sundriesMisc + dialyzerPerSession + tubingPerSession;
+  // B. Consumable COGS Logic (Grounded in real procurement)
+  // Base: Kit(455) + Meds(115) + RO(100) + Misc(30) = 700
+  // Reuse: (700 - 330) + 66 (Dialyzer/5) + 60 (Reprocessing) = 496
+  const consumableCostPerSession = mode === "single" ? 700 : 496;
+  const totalMonthlyConsumables = monthlySessions * consumableCostPerSession;
 
-  /* ---------- FIXED MONTHLY COSTS ---------- */
-  const staffCost = 180000;   // Nurses + technicians
-  const rentCost = 80000;
-  const maintenanceCost = 40000;
-  const adminCost = 30000;
+  // C. Fixed OPEX Logic
+  const staffCost = 250000 + (machines > 10 ? (machines - 10) * 15000 : 0);
+  const rentCost = 150000;
+  const powerCost = machines * 10000;
+  const machineMaint = machines * 4000;
+  const roMaint = 30000;
   
-  const fixedMonthlyCost = staffCost + rentCost + maintenanceCost + adminCost;
+  const fixedMonthlyOpex = staffCost + rentCost + powerCost + machineMaint + roMaint;
+  const totalOpex = fixedMonthlyOpex + totalMonthlyConsumables;
 
-  /* ---------- UTILIZATION & VOLUME ---------- */
-  const totalSessions = sessionsPerDay * days;
-  const maxCapacity = machines * 3 * days; // 3 shifts max
-  const utilization = ((totalSessions / maxCapacity) * 100).toFixed(1);
+  // D. The Leakage Engine (The Moat)
+  const downtimeLoss = grossMonthlyRevenue * (downtime / 100);
+  const utilLoss = sessionsPerDay < 3 ? (machines * (3 - sessionsPerDay) * days * weightedAvgRevenue) : 0;
+  const totalLeakage = downtimeLoss + utilLoss;
 
-  /* ---------- FINANCIALS (EBITDA) ---------- */
-  const monthlyRevenue = totalSessions * revenuePerSession;
-  const monthlyVariableCost = totalSessions * costPerSession;
+  // E. Profitability & CAPEX
+  const grossProfit = grossMonthlyRevenue - totalOpex;
+  const netEffectiveProfit = grossProfit - totalLeakage;
   
-  const monthlyEBITDA = monthlyRevenue - (monthlyVariableCost + fixedMonthlyCost);
-  const profitMargin = monthlyRevenue > 0 ? ((monthlyEBITDA / monthlyRevenue) * 100).toFixed(1) : "0.0";
+  const totalCapex = (machines * 800000) + 2500000 + (machines * 200000); // Machines + RO + Interiors
+  const breakEvenMonths = netEffectiveProfit > 0 ? (totalCapex / netEffectiveProfit).toFixed(1) : "0.0";
 
-  /* ---------- CAPEX & BREAK-EVEN ---------- */
-  const machineCapex = machines * 650000;
-  const roPlant = machines > 10 ? 450000 : 250000;
-  const infra = 500000;
-  
-  const totalCapex = machineCapex + roPlant + infra;
-  const breakEvenMonths = monthlyEBITDA > 0 ? (totalCapex / monthlyEBITDA).toFixed(1) : "∞";
+  // Formatting Helper
+  const formatINR = (val: number) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(val);
 
   return (
-    /* FIXED: Changed accentColor to accent, and hover to interactive */
-    <GlassCard accent={mode === "reuse" ? "gold" : "blue"} interactive={false} className="max-w-6xl mx-auto p-8 lg:p-12 relative overflow-hidden">
+    <GlassCard accent={mode === "reuse" ? "gold" : "blue"} interactive={false} className="max-w-7xl mx-auto p-6 lg:p-10 relative overflow-hidden">
       
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 border-b border-white/5 pb-8">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02] mb-4">
-             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Investor Level DPR</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#D4AF37]">Innovate IndAI Intelligence</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter">Dialysis Financial Engine</h2>
-          <p className="text-sm text-gray-400 mt-2">
-            Complete business feasibility including CAPEX, fixed overheads, and break-even timelines.
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tighter text-white">Financial Decision Engine</h2>
+          <p className="text-sm text-gray-400 mt-2 max-w-xl">
+            Audit-ready projections mapping exact state compliance, weighted payor mix, and operational leakage to determine true net effective profit.
           </p>
-        </div>
-
-        {/* MODE TOGGLE */}
-        <div className="flex bg-[#010810] p-1.5 rounded-xl border border-white/10 shrink-0">
-          <button
-            onClick={() => setMode("reuse")}
-            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
-              mode === "reuse"
-                ? "bg-[#D4AF37] text-[#010810] shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                : "text-gray-500 hover:text-white"
-            }`}
-          >
-            <RefreshCcw size={14} /> Reuse (8x)
-          </button>
-          <button
-            onClick={() => setMode("single")}
-            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
-              mode === "single"
-                ? "bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-                : "text-gray-500 hover:text-white"
-            }`}
-          >
-            <Layers size={14} /> Single Use
-          </button>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-12">
+      <div className="grid lg:grid-cols-12 gap-10">
         
-        {/* LEFT: CONTROLS */}
-        <div className="space-y-6">
-          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-6 flex items-center gap-2">
-              <Activity size={14} /> Core Capacity Parameters
-            </h3>
+        {/* LEFT: CONTROLS & INTELLIGENCE */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Policy & Mode Matrix */}
+          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5 shadow-inner">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                <ShieldCheck size={14} className="text-[#D4AF37]" /> Operating Jurisdiction
+              </h3>
+            </div>
             
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between text-sm mb-3">
-                  <span className="text-gray-300 font-medium">Installed Machines</span>
-                  <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded">{machines} Units</span>
-                </div>
-                <input type="range" min="3" max="30" step="1" value={machines} onChange={(e) => setMachines(Number(e.target.value))} className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]" />
-              </div>
+            <select 
+              value={stateJurisdiction}
+              onChange={(e) => setStateJurisdiction(e.target.value)}
+              className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm font-bold text-white focus:outline-none focus:border-[#D4AF37] mb-4"
+            >
+              <option value="Gujarat">Gujarat</option>
+              <option value="Maharashtra">Maharashtra</option>
+              <option value="Tamil Nadu">Tamil Nadu</option>
+              <option value="Karnataka">Karnataka</option>
+              <option value="Telangana">Telangana</option>
+              <option value="Other">Other Region</option>
+            </select>
 
-              <div>
-                <div className="flex justify-between text-sm mb-3">
-                  <span className="text-gray-300 font-medium">Charge per Session (Revenue)</span>
-                  <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded flex items-center gap-1">
-                    <IndianRupee size={12} /> {revenuePerSession}
-                  </span>
-                </div>
-                <input type="range" min="1200" max="4000" step="50" value={revenuePerSession} onChange={(e) => setRevenuePerSession(Number(e.target.value))} className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#D4AF37]" />
+            {isStrictState ? (
+              <div className="flex items-start gap-3 p-3 bg-blue-900/10 border border-blue-500/20 rounded-xl">
+                <Layers className="text-blue-400 shrink-0 mt-0.5" size={14} />
+                <p className="text-[10px] text-blue-300 uppercase tracking-wider">
+                  Mandated Single-Use State. Reuse mode locked to ensure regulatory compliance and eliminate infection liability.
+                </p>
               </div>
+            ) : (
+              <div className="flex bg-black/40 p-1 rounded-xl border border-white/10">
+                <button onClick={() => setMode("reuse")} className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${mode === "reuse" ? "bg-[#D4AF37] text-black" : "text-gray-500"}`}>Reuse Mode</button>
+                <button onClick={() => setMode("single")} className={`flex-1 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${mode === "single" ? "bg-blue-500 text-white" : "text-gray-500"}`}>Single Use</button>
+              </div>
+            )}
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Sessions / Day</label>
-                  <input type="number" value={sessionsPerDay} onChange={(e) => setSessionsPerDay(Number(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none transition-colors" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Days / Month</label>
-                  <input type="number" value={days} onChange={(e) => setDays(Number(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none transition-colors" />
-                </div>
-              </div>
+          {/* Payor Mix Engine */}
+          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5 shadow-inner">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-6 flex items-center gap-2">
+              <PieChart size={14} className="text-[#D4AF37]"/> Payor Mix Weighting
+            </h3>
+            <div className="space-y-5">
+              <SliderRow label="PMJAY Scheme" value={pmjay} setter={setPmjay} max={100} color="accent-blue-500" suffix="%" />
+              <SliderRow label="Private Cash" value={privateMix} setter={setPrivateMix} max={100} color="accent-[#D4AF37]" suffix="%" />
+              <SliderRow label="TPA / Corporate" value={tpa} setter={setTpa} max={100} color="accent-emerald-500" suffix="%" />
+            </div>
+            <div className="mt-5 pt-4 border-t border-white/10 flex justify-between items-center">
+              <span className="text-xs text-gray-400 uppercase tracking-widest">Weighted Avg Realization</span>
+              <span className="text-lg font-black text-white tabular-nums">₹ {formatINR(weightedAvgRevenue)}</span>
             </div>
           </div>
 
-          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5 shadow-inner">
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] mb-4">Per Session Base OPEX</h3>
-            <div className="space-y-3">
-              <Row label="Power (HD + RO)" value={electricityCost} />
-              <Row label="Clinical Consumables" value={clinicalConsumables} />
-              <Row label="Disinfection & Sundries" value={disinfectionCost + sundriesMisc} />
-              <Row label={mode === "reuse" ? "Dialyzer & Tubing (8x)" : "Dialyzer & Tubing (Single)"} value={dialyzerPerSession + tubingPerSession} highlight />
-            </div>
-            <div className="border-t border-white/10 mt-4 pt-4 flex justify-between items-center font-bold">
-              <span className="text-sm uppercase tracking-widest text-white">Total Variable OPEX</span>
-              <span className="flex items-center text-xl text-[#D4AF37]">
-                <IndianRupee size={16} className="opacity-70 mr-1" /> {costPerSession}
-              </span>
-            </div>
+          {/* Infrastructure Sliders */}
+          <div className="bg-[#010810] p-6 rounded-2xl border border-white/5 shadow-inner space-y-6">
+            <SliderRow label="Installed Machines" value={machines} setter={setMachines} min={5} max={40} step={1} color="accent-white" />
+            <SliderRow label="Sessions / Day" value={sessionsPerDay} setter={setSessionsPerDay} min={1.0} max={4.0} step={0.1} color="accent-[#D4AF37]" />
+            <SliderRow label="System Downtime" value={downtime} setter={setDowntime} min={0} max={15} step={1} color="accent-red-500" suffix="%" />
           </div>
         </div>
 
-        {/* RIGHT: OUTPUT DASHBOARD */}
-        <div className="flex flex-col h-full">
-          <div className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-3xl p-8 flex-1 flex flex-col relative overflow-hidden">
-            <div className={`absolute top-0 inset-x-0 h-1 ${mode === "reuse" ? "bg-[#D4AF37]" : "bg-[#3B82F6]"}`} />
+        {/* RIGHT: OUTPUT DASHBOARD & LEAKAGE ENGINE */}
+        <div className="lg:col-span-7 flex flex-col gap-6">
+          
+          {/* Top KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KPI label="Capacity Util" value={`${utilization}%`} />
+            <KPI label="Total CAPEX" value={`${(totalCapex / 100000).toFixed(2)} L`} />
+            <KPI label="Mo. Sessions" value={monthlySessions} />
+            <KPI label="Break-Even" value={Number(breakEvenMonths) > 0 ? `${breakEvenMonths} mo` : "Loss"} highlight />
+          </div>
+
+          {/* The Financial Waterfall */}
+          <div className="bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 rounded-3xl p-8 flex-1 flex flex-col relative">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-8">P&L Waterfall & Leakage Analysis</h3>
             
-            {/* KPI ROW */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <KPI label="Utilization" value={`${utilization}%`} />
-              <KPI label="Break-even" value={`${breakEvenMonths} mo`} />
-              <KPI label="Monthly Tx" value={totalSessions} />
-            </div>
-
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-2 flex items-center gap-2">
-              <PieChart size={14} /> Total Monthly Revenue
-            </p>
-            <p className="text-4xl font-black flex items-center text-white mb-6 tracking-tighter">
-              <IndianRupee size={28} className="opacity-50 mr-1" />
-              {(monthlyRevenue / 100000).toFixed(2)} Lakhs
-            </p>
-
-            <div className={`p-6 rounded-2xl border ${monthlyEBITDA > 0 ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"}`}>
-              <div className="flex justify-between items-end">
-                <div>
-                  <p className={`text-[10px] font-bold uppercase tracking-[0.2em] mb-1 ${monthlyEBITDA > 0 ? "text-green-400" : "text-red-400"}`}>
-                    Net Monthly EBITDA
-                  </p>
-                  <p className="text-4xl font-black flex items-center text-white tracking-tighter">
-                    <IndianRupee size={28} className="opacity-50 mr-1" />
-                    {(monthlyEBITDA / 100000).toFixed(2)} L
-                  </p>
+            <div className="space-y-6 flex-1">
+              {/* Gross Revenue */}
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Gross Potential Revenue</span>
+                  <span className="font-bold text-white tabular-nums">₹ {formatINR(grossMonthlyRevenue)}</span>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Margin</p>
-                  <p className={`text-2xl font-bold flex items-center gap-1 ${monthlyEBITDA > 0 ? "text-green-400" : "text-red-400"}`}>
-                    <TrendingUp size={20} /> {profitMargin}%
+              </div>
+
+              {/* OPEX */}
+              <div className="pl-4 border-l border-white/10">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-500">Total Operational Expense (COGS + Fixed)</span>
+                  <span className="font-bold text-gray-400 tabular-nums">- ₹ {formatINR(totalOpex)}</span>
+                </div>
+              </div>
+
+              {/* Gross Margin */}
+              <div className="pt-4 border-t border-white/5">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-[#D4AF37] font-bold">Gross Operating Profit</span>
+                  <span className="font-bold text-[#D4AF37] tabular-nums">₹ {formatINR(grossProfit)}</span>
+                </div>
+              </div>
+
+              {/* Leakage Engine */}
+              <div className="pl-4 border-l-2 border-red-500/50 space-y-3 pt-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-red-400/80 flex items-center gap-2"><TrendingDown size={14}/> Downtime Cannibalization</span>
+                  <span className="font-bold text-red-400 tabular-nums">- ₹ {formatINR(downtimeLoss)}</span>
+                </div>
+                {utilLoss > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-orange-400/80 flex items-center gap-2"><AlertTriangle size={14}/> Underutilization Cost (Opportunity)</span>
+                    <span className="font-bold text-orange-400 tabular-nums">- ₹ {formatINR(utilLoss)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Net Effective Profit */}
+              <div className="pt-6 mt-auto border-t border-white/10">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37] mb-1">Net Effective Profit</p>
+                    <p className="text-xs text-gray-500">Actual yield after operational leakage</p>
+                  </div>
+                  <p className="text-4xl md:text-5xl font-black text-white tracking-tighter tabular-nums">
+                    <span className="text-2xl text-gray-500 mr-1">₹</span>
+                    {netEffectiveProfit > 0 ? formatINR(netEffectiveProfit) : "0"}
                   </p>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* CAPEX DISPLAY */}
-            <div className="mt-auto pt-6">
-              <div className="p-5 bg-white/5 rounded-xl border border-white/10 flex justify-between items-center">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Project CAPEX</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Machines, RO & Infrastructure</p>
-                </div>
-                <p className="text-2xl font-bold flex items-center text-white">
-                  <IndianRupee size={20} className="mr-1 opacity-70" /> {(totalCapex / 100000).toFixed(2)} L
+          {/* INTELLIGENCE PANEL */}
+          <div className="space-y-3">
+            {pmjayWt > 0.65 && isStrictState && (
+              <div className="bg-red-900/20 border border-red-500/30 p-4 rounded-xl flex gap-3 items-start">
+                <ShieldCheck className="text-red-400 shrink-0 mt-0.5" size={16} />
+                <p className="text-xs text-red-300 font-medium leading-relaxed">
+                  <strong className="text-red-400 uppercase tracking-wider text-[10px] block mb-1">Margin Pressure Alert</strong>
+                  High PMJAY dependency in a mandated single-use environment creates severe margin compression. High capacity utilization is strictly required to maintain solvency.
                 </p>
               </div>
-            </div>
-
+            )}
+            {downtime > 6 && (
+              <div className="bg-orange-900/20 border border-orange-500/30 p-4 rounded-xl flex gap-3 items-start">
+                <Activity className="text-orange-400 shrink-0 mt-0.5" size={16} />
+                <p className="text-xs text-orange-300 font-medium leading-relaxed">
+                  <strong className="text-orange-400 uppercase tracking-wider text-[10px] block mb-1">AMC Upgrade Required</strong>
+                  System downtime is actively cannibalizing net yields. Premium RO and machine maintenance contracts will yield a positive ROI against current leakage rates.
+                </p>
+              </div>
+            )}
           </div>
           
-          <button className="mt-6 w-full bg-white text-black hover:bg-gray-200 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]">
-            <Download size={16} /> Generate Investor PDF Report
+          <button className="mt-2 w-full bg-[#D4AF37] text-[#010810] hover:bg-yellow-500 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+            <Download size={16} /> Export Audit-Ready DPR
           </button>
         </div>
       </div>
@@ -221,22 +261,29 @@ export default function DialysisCostCalculator() {
 
 /* ---------- SUB-COMPONENTS ---------- */
 
-function Row({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+function SliderRow({ label, value, setter, min = 0, max, step = 1, color, suffix = "" }: any) {
   return (
-    <div className={`flex justify-between items-center text-sm ${highlight ? "text-white font-bold" : "text-gray-400"}`}>
-      <span>{label}</span>
-      <span className="flex items-center">
-        <IndianRupee size={12} className="opacity-50 mr-1" /> {value}
-      </span>
+    <div>
+      <div className="flex justify-between text-sm mb-3">
+        <span className="text-gray-300 font-medium">{label}</span>
+        <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded text-xs tabular-nums">
+          {value}{suffix}
+        </span>
+      </div>
+      <input 
+        type="range" min={min} max={max} step={step} value={value} 
+        onChange={(e) => setter(Number(e.target.value))} 
+        className={`w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer ${color}`} 
+      />
     </div>
   );
 }
 
-function KPI({ label, value }: { label: string; value: string | number }) {
+function KPI({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
   return (
-    <div className="bg-black/40 border border-white/10 rounded-xl p-4 text-center shadow-inner">
-      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-xl font-bold text-white">{value}</p>
+    <div className={`border rounded-xl p-4 text-center shadow-inner ${highlight ? "bg-[#D4AF37]/5 border-[#D4AF37]/30" : "bg-black/40 border-white/10"}`}>
+      <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${highlight ? "text-[#D4AF37]" : "text-gray-500"}`}>{label}</p>
+      <p className="text-xl font-black text-white tabular-nums">{value}</p>
     </div>
   );
 }
