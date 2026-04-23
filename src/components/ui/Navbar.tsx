@@ -4,9 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Menu, X, ArrowRight, Activity, TrendingUp, ShieldCheck } from "lucide-react";
-
-// --- 1. IMPORT GLOBAL STATE & SOVEREIGN ENGINE ---
+import { Zap, Menu, X, ArrowRight, Activity, TrendingUp, Calculator } from "lucide-react";
 import { useInfra } from "@/context/InfrastructureContext";
 import { calculateV7Sovereign } from "@/lib/sovereign-engine";
 
@@ -14,11 +12,8 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-
-  // --- 2. HOOK INTO GLOBAL INFRASTRUCTURE DATA ---
   const { machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode } = useInfra();
 
-  // --- 3. LIVE FINANCIAL UNDERWRITING (Command Center Logic) ---
   const liveMetrics = useMemo(() => {
     return calculateV7Sovereign({ machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode });
   }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode]);
@@ -29,8 +24,10 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // --- UPDATED NAV LINKS ---
   const navLinks = [
     { name: "DPR Engine", href: "/tools" },
+    { name: "CAPEX Audit", href: "/capex" }, // New Link
     { name: "Solutions", href: "/solutions" },
     { name: "AMC Intel", href: "/service" },
   ];
@@ -39,16 +36,9 @@ export function Navbar() {
 
   return (
     <>
-      <nav 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b ${
-          isScrolled 
-            ? "bg-[#010810]/80 backdrop-blur-xl border-white/10 py-3 shadow-2xl" 
-            : "bg-transparent border-transparent py-5"
-        }`}
-      >
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b ${isScrolled ? "bg-[#010810]/80 backdrop-blur-xl border-white/10 py-3 shadow-2xl" : "bg-transparent border-transparent py-5"}`}>
         <div className="max-w-[1440px] mx-auto px-6 flex items-center justify-between">
           
-          {/* BRAND LOGO */}
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl flex items-center justify-center group-hover:bg-[#D4AF37]/20 transition-all">
               <Activity className="text-[#D4AF37]" size={20} />
@@ -59,103 +49,50 @@ export function Navbar() {
             </div>
           </Link>
 
-          {/* DESKTOP NAVIGATION */}
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link) => (
-              <Link 
-                key={link.name} 
-                href={link.href}
-                className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${
-                  pathname === link.href ? "text-[#D4AF37]" : "text-gray-500 hover:text-white"
-                }`}
-              >
+              <Link key={link.name} href={link.href} className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${pathname === link.href ? "text-[#D4AF37]" : "text-gray-500 hover:text-white"}`}>
                 {link.name}
               </Link>
             ))}
           </div>
 
-          {/* --- 4. THE COMMAND CENTER PILL (Live Asset Tracking) --- */}
           <div className="hidden xl:flex items-center gap-4 bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-2 hover:bg-white/[0.05] transition-all cursor-help group">
             <div className="flex flex-col items-end">
               <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Enterprise Value</span>
-              <span className="text-sm font-black text-white tracking-tighter tabular-nums group-hover:text-[#D4AF37] transition-colors">
-                ₹ {formatCr(liveMetrics.exitValue)} Cr
-              </span>
+              <span className="text-sm font-black text-white tracking-tighter tabular-nums group-hover:text-[#D4AF37] transition-colors">₹ {formatCr(liveMetrics.exitValue)} Cr</span>
             </div>
             <div className="w-[1px] h-6 bg-white/10" />
             <div className="flex flex-col">
-              <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1">
-                <TrendingUp size={8} /> Project IRR
-              </span>
-              <span className="text-sm font-black text-emerald-400 tabular-nums">
-                {liveMetrics.irr.toFixed(1)}%
-              </span>
+              <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1"><TrendingUp size={8} /> Project IRR</span>
+              <span className="text-sm font-black text-emerald-400 tabular-nums">{liveMetrics.irr.toFixed(1)}%</span>
             </div>
           </div>
 
-          {/* DESKTOP CTA */}
           <div className="hidden lg:flex items-center gap-4">
-            <Link 
-              href="/tools"
-              className="bg-white hover:bg-[#D4AF37] hover:text-black text-black px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-2xl active:scale-95 flex items-center gap-2"
-            >
+            <Link href="/tools" className="bg-white hover:bg-[#D4AF37] hover:text-black text-black px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-2xl flex items-center gap-2">
               Access Terminal <ArrowRight size={14} />
             </Link>
           </div>
 
-          {/* MOBILE MENU TOGGLE */}
-          <button 
-            className="lg:hidden text-gray-400 hover:text-white p-2 z-50"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
+          <button className="lg:hidden text-gray-400 hover:text-white p-2 z-50" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </nav>
 
-      {/* MOBILE FULL-SCREEN MENU */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="fixed inset-0 z-40 bg-[#010810] pt-28 px-8 lg:hidden flex flex-col h-screen"
-          >
-            {/* Mobile Asset Briefing */}
-            <div className="mb-12 p-6 bg-white/[0.02] border border-white/5 rounded-3xl">
-              <p className="text-[10px] text-[#D4AF37] font-black uppercase tracking-widest mb-4">Live Project DNA</p>
-              <div className="flex justify-between items-end">
-                <div>
-                  <span className="text-[8px] text-gray-600 uppercase font-bold block mb-1">Exit Valuation</span>
-                  <span className="text-2xl font-black text-white">₹ {formatCr(liveMetrics.exitValue)} Cr</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[8px] text-gray-600 uppercase font-bold block mb-1 text-emerald-500">Project IRR</span>
-                  <span className="text-2xl font-black text-emerald-400">{liveMetrics.irr.toFixed(1)}%</span>
-                </div>
-              </div>
-            </div>
-
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="fixed inset-0 z-40 bg-[#010810] pt-28 px-8 lg:hidden flex flex-col h-screen">
             <div className="flex flex-col gap-8">
               {navLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  href={link.href}
-                  className={`text-2xl font-black uppercase tracking-tighter ${
-                    pathname === link.href ? "text-[#D4AF37]" : "text-gray-500"
-                  }`}
-                >
+                <Link key={link.name} href={link.href} className={`text-2xl font-black uppercase tracking-tighter ${pathname === link.href ? "text-[#D4AF37]" : "text-gray-500"}`}>
                   {link.name}
                 </Link>
               ))}
             </div>
-            
             <div className="mt-auto pb-12">
-              <Link 
-                href="/tools"
-                className="w-full bg-[#D4AF37] text-black py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2"
-              >
+              <Link href="/tools" className="w-full bg-[#D4AF37] text-black py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2">
                 Run Simulator <ArrowRight size={16} />
               </Link>
             </div>
