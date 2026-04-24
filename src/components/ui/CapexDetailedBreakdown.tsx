@@ -1,57 +1,59 @@
-"use client";
-
-import React, { useMemo } from "react";
-import { useInfra } from "@/context/InfrastructureContext";
-import { calculateDetailedCapex } from "@/lib/capex-engine";
+import React from "react";
 import { PieChart, HardDrive, Construction, AlertCircle, IndianRupee } from "lucide-react";
 
-export default function CapexDetailedBreakdown() {
-  const { machines } = useInfra();
-  const capex = useMemo(() => calculateDetailedCapex(machines), [machines]);
+// 1. STRICT UI CONTRACT: We define exactly what the UI expects from the API.
+export interface CapexBreakdownProps {
+  data?: {
+    civil: number;
+    equipment: number;
+    ro: number;
+    mep: number;
+    contingency: number;
+    totalCapex: number;
+  } | null;
+}
 
-  const formatINR = (val: number) => 
-    new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(val);
+export default function CapexDetailedBreakdown({ data }: CapexBreakdownProps) {
+  // 2. GRACEFUL FALLBACK: If the API hasn't sent data yet, show a placeholder.
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 border border-gray-800 border-dashed rounded-xl bg-gray-900/50">
+        <AlertCircle className="w-8 h-8 mb-3 text-yellow-500/70" />
+        <h3 className="text-sm font-medium text-gray-300">Awaiting Sovereign Engine</h3>
+        <p className="text-xs text-gray-500">CAPEX calculations are now securely processed by the backend.</p>
+      </div>
+    );
+  }
 
+  // 3. PURE RENDERING: No math happens here. Just formatting numbers.
   return (
-    <div className="bg-[#020617] border border-white/5 rounded-[2.5rem] p-8 lg:p-12 shadow-2xl">
-      <header className="mb-10 flex justify-between items-end">
-        <div>
-          <h3 className="text-[10px] font-black text-[#D4AF37] uppercase tracking-[0.3em] mb-2 italic">Capital Allocation Audit</h3>
-          <h2 className="text-4xl font-black text-white tracking-tighter">CAPEX Breakdown.</h2>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] text-gray-500 uppercase font-bold">Total Investment</p>
-          <p className="text-3xl font-black text-white tracking-tighter">₹ {formatINR(capex.total)}</p>
-        </div>
-      </header>
-
-      {/* VISUAL BAR CHART */}
-      <div className="h-4 w-full flex rounded-full overflow-hidden mb-12 bg-white/5">
-        <div style={{ width: `${capex.breakdown[0].pct}%` }} className="bg-[#D4AF37]" />
-        <div style={{ width: `${capex.breakdown[1].pct}%` }} className="bg-blue-500" />
-        <div style={{ width: `${capex.breakdown[2].pct}%` }} className="bg-emerald-500" />
-        <div style={{ width: `${capex.breakdown[3].pct}%` }} className="bg-gray-600" />
+    <div className="p-6 bg-gray-900 border border-gray-800 rounded-xl">
+      <div className="flex items-center mb-6 space-x-3">
+        <PieChart className="w-6 h-6 text-blue-400" />
+        <h2 className="text-lg font-semibold text-white">CAPEX Breakdown</h2>
       </div>
 
-      {/* LINE ITEM TABLE */}
       <div className="space-y-4">
-        {capex.breakdown.map((item, i) => (
-          <div key={i} className="group flex items-center justify-between p-6 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] transition-all">
-            <div className="flex items-center gap-6">
-              <div className="p-3 bg-white/5 rounded-xl text-gray-400 group-hover:text-[#D4AF37] transition-colors">
-                {i === 0 && <HardDrive size={20} />}
-                {i === 1 && <PieChart size={20} />}
-                {i === 2 && <Construction size={20} />}
-                {i === 3 && <AlertCircle size={20} />}
-              </div>
-              <div>
-                <p className="text-xs font-black text-white uppercase tracking-widest">{item.item}</p>
-                <p className="text-[10px] text-gray-500 font-bold uppercase">{item.pct.toFixed(1)}% of Total Capital</p>
-              </div>
-            </div>
-            <p className="text-xl font-black text-white tracking-tight">₹ {formatINR(item.cost)}</p>
-          </div>
-        ))}
+        <div className="flex justify-between text-sm">
+          <span className="flex items-center text-gray-400"><Construction className="w-4 h-4 mr-2"/> Civil Works</span>
+          <span className="text-white">₹{(data.civil).toLocaleString('en-IN')}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="flex items-center text-gray-400"><HardDrive className="w-4 h-4 mr-2"/> Equipment</span>
+          <span className="text-white">₹{(data.equipment).toLocaleString('en-IN')}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-400 pl-6">RO Water Plant</span>
+          <span className="text-white">₹{(data.ro).toLocaleString('en-IN')}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-400 pl-6">MEP (Electrical/HVAC)</span>
+          <span className="text-white">₹{(data.mep).toLocaleString('en-IN')}</span>
+        </div>
+        <div className="pt-4 border-t border-gray-800 flex justify-between font-bold">
+          <span className="text-gray-300">Total Infrastructure CAPEX</span>
+          <span className="text-blue-400">₹{(data.totalCapex).toLocaleString('en-IN')}</span>
+        </div>
       </div>
     </div>
   );
