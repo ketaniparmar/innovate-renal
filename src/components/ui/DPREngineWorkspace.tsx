@@ -10,8 +10,10 @@ import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { LeadCaptureModal } from "@/components/ui/LeadCaptureModal";
 
-// --- 1. GLOBAL CONTEXT HOOK ---
+// --- 1. GLOBAL CONTEXT HOOK & PDF EXPORTS ---
 import { useInfra } from "@/context/InfrastructureContext";
+import { DPRDownloadButton } from "@/components/ui/DPRDownloadButton";
+import { calculateV8Capex } from "@/lib/capex-engine-v8"; 
 
 const V7_CONFIG = {
   WACC: 0.125,
@@ -36,7 +38,8 @@ export default function DPREngineWorkspace() {
     sessionsPerDay, setSessionsPerDay, 
     pmjay, setPmjay, 
     pvt, setPvt, 
-    mode, setMode 
+    mode, setMode,
+    cityTier, tdsLevel, buildGrade // Extracted for v8 CAPEX Engine
   } = useInfra();
 
   // Auto-balance TPA so total never exceeds 100%
@@ -97,9 +100,16 @@ export default function DPREngineWorkspace() {
       war: WAR,
       utilization: ((sessionsPerDay / 3.0) * 100).toFixed(1),
       netEffectiveProfit: monthlyYield,
-      costOfDelay: monthlyYield * 0.85 // Missing variable restored
+      costOfDelay: monthlyYield * 0.85 
     };
   }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode]);
+
+  // --- 4. V8 CAPEX ENGINE INTEGRATION ---
+  const capexEngineData = useMemo(() => {
+    return calculateV8Capex({ machines, cityTier, tdsLevel, buildGrade });
+  }, [machines, cityTier, tdsLevel, buildGrade]);
+
+  const currentInfraData = { machines, cityTier, tdsLevel, mode, buildGrade };
 
   useEffect(() => {
     if (stateJurisdiction === "Gujarat") setMode("single");
@@ -120,12 +130,13 @@ export default function DPREngineWorkspace() {
             <span className="text-white">v7.0 Financial Underwriting</span>
           </div>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-white hover:bg-[#D4AF37] hover:text-black text-[#010810] px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.2)]"
-        >
-          <Download size={14} /> Generate Official DPR
-        </button>
+        
+        {/* V8 PDF EXPORT BUTTON */}
+        <DPRDownloadButton 
+          infraData={currentInfraData} 
+          financials={financials} 
+          capex={capexEngineData} 
+        />
       </header>
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">

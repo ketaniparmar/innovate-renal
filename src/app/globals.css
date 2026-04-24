@@ -1,32 +1,69 @@
 @import "tailwindcss";
 
+/* --- 1. SOVEREIGN OS COLOR THEME (Tailwind v4 Syntax) --- */
+@theme {
+  --color-sovereign-navy: #0A0F1C;
+  --color-sovereign-navy-light: #141D30;
+  --color-sovereign-navy-border: #1E2A45;
+  
+  --color-sovereign-teal: #00A8A8;
+  --color-sovereign-teal-muted: rgba(0, 168, 168, 0.1);
+  
+  --color-sovereign-gold: #C6A85A;
+  --color-sovereign-gold-muted: rgba(198, 168, 90, 0.1);
+  
+  --color-sovereign-red: #A6192E;
+  --color-sovereign-red-muted: rgba(166, 25, 46, 0.1);
+  
+  --color-sovereign-white: #F5F5F2;
+  --color-sovereign-gray: #8A94A6;
+}
+
+/* --- 2. BASE HTML/BODY SETUP --- */
 :root {
-  --background: #010810;
-  --foreground: #ffffff;
-  --gold: #D4AF37;
-  --blue: #3B82F6;
+  --background: #0A0F1C; /* Sovereign Navy */
+  --foreground: #F5F5F2; /* Sovereign Warm White */
 }
 
 @layer base {
   body {
     background-color: var(--background);
     color: var(--foreground);
-    @apply antialiased selection:bg-[#D4AF37] selection:text-[#010810];
+    @apply antialiased selection:bg-sovereign-gold selection:text-sovereign-navy;
   }
 }
 
+/* --- 3. CUSTOM UTILITIES & COMPONENTS --- */
 @layer components {
   .glass {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(20, 29, 48, 0.4); /* sovereign-navy-light */
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--color-sovereign-navy-border);
   }
   
   .text-gradient-gold {
-    background: linear-gradient(to right, #D4AF37, #F1E5AC, #D4AF37);
+    background: linear-gradient(to right, #C6A85A, #F1E5AC, #C6A85A);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
+}
+
+/* --- 4. INSTITUTIONAL SCROLLBARS --- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background); 
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-sovereign-navy-border); 
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sovereign-teal); 
 }

@@ -1,32 +1,43 @@
-module.exports = {
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
   theme: {
     extend: {
       colors: {
-        background: "#010810", // Absolute base
-        surface: "#0A1118",   // Slightly elevated
-        gold: {
-          DEFAULT: "#D4AF37",
-          glow: "rgba(212, 175, 55, 0.15)", // Soft glow
-        },
-        blue: {
-          DEFAULT: "#3B82F6",
-          glow: "rgba(59, 130, 246, 0.15)",
-        },
-        glass: {
-          light: "rgba(255, 255, 255, 0.03)",
-          border: "rgba(255, 255, 255, 0.05)",
+        sovereign: {
+          navy: {
+            DEFAULT: '#0A0F1C', // Authority Base (Backgrounds)
+            light: '#141D30',   // Raised Surfaces / Cards
+            border: '#1E2A45',  // Subtle dividers
+          },
+          teal: {
+            DEFAULT: '#00A8A8', // Intelligence Layer (AI Signals, Active States)
+            muted: 'rgba(0, 168, 168, 0.1)',
+          },
+          gold: {
+            DEFAULT: '#C6A85A', // Web fallback for Pantone 871 C (Wealth, Exit Value)
+            muted: 'rgba(198, 168, 90, 0.1)',
+          },
+          red: {
+            DEFAULT: '#A6192E', // Execution Accent (Micro-usage only: Warnings, Errors)
+            muted: 'rgba(166, 25, 46, 0.1)',
+          },
+          neutral: {
+            white: '#F5F5F2',   // Warm White for primary text
+            gray: '#8A94A6',    // Subtitles and disabled states
+          }
         }
       },
-      fontFamily: {
-        // 'Inter' for numbers/data, 'Plus Jakarta Sans' for premium headings
-        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'], 
-        mono: ['"JetBrains Mono"', 'monospace'], // For AI code/data blocks
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
-      boxShadow: {
-        'glow-gold': '0 0 20px rgba(212, 175, 55, 0.2)',
-        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.2)',
-        'glass-inset': 'inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      }
-    }
-  }
-}
+    },
+  },
+  plugins: [],
+};
+export default config;
