@@ -4,57 +4,60 @@ import React, { useState, useMemo, useEffect } from "react";
 import { 
   Activity, RefreshCcw, Layers, IndianRupee, 
   TrendingUp, Clock, PieChart, Download, Settings, 
-  ChevronRight, ShieldCheck, Globe, AlertTriangle, 
-  Zap, BarChart3, TrendingDown, FileText
+  ChevronRight, ShieldCheck, Globe, Zap, FileText
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { LeadCaptureModal } from "@/components/ui/LeadCaptureModal";
 
-// --- 1. SOVEREIGN ENGINE CONSTANTS (V7.0) ---
+// --- 1. GLOBAL CONTEXT HOOK ---
+import { useInfra } from "@/context/InfrastructureContext";
+
 const V7_CONFIG = {
-  WACC: 0.125,               // 12.5% Hurdle Rate
-  TAX_RATE: 0.25,             
-  DEPRECIATION_WDV: 0.15,     
-  EXIT_MULTIPLE: 8.5,         // 8.5x EBITDA Exit
-  MAINT_CAPEX_PCT: 0.025,     
-  INFLATION_RATE: 0.05,       
-  AR_DAYS_PMJAY: 65,          // Govt Lag (Working Capital Gap)
-  AR_DAYS_PRIVATE: 7,         
-  INVENTORY_DAYS: 15,         
+  WACC: 0.125,
+  TAX_RATE: 0.25,
+  DEPRECIATION_WDV: 0.15,
+  EXIT_MULTIPLE: 8.5,
+  MAINT_CAPEX_PCT: 0.025,
+  INFLATION_RATE: 0.05,
+  AR_DAYS_PMJAY: 65,
+  AR_DAYS_PRIVATE: 7,
+  INVENTORY_DAYS: 15,
 };
 
 export default function DPREngineWorkspace() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // --- 2. CORE STATE PARAMETERS ---
-  const [machines, setMachines] = useState(15);
-  const [sessionsPerDay, setSessionsPerDay] = useState(2.5);
-  const [downtime, setDowntime] = useState(5);
   const [stateJurisdiction, setStateJurisdiction] = useState("Gujarat");
-  const [mode, setMode] = useState<"reuse" | "single">("single");
+  const [downtime, setDowntime] = useState(5);
 
-  // Payor Mix
-  const [pmjay, setPmjay] = useState(60);
-  const [privateMix, setPrivateMix] = useState(25);
-  const [tpa, setTpa] = useState(15);
+  // --- 2. TRUE GLOBAL STATE BINDING ---
+  const { 
+    machines, setMachines, 
+    sessionsPerDay, setSessionsPerDay, 
+    pmjay, setPmjay, 
+    pvt, setPvt, 
+    mode, setMode 
+  } = useInfra();
 
-  // --- 3. THE SOVEREIGN CALCULATION ENGINE ---
+  // Auto-balance TPA so total never exceeds 100%
+  const tpa = Math.max(0, 100 - pmjay - pvt);
+
+  // --- 3. SOVEREIGN ENGINE ---
   const financials = useMemo(() => {
-    const totalMix = Math.max(pmjay + privateMix + tpa, 1);
-    const weights = { pmjay: pmjay/totalMix, pvt: privateMix/totalMix, tpa: tpa/totalMix };
+    const totalMix = pmjay + pvt + tpa || 1;
+    const weights = { pmjay: pmjay/totalMix, pvt: pvt/totalMix, tpa: tpa/totalMix };
     const WAR = (weights.pmjay * 1300) + (weights.pvt * 2600) + (weights.tpa * 2100);
 
     const equipCapex = machines * 850000; 
     const infraCapex = 2800000 + (machines * 220000); 
-    const totalCapex = (equipCapex + infraCapex) * 1.15; // 15% Contingency
+    const totalCapex = (equipCapex + infraCapex) * 1.15; 
 
     let cashflows: number[] = [-totalCapex];
     let yearlyEbitda: number[] = [];
     let workingCapitalBalance = 0;
 
     for (let year = 1; year <= 5; year++) {
-      const ramp = 1 / (1 + Math.exp(-1.8 * (year - 1.2))); // Sigmoid S-Curve
+      const ramp = 1 / (1 + Math.exp(-1.8 * (year - 1.2))); 
       const yearlyVolume = (machines * sessionsPerDay * 26 * 12) * ramp * (1 - downtime/100);
       const revenue = yearlyVolume * WAR;
       
@@ -81,31 +84,33 @@ export default function DPREngineWorkspace() {
     const exitValue = yearlyEbitda[yearlyEbitda.length - 1] * V7_CONFIG.EXIT_MULTIPLE;
     cashflows[cashflows.length - 1] += exitValue;
 
+    const monthlyYield = yearlyEbitda[0] / 12;
+
     return {
       totalCapex,
       npv: calculateNPV(cashflows, V7_CONFIG.WACC),
       irr: calculateIRR(cashflows),
       exitValue,
       fcfTrajectory: cashflows.slice(1, 6),
-      paybackMonths: (totalCapex / (cashflows[1] / 12)).toFixed(1),
-      monthlyYield: (yearlyEbitda[0] / 12),
+      paybackMonths: monthlyYield > 0 ? (totalCapex / monthlyYield).toFixed(1) : "Never",
+      monthlyYield,
       war: WAR,
-      utilization: ((sessionsPerDay / 3.0) * 100).toFixed(1)
+      utilization: ((sessionsPerDay / 3.0) * 100).toFixed(1),
+      netEffectiveProfit: monthlyYield,
+      costOfDelay: monthlyYield * 0.85 // Missing variable restored
     };
-  }, [machines, sessionsPerDay, downtime, pmjay, privateMix, tpa, mode]);
+  }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode]);
 
-  // Policy Enforcement
   useEffect(() => {
     if (stateJurisdiction === "Gujarat") setMode("single");
-  }, [stateJurisdiction]);
+  }, [stateJurisdiction, setMode]);
 
-  const formatINR = (val: number) => 
-    new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(val);
+  const formatINR = (val: number) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(val);
 
   return (
     <main className="min-h-screen bg-[#010810] text-white selection:bg-[#D4AF37] selection:text-black flex flex-col h-screen overflow-hidden">
       
-      {/* 4. HEADER ACTION BAR */}
+      {/* HEADER ACTION BAR */}
       <header className="h-16 border-b border-white/5 flex items-center justify-between px-6 shrink-0 bg-[#0A1118]">
         <div className="flex items-center gap-4">
           <div className="w-8 h-8 rounded bg-[#D4AF37] flex items-center justify-center text-black font-black text-sm">II</div>
@@ -125,7 +130,7 @@ export default function DPREngineWorkspace() {
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         
-        {/* 5. SIDEBAR: PARAMETERS */}
+        {/* SIDEBAR: PARAMETERS */}
         <aside className="w-full lg:w-[420px] border-r border-white/5 bg-[#010810] flex flex-col h-full overflow-y-auto p-8 space-y-10 custom-scrollbar">
           
           <section>
@@ -158,8 +163,9 @@ export default function DPREngineWorkspace() {
               <PieChart size={14} /> Payor Mix Realization
             </h4>
             <div className="space-y-6">
-              <Slider label="PM-JAY Portfolio" value={pmjay} max={100} onChange={setPmjay} color="accent-blue-500" />
-              <Slider label="Private Portfolio" value={privateMix} max={100} onChange={setPrivateMix} color="accent-[#D4AF37]" />
+              {/* Capped slider constraint logic applied */}
+              <Slider label="PM-JAY Portfolio (%)" value={pmjay} max={100 - pvt} onChange={setPmjay} color="accent-blue-500" />
+              <Slider label="Private Portfolio (%)" value={pvt} max={100 - pmjay} onChange={setPvt} color="accent-[#D4AF37]" />
               <div className="pt-4 border-t border-white/5 flex justify-between items-end">
                 <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Weighted Realization</span>
                 <span className="text-lg font-black text-white">₹{formatINR(financials.war)}</span>
@@ -168,7 +174,7 @@ export default function DPREngineWorkspace() {
           </section>
         </aside>
 
-        {/* 6. MAIN CONTENT: TERMINAL DASHBOARD */}
+        {/* MAIN CONTENT: TERMINAL DASHBOARD */}
         <section className="flex-1 bg-[#0A1118] p-8 overflow-y-auto custom-scrollbar">
           
           {/* KPI GRID */}
@@ -180,7 +186,7 @@ export default function DPREngineWorkspace() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Monthly Yield Waterfall */}
+            {/* Monthly Yield */}
             <div className="lg:col-span-1">
               <GlassCard accent="gold" className="h-full flex flex-col justify-center p-8 bg-black/40 border-white/5">
                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">Net Monthly Operational Yield</span>
@@ -201,9 +207,7 @@ export default function DPREngineWorkspace() {
                 </div>
               </div>
               <div className="h-48 flex items-end justify-between gap-3 relative">
-                {/* Horizontal Baseline */}
                 <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/5 z-0" />
-                
                 {financials.fcfTrajectory.map((fcf, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-3 relative z-10">
                     <motion.div 
@@ -218,7 +222,7 @@ export default function DPREngineWorkspace() {
             </div>
           </div>
 
-          {/* SENSITIVITY MATRIX (RISK AUDIT) */}
+          {/* SENSITIVITY MATRIX & INERTIA RISK HOOK */}
           <div className="bg-[#010810] border border-white/5 rounded-3xl p-8 relative overflow-hidden">
             <header className="flex justify-between items-center mb-10">
               <div>
@@ -229,7 +233,6 @@ export default function DPREngineWorkspace() {
             </header>
             
             <div className="grid grid-cols-5 gap-2">
-              {/* Dynamic Heatmap Simulation */}
               {Array.from({length: 25}).map((_, i) => {
                 const irrVal = financials.irr - (i * 0.8) + (Math.random() * 2);
                 return (
@@ -240,7 +243,6 @@ export default function DPREngineWorkspace() {
               })}
             </div>
             
-            {/* The "Cost of Delay" Conversion Hook */}
             {financials.netEffectiveProfit > 0 && (
               <motion.div 
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -266,20 +268,12 @@ export default function DPREngineWorkspace() {
         </section>
       </div>
 
-      {/* LEAD CAPTURE MODAL */}
       <LeadCaptureModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         source="Sovereign v7.0 Workspace"
         contextData={{ machines, irr: financials.irr }}
       />
-
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #010810; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
-      `}} />
     </main>
   );
 }
@@ -326,7 +320,7 @@ function MetricCard({ title, value, icon, color, sub }: any) {
         {React.cloneElement(icon, { size: 18 })}
       </div>
       <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1">{title}</p>
-      <h3 className="text-xl font-black text-white tracking-tighter">{value}</h3>
+      <h3 className="text-xl font-black text-white tracking-tighter tabular-nums">{value}</h3>
       <p className="text-[9px] text-gray-700 font-bold uppercase mt-1 italic">{sub}</p>
     </div>
   );

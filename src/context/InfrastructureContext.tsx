@@ -1,8 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-// Define the shape of our global data
 interface InfraContextType {
   machines: number;
   setMachines: (val: number) => void;
@@ -14,7 +13,7 @@ interface InfraContextType {
   setPmjay: (val: number) => void;
   pvt: number;
   setPvt: (val: number) => void;
-  // Based on your image: 15,000 base + 1,000/machine + 10/session
+  // Institutional Constants
   baseFee: number;
   machineFeeRate: number;
   sessionFeeRate: number;
@@ -23,16 +22,46 @@ interface InfraContextType {
 const InfraContext = createContext<InfraContextType | undefined>(undefined);
 
 export function InfraProvider({ children }: { children: ReactNode }) {
+  // 1. INITIAL STATE (Fallback defaults)
   const [machines, setMachines] = useState(15);
   const [sessionsPerDay, setSessionsPerDay] = useState(2.5);
   const [mode, setMode] = useState<"reuse" | "single">("single");
   const [pmjay, setPmjay] = useState(60);
-  const [pvt, setPvt] = useState(40);
+  const [pvt, setPvt] = useState(25);
 
-  // Constants from your pricing UI (image_185048.jpg)
   const baseFee = 15000;
   const machineFeeRate = 1000;
   const sessionFeeRate = 10;
+
+  // 2. HYDRATION: Load data from LocalStorage on Mount
+  useEffect(() => {
+    try {
+      const savedState = localStorage.getItem("sovereign_os_dna");
+      if (savedState) {
+        const dna = JSON.parse(savedState);
+        if (dna.machines) setMachines(dna.machines);
+        if (dna.sessionsPerDay) setSessionsPerDay(dna.sessionsPerDay);
+        if (dna.mode) setMode(dna.mode);
+        if (dna.pmjay) setPmjay(dna.pmjay);
+        if (dna.pvt) setPvt(dna.pvt);
+        console.log("🧬 Project DNA Hydrated from Storage");
+      }
+    } catch (e) {
+      console.warn("Failed to hydrate Infrastructure DNA", e);
+    }
+  }, []);
+
+  // 3. PERSISTENCE: Save to LocalStorage whenever values change
+  useEffect(() => {
+    const dnaToSave = {
+      machines,
+      sessionsPerDay,
+      mode,
+      pmjay,
+      pvt
+    };
+    localStorage.setItem("sovereign_os_dna", JSON.stringify(dnaToSave));
+  }, [machines, sessionsPerDay, mode, pmjay, pvt]);
 
   return (
     <InfraContext.Provider value={{
