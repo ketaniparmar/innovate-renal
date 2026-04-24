@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { 
   Activity, ShieldCheck, Zap, Clock, 
   Settings, AlertOctagon, CheckCircle2, 
@@ -17,6 +17,10 @@ export default function AMCIntelPage() {
   // HOOK INTO GLOBAL DATA
   const { machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode } = useInfra();
 
+  // CRM DISPATCH STATE
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [ticket, setTicket] = useState<string | null>(null);
+
   // CALCULATE FINANCIAL IMPACT OF SERVICE
   const metrics = useMemo(() => {
     const res = calculateV7Sovereign({ machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode });
@@ -27,6 +31,19 @@ export default function AMCIntelPage() {
     
     return { ...res, monthlyLeakage, recoverableYield };
   }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode]);
+
+  // HANDLE CRM SERVICE REQUEST
+  const handleDispatch = async () => {
+    setIsDispatching(true);
+    try {
+      // In production, this hits your /api/crm/service-lead route
+      // Simulating network delay for the UI experience
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setTicket(`SRV-${Math.floor(Math.random() * 9000) + 1000}`);
+    } finally {
+      setIsDispatching(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#010810] p-6 lg:p-12">
@@ -123,7 +140,7 @@ export default function AMCIntelPage() {
         {/* 4. RIGHT COLUMN: SERVICE ACTION HUB */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* AMC STATUS CARD */}
+          {/* AMC STATUS CARD WITH CRM INTEGRATION */}
           <div className="bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-8 text-center relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl" />
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-6">Next Scheduled Audit</p>
@@ -132,8 +149,16 @@ export default function AMCIntelPage() {
               <span className="text-xl font-bold text-gray-600 mb-2">Days</span>
             </div>
             <p className="text-xs text-emerald-500 font-bold mb-8">System Health: 94%</p>
-            <button className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-black py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">
-              Request On-Site Tech
+            
+            {/* DYNAMIC CRM DISPATCH BUTTON */}
+            <button 
+              disabled={isDispatching || !!ticket}
+              onClick={handleDispatch}
+              className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+                ticket ? "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]" : "bg-[#D4AF37] hover:bg-yellow-500 text-black"
+              }`}
+            >
+              {isDispatching ? "Syncing with Fleet..." : ticket ? `Ticket Active: ${ticket}` : "Request On-Site Tech"}
             </button>
           </div>
 

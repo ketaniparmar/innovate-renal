@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-// 1. IMPORT THE GLOBAL STATE PROVIDER
+// 1. IMPORT GLOBAL STATE & COMPONENTS
 import { InfraProvider } from "@/context/InfrastructureContext";
 import { Navbar } from "@/components/ui/Navbar"; 
 import Link from "next/link";
@@ -14,6 +14,7 @@ const inter = Inter({
   display: "swap",
 });
 
+// 2. NEXT.JS 14 METADATA (SEO & Branding)
 export const metadata: Metadata = {
   title: {
     default: "Innovate IndAI | Sovereign Infrastructure OS",
@@ -30,7 +31,13 @@ export const metadata: Metadata = {
     "Dialysis Machine Procurement"
   ],
   authors: [{ name: "Ketan Parmar", url: "https://innovate-india.com" }],
-  viewport: "width=device-width, initial-scale=1",
+};
+
+// 3. NEXT.JS 14 VIEWPORT (Fixes the terminal warning)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#010810",
 };
 
 export default function RootLayout({
@@ -39,11 +46,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    // Added data-scroll-behavior to fix Next.js scroll warning
+    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <body
         className={`${inter.variable} font-sans bg-[#010810] text-white antialiased relative selection:bg-[#D4AF37] selection:text-black`}
       >
-        {/* 2. WRAP WITH INFRAPROVIDER FOR GLOBAL DATA SYNC */}
+        {/* 4. GLOBAL STATE WRAPPER */}
         <InfraProvider>
           
           {/* GLOBAL BACKGROUND EFFECTS */}
@@ -89,6 +97,7 @@ export default function RootLayout({
               <div className="flex flex-col gap-4 text-xs">
                 <span className="text-gray-600 uppercase text-[9px] font-black tracking-[0.2em] mb-2">Systems Architecture</span>
                 <Link href="/tools" className="text-gray-400 hover:text-[#D4AF37] transition-all">Institutional DPR Engine</Link>
+                <Link href="/capex" className="text-gray-400 hover:text-[#D4AF37] transition-all">Detailed CAPEX Audit</Link>
                 <Link href="/service" className="text-gray-400 hover:text-[#D4AF37] transition-all">Predictive AMC Dashboard</Link>
                 <Link href="/solutions" className="text-gray-400 hover:text-[#D4AF37] transition-all">Turnkey Deployment</Link>
               </div>
@@ -127,7 +136,7 @@ export default function RootLayout({
 
         </InfraProvider>
 
-        {/* 3. GLOBAL SCROLLBAR & FONT OVERRIDES */}
+        {/* 5. GLOBAL SCROLLBAR & FONT OVERRIDES */}
         <style dangerouslySetInnerHTML={{__html: `
           :root { --font-sans: ${inter.style.fontFamily}; }
           ::-webkit-scrollbar { width: 6px; }
