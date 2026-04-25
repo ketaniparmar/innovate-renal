@@ -1,14 +1,7 @@
 // src/app/api/cron/report-usage/route.ts
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-// import axios from 'axios'; // ⚠️ Commented out until you write the actual Cashfree/Gateway logic to prevent "unused variable" build crashes.
-
-// ✅ 1. EXPLICIT INTERFACE: Tells TypeScript exactly what the database returns
-interface ActiveProject {
-  id: string;
-  monthly_sessions?: number | null;
-  session_rate?: number | null;
-}
+import axios from 'axios'; 
 
 export async function GET(req: Request) {
   try {
@@ -23,19 +16,18 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 2. Process Billing Safely (No "any" types)
-    const billingPromises = (projects as ActiveProject[] || []).map(async (project) => {
+    // 2. Process Billing Safely (Fixes the "implicit any" crash)
+    const billingPromises = (projects || []).map(async (project: any) => {
       
       // Calculate variable session charges safely with zero-fallbacks
       const sessions = project.monthly_sessions || 0;
       const rate = project.session_rate || 0;
       const sessionCharge = sessions * rate;
 
-      // TODO: Post the "Add-on" charge to your payment gateway here using Axios
-      /* if (sessionCharge > 0) {
-        await axios.post('https://api.cashfree.com/...', { amount: sessionCharge }); 
-      }
-      */
+      // TODO: Use axios for Cashfree integration here
+      // if (sessionCharge > 0) {
+      //   await axios.post('https://api.cashfree.com/...', { amount: sessionCharge }); 
+      // }
 
       return {
         projectId: project.id,
