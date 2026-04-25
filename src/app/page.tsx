@@ -2,10 +2,7 @@
 
 import React, { useMemo } from "react";
 import { 
-  Activity, ShieldCheck, Zap, Clock, 
-  Settings, AlertOctagon, CheckCircle2, 
-  Wrench, Droplets, Thermometer, Cpu,
-  BarChart3, ArrowUpRight
+  Activity, ShieldCheck, Wrench, Droplets, Cpu, BarChart3 
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -13,23 +10,61 @@ import { motion } from "framer-motion";
 import { useInfra } from "@/context/InfrastructureContext";
 import { calculateV7Sovereign } from "@/lib/sovereign-engine";
 
+// --- TYPESCRIPT INTERFACES ---
+interface LifecycleCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  status: string;
+  health: number;
+}
+
+interface LogItemProps {
+  date: string;
+  task: string;
+  machine: string;
+  tech: string;
+  status: "Complete" | "Pending" | "Failed";
+}
+
 export default function AMCIntelPage() {
-  // HOOK INTO GLOBAL DATA
-  const { machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode } = useInfra();
+  // HOOK INTO GLOBAL DATA (With safety fallbacks)
+  const infraContext = useInfra();
+  const machines = infraContext?.machines || 10;
+  const sessionsPerDay = infraContext?.sessionsPerDay || 2.5;
+  const downtime = infraContext?.downtime || 5;
+  const pmjay = infraContext?.pmjay || 40;
+  const pvt = infraContext?.pvt || 40;
+  const tpa = infraContext?.tpa || 20;
+  const mode = infraContext?.mode || "standard";
 
   // CALCULATE FINANCIAL IMPACT OF SERVICE
   const metrics = useMemo(() => {
-    const res = calculateV7Sovereign({ machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode });
-    
-    // Theoretical Leakage vs. Recoverable Yield
-    const monthlyLeakage = (res.totalCapex * 0.02) / 12; // Simplified benchmark
-    const recoverableYield = monthlyLeakage * 0.85; // Recapture 85% through predictive AMC
-    
-    return { ...res, monthlyLeakage, recoverableYield };
+    // Wrap in try-catch to ensure UI never crashes if engine throws
+    try {
+      const res = calculateV7Sovereign({ machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode });
+      
+      const safeTotalCapex = res?.totalCapex || 0;
+      const safeExitValue = res?.exitValue || 0;
+
+      // Theoretical Leakage vs. Recoverable Yield
+      const monthlyLeakage = (safeTotalCapex * 0.02) / 12; // Simplified benchmark
+      const recoverableYield = monthlyLeakage * 0.85; // Recapture 85% through predictive AMC
+      
+      return { 
+        ...res, 
+        exitValue: safeExitValue,
+        monthlyLeakage, 
+        recoverableYield 
+      };
+    } catch (error) {
+      console.error("Engine calculation failed:", error);
+      return { exitValue: 0, monthlyLeakage: 0, recoverableYield: 0 };
+    }
   }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode]);
 
   return (
-    <main className="min-h-screen bg-[#010810] p-6 lg:p-12">
+    <main className="min-h-screen bg-[#010810] p-6 lg:p-12 font-sans">
       
       {/* 2. HEADER: ASSET HEALTH OVERVIEW */}
       <div className="max-w-7xl mx-auto mb-12">
@@ -49,7 +84,9 @@ export default function AMCIntelPage() {
           <div className="flex gap-4">
             <div className="bg-white/[0.03] border border-white/5 p-4 rounded-2xl text-right">
               <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Recoverable Leakage</p>
-              <p className="text-xl font-black text-emerald-400">₹ {new Intl.NumberFormat('en-IN').format(metrics.recoverableYield)} <span className="text-[10px] text-gray-600">/MO</span></p>
+              <p className="text-xl font-black text-emerald-400">
+                ₹ {new Intl.NumberFormat('en-IN').format(Math.round(metrics.recoverableYield))} <span className="text-[10px] text-gray-600">/MO</span>
+              </p>
             </div>
           </div>
         </header>
@@ -70,7 +107,7 @@ export default function AMCIntelPage() {
              </div>
 
              <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
-                {Array.from({ length: machines }).map((_, i) => (
+                {Array.from({ length: Math.max(1, machines) }).map((_, i) => (
                   <motion.div 
                     key={i}
                     initial={{ opacity: 0 }}
@@ -80,7 +117,7 @@ export default function AMCIntelPage() {
                   >
                     <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                     {/* Tooltip */}
-                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-2 py-1 rounded text-[8px] font-bold opacity-0 group-hover:opacity-100 whitespace-nowrap z-20">
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-2 py-1 rounded text-[8px] font-bold opacity-0 group-hover:opacity-100 whitespace-nowrap z-20 pointer-events-none transition-opacity">
                       Machine #{100 + i} - ONLINE
                     </div>
                   </motion.div>
@@ -110,7 +147,9 @@ export default function AMCIntelPage() {
           <div className="bg-black/40 border border-white/5 rounded-[2.5rem] overflow-hidden">
             <div className="p-6 border-b border-white/5 flex justify-between items-center">
               <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Recent Activity Log</h4>
-              <button className="text-[10px] text-[#D4AF37] font-black uppercase">View Full Audit</button>
+              <button className="text-[10px] text-[#D4AF37] font-black uppercase hover:text-yellow-400 transition-colors">
+                View Full Audit
+              </button>
             </div>
             <div className="divide-y divide-white/5">
               <LogItem date="24 APR" task="RO System Descaling" machine="Main Plant" tech="K. Parmar" status="Complete" />
@@ -125,7 +164,7 @@ export default function AMCIntelPage() {
           
           {/* AMC STATUS CARD */}
           <div className="bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-8 text-center relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-6">Next Scheduled Audit</p>
             <div className="flex justify-center items-end gap-2 mb-2">
               <span className="text-6xl font-black text-white tracking-tighter">14</span>
@@ -145,7 +184,7 @@ export default function AMCIntelPage() {
             <div className="space-y-6">
                <div className="flex justify-between items-end">
                   <span className="text-xs text-gray-400">Monthly Opex Saved</span>
-                  <span className="text-lg font-black text-emerald-400">₹ {new Intl.NumberFormat('en-IN').format(metrics.recoverableYield)}</span>
+                  <span className="text-lg font-black text-emerald-400">₹ {new Intl.NumberFormat('en-IN').format(Math.round(metrics.recoverableYield))}</span>
                </div>
                <div className="flex justify-between items-end">
                   <span className="text-xs text-gray-400">Downtime Prevented</span>
@@ -172,7 +211,7 @@ export default function AMCIntelPage() {
 
 // --- REUSABLE SUB-COMPONENTS ---
 
-function LifecycleCard({ icon, label, value, status, health }: any) {
+function LifecycleCard({ icon, label, value, status, health }: LifecycleCardProps) {
   return (
     <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 hover:bg-white/[0.04] transition-all group">
       <div className="flex justify-between items-start mb-4">
@@ -181,7 +220,9 @@ function LifecycleCard({ icon, label, value, status, health }: any) {
         </div>
         <div className="text-right">
           <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Status</span>
-          <span className="text-[10px] font-bold text-white uppercase">{status}</span>
+          <span className={`text-[10px] font-bold uppercase ${health > 70 ? 'text-emerald-500' : 'text-orange-500'}`}>
+            {status}
+          </span>
         </div>
       </div>
       <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">{label}</p>
@@ -189,7 +230,8 @@ function LifecycleCard({ icon, label, value, status, health }: any) {
         <h3 className="text-2xl font-black text-white">{value}</h3>
         <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
           <motion.div 
-            initial={{ width: 0 }} animate={{ width: `${health}%` }}
+            initial={{ width: 0 }} 
+            animate={{ width: `${Math.min(100, Math.max(0, health))}%` }}
             className={`h-full ${health > 70 ? "bg-emerald-500" : "bg-orange-500"}`} 
           />
         </div>
@@ -198,7 +240,7 @@ function LifecycleCard({ icon, label, value, status, health }: any) {
   );
 }
 
-function LogItem({ date, task, machine, tech, status }: any) {
+function LogItem({ date, task, machine, tech, status }: LogItemProps) {
   return (
     <div className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-all">
       <div className="flex items-center gap-4">
@@ -209,7 +251,7 @@ function LogItem({ date, task, machine, tech, status }: any) {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div className={`w-1.5 h-1.5 rounded-full ${status === "Complete" ? "bg-emerald-500" : "bg-orange-500"}`} />
+        <div className={`w-1.5 h-1.5 rounded-full ${status === "Complete" ? "bg-emerald-500" : status === "Pending" ? "bg-orange-500" : "bg-red-500"}`} />
         <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{status}</span>
       </div>
     </div>
