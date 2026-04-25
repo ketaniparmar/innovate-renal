@@ -11,8 +11,23 @@ export const V7_CONFIG = {
   INVENTORY_DAYS: 15,         
 };
 
+// ✅ FIX: Explicit Return Interface so Vercel knows these fields exist
+export interface SovereignEngineOutput {
+  totalCapex: number;
+  npv: number;
+  irr: number;
+  exitValue: number;
+  fcfTrajectory: number[];
+  paybackMonths: number;      // Changed to number for easier math
+  monthlyRevenue: number;     // Added for DPR
+  ebitda: number;             // Added for DPR
+  downtimeLoss: number;       // Added for DPR
+  underutilizationLoss: number; // Added for DPR
+}
+
 // --- THE CALCULATION ENGINE ---
-export function calculateV7Sovereign(data: any) {
+// ✅ FIX: Enforcing the Return Type
+export function calculateV7Sovereign(data: any): SovereignEngineOutput {
   const { machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode } = data;
 
   const totalMix = Math.max(pmjay + pvt + tpa, 1);
@@ -59,13 +74,29 @@ export function calculateV7Sovereign(data: any) {
   const exitValue = yearlyEbitda[yearlyEbitda.length - 1] * V7_CONFIG.EXIT_MULTIPLE;
   cashflows[cashflows.length - 1] += exitValue;
 
+  // --- NEW OPERATIONAL SNAPSHOT FOR UI & DPR ---
+  // Calculating theoretical 100% capacity monthly metrics
+  const grossMonthlyVolume = machines * sessionsPerDay * 26;
+  const monthlyRevenue = grossMonthlyVolume * WAR;
+  const downtimeLoss = monthlyRevenue * (downtime / 100);
+  const underutilizationLoss = monthlyRevenue * 0.15; // Standard 15% shift management friction
+
+  // Using Year 2 EBITDA (stabilized post-ramp up) as the representative Monthly EBITDA
+  const representativeMonthlyEbitda = yearlyEbitda[1] ? (yearlyEbitda[1] / 12) : 0;
+  const paybackMonthsRaw = parseFloat((totalCapex / (cashflows[1] / 12)).toFixed(1));
+
   return {
     totalCapex,
     npv: calculateNPV(cashflows, V7_CONFIG.WACC),
     irr: calculateIRR(cashflows),
     exitValue,
     fcfTrajectory: cashflows.slice(1, 6),
-    paybackMonths: (totalCapex / (cashflows[1] / 12)).toFixed(1)
+    paybackMonths: isNaN(paybackMonthsRaw) || paybackMonthsRaw < 0 ? 0 : paybackMonthsRaw,
+    // ✅ Binding the new metrics
+    monthlyRevenue,
+    ebitda: representativeMonthlyEbitda,
+    downtimeLoss,
+    underutilizationLoss
   };
 }
 
