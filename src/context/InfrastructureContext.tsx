@@ -2,9 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-// --- 1. TYPE DEFINITIONS ---
+// --- 1. TYPE DEFINITIONS (V8 Sovereign Standard) ---
 interface InfraContextType {
-  // Core Clinical Capacity
   machines: number;
   setMachines: (val: number) => void;
   sessionsPerDay: number;
@@ -13,107 +12,69 @@ interface InfraContextType {
   setDowntime: (val: number) => void;
   mode: "reuse" | "single";
   setMode: (val: "reuse" | "single") => void;
-  
-  // Payor Mix Portfolio
   pmjay: number;
   setPmjay: (val: number) => void;
   pvt: number;
   setPvt: (val: number) => void;
   tpa: number;
   setTpa: (val: number) => void;
-
-  // v8.0 Parametric CAPEX Variables
   cityTier: "Tier_1" | "Tier_2" | "Tier_3";
   setCityTier: (val: "Tier_1" | "Tier_2" | "Tier_3") => void;
   tdsLevel: number;
   setTdsLevel: (val: number) => void;
   buildGrade: "Standard" | "Premium" | "NABH";
   setBuildGrade: (val: "Standard" | "Premium" | "NABH") => void;
-
-  // Institutional SaaS & Service Constants
-  baseFee: number;
-  machineFeeRate: number;
-  sessionFeeRate: number;
-  amcCostPerMachine: number;
 }
 
 const InfraContext = createContext<InfraContextType | undefined>(undefined);
 
 export function InfraProvider({ children }: { children: ReactNode }) {
-  // --- 2. INITIAL STATE (Calibrated for Jalgaon / Diacare Profile) ---
-  
-  // Core Base
-  const [machines, setMachines] = useState(12);
+  // --- 2. INITIAL STATE (Calibrated for Jalgaon / Diacare Hub Profile) ---
+  const [machines, setMachines] = useState(15);
   const [sessionsPerDay, setSessionsPerDay] = useState(2.8);
-  const [downtime, setDowntime] = useState(6);
+  const [downtime, setDowntime] = useState(5);
   const [mode, setMode] = useState<"reuse" | "single">("single");
   
-  // Payor Base (Must equal ~100%)
-  const [pmjay, setPmjay] = useState(50);
-  const [pvt, setPvt] = useState(30);
+  const [pmjay, setPmjay] = useState(40);
+  const [pvt, setPvt] = useState(40);
   const [tpa, setTpa] = useState(20);
 
-  // CAPEX Base
   const [cityTier, setCityTier] = useState<"Tier_1" | "Tier_2" | "Tier_3">("Tier_2");
-  const [tdsLevel, setTdsLevel] = useState(800);
+  const [tdsLevel, setTdsLevel] = useState(850);
   const [buildGrade, setBuildGrade] = useState<"Standard" | "Premium" | "NABH">("Premium");
 
-  // Constants
-  const baseFee = 15000;
-  const machineFeeRate = 1000;
-  const sessionFeeRate = 10;
-  const amcCostPerMachine = 22000; // Aligned with your 19.5k - 25k local South Gujarat/Maharashtra rate
-
-  // --- 3. HYDRATION: Securely load Project DNA from browser memory ---
+  // --- 3. PROJECT DNA HYDRATION ---
   useEffect(() => {
     try {
-      const savedState = localStorage.getItem("sovereign_os_dna");
+      const savedState = localStorage.getItem("sovereign_os_v8_dna");
       if (savedState) {
         const dna = JSON.parse(savedState);
-        
-        // Restore Core
         if (dna.machines) setMachines(dna.machines);
         if (dna.sessionsPerDay) setSessionsPerDay(dna.sessionsPerDay);
         if (dna.downtime !== undefined) setDowntime(dna.downtime);
         if (dna.mode) setMode(dna.mode);
-        
-        // Restore Payor Mix
         if (dna.pmjay !== undefined) setPmjay(dna.pmjay);
         if (dna.pvt !== undefined) setPvt(dna.pvt);
         if (dna.tpa !== undefined) setTpa(dna.tpa);
-        
-        // Restore CAPEX parameters
         if (dna.cityTier) setCityTier(dna.cityTier);
         if (dna.tdsLevel !== undefined) setTdsLevel(dna.tdsLevel);
         if (dna.buildGrade) setBuildGrade(dna.buildGrade);
 
-        console.log("🧬 Project DNA Hydrated Successfully (v8.0)");
+        console.log("🧬 SOVEREIGN OS: Project DNA sequence loaded successfully.");
       }
     } catch (e) {
-      console.warn("Sovereign OS: Failed to hydrate Infrastructure DNA. Reverting to defaults.", e);
+      console.warn("⚠️ DNA HYDRATION FAILURE: Operating on default parameters.", e);
     }
   }, []);
 
-  // --- 4. PERSISTENCE: Save state dynamically on every change ---
+  // --- 4. PERSISTENCE LAYER ---
   useEffect(() => {
-    const dnaToSave = {
-      machines,
-      sessionsPerDay,
-      downtime,
-      mode,
-      pmjay,
-      pvt,
-      tpa,
-      cityTier,
-      tdsLevel,
-      buildGrade
-    };
-    localStorage.setItem("sovereign_os_dna", JSON.stringify(dnaToSave));
+    const dnaToSave = { machines, sessionsPerDay, downtime, mode, pmjay, pvt, tpa, cityTier, tdsLevel, buildGrade };
+    localStorage.setItem("sovereign_os_v8_dna", JSON.stringify(dnaToSave));
   }, [machines, sessionsPerDay, downtime, mode, pmjay, pvt, tpa, cityTier, tdsLevel, buildGrade]);
 
   return (
     <InfraContext.Provider value={{
-      // State & Setters
       machines, setMachines,
       sessionsPerDay, setSessionsPerDay,
       downtime, setDowntime,
@@ -123,24 +84,15 @@ export function InfraProvider({ children }: { children: ReactNode }) {
       tpa, setTpa,
       cityTier, setCityTier,
       tdsLevel, setTdsLevel,
-      buildGrade, setBuildGrade,
-      
-      // Constants
-      baseFee, 
-      machineFeeRate, 
-      sessionFeeRate,
-      amcCostPerMachine
+      buildGrade, setBuildGrade
     }}>
       {children}
     </InfraContext.Provider>
   );
 }
 
-// --- 5. SECURE HOOK EXPORT ---
 export function useInfra() {
   const context = useContext(InfraContext);
-  if (!context) {
-    throw new Error("useInfra must be used within an InfraProvider wrapper. Check layout.tsx.");
-  }
+  if (!context) throw new Error("CRITICAL: useInfra called outside of Provider.");
   return context;
 }
