@@ -1,3 +1,4 @@
+import { supabase } from '@/lib/supabase';
 // Run via Cron Job
 export async function GET(request: Request) {
   // Security check...
