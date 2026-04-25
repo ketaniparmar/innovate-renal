@@ -111,7 +111,7 @@ export default function DialysisDecisionOS() {
       const data = await response.json();
       if (!data.payment_session_id) throw new Error("Failed to secure connection.");
 
-      cashfree.checkout({
+      cashfree?.checkout({
         paymentSessionId: data.payment_session_id,
         returnUrl: `${window.location.origin}/success`, // Ensure you have a /success page
       });
@@ -164,10 +164,11 @@ export default function DialysisDecisionOS() {
                <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Shift Demand</h2>
                <span className="text-[10px] text-teal-500 uppercase">{output.dailySessionsPerMachine.toFixed(2)} Sessions/Day</span>
             </div>
-            <Slider label="Morning (6am-10am)" value={shifts.morning} set={(v) => setShifts({...shifts, morning: v})} max={100} unit="%" />
-            <Slider label="Afternoon (10am-2pm)" value={shifts.afternoon} set={(v) => setShifts({...shifts, afternoon: v})} max={100} unit="%" />
-            <Slider label="Evening (2pm-6pm)" value={shifts.evening} set={(v) => setShifts({...shifts, evening: v})} max={100} unit="%" />
-            <Slider label="Night (6pm-10pm)" value={shifts.night} set={(v) => setShifts({...shifts, night: v})} max={100} unit="%" />
+            {/* ✅ FIXED: Explicitly typed '(v: number)' so Vercel compiles successfully */}
+            <Slider label="Morning (6am-10am)" value={shifts.morning} set={(v: number) => setShifts({...shifts, morning: v})} max={100} unit="%" />
+            <Slider label="Afternoon (10am-2pm)" value={shifts.afternoon} set={(v: number) => setShifts({...shifts, afternoon: v})} max={100} unit="%" />
+            <Slider label="Evening (2pm-6pm)" value={shifts.evening} set={(v: number) => setShifts({...shifts, evening: v})} max={100} unit="%" />
+            <Slider label="Night (6pm-10pm)" value={shifts.night} set={(v: number) => setShifts({...shifts, night: v})} max={100} unit="%" />
           </div>
 
           {/* Payor Mix */}
@@ -269,7 +270,18 @@ export default function DialysisDecisionOS() {
 
 // --- UTILITY COMPONENTS ---
 
-function Slider({ label, value, set, min = 0, max, step = 1, unit = "" }: any) {
+// ✅ FIXED: Added an explicit interface to protect against 'any' type warnings
+interface SliderProps {
+  label: string;
+  value: number;
+  set: (val: number) => void;
+  min?: number;
+  max: number;
+  step?: number;
+  unit?: string;
+}
+
+function Slider({ label, value, set, min = 0, max, step = 1, unit = "" }: SliderProps) {
   return (
     <div>
       <div className="flex justify-between text-sm mb-2 text-slate-400">
