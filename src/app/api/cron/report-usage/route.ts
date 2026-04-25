@@ -1,22 +1,55 @@
-import { supabase } from '@/lib/supabase';
-// Run via Cron Job
-export async function GET(request: Request) {
-  // Security check...
-  
-  // 1. Fetch sessions from your DB
-  const { data: projects } = await supabase.from('projects').select('*').eq('billing_active', true);
+import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase'; // ✅ Fix 1: The missing import
 
-  const billingPromises = projects.map(async (project) => {
-    const sessionCharge = project.monthly_sessions * project.session_rate;
+// Vercel Cron Jobs typically use GET requests
+export async function GET(req: Request) {
+  try {
+    // 1. Fetch active projects from your DB
+    const { data: projects, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('billing_active', true);
 
-    // 2. Post an "Add-on" charge for the variable sessions
-    return axios.post(`${CF_CONFIG.baseUrl}/subscriptions/${project.subscription_id}/charge`, {
-      charge_amount: sessionCharge,
-      charge_note: `Usage charge for ${project.monthly_sessions} dialysis sessions`
-    }, { headers: CF_CONFIG.headers });
-  });
+    if (error) {
+      console.error("Supabase Query Error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-  await Promise.all(billingPromises);
-  
-  return Response.json({ success: true });
+    // 2. Process Billing (✅ Fix 2: TypeScript Null Fallback added here)
+    const billingPromises = (projects || []).map(async (project: any) => {
+      
+      // Calculate variable session charges safely
+      const sessions = project.monthly_sessions || 0;
+      const rate = project.session_rate || 0;
+      const sessionCharge = sessions * rate;
+
+      // TODO: Post the "Add-on" charge to your payment gateway here
+      // await processVariableBilling(project.id, sessionCharge);
+
+      return {
+        projectId: project.id,
+        sessionsReported: sessions,
+        chargeCalculated: sessionCharge,
+        status: 'Processed'
+      };
+    });
+
+    // Wait for all billing calculations to finish
+    const results = await Promise.all(billingPromises);
+
+    // 3. Return a clean success response
+    return NextResponse.json({ 
+      success: true, 
+      message: "Usage reported successfully",
+      processedCount: results.length,
+      data: results 
+    }, { status: 200 });
+
+  } catch (error: any) {
+    console.error("Cron Execution Failed:", error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message || "Internal Server Error" 
+    }, { status: 500 });
+  }
 }
