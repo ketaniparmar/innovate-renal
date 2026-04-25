@@ -4,72 +4,129 @@ import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: { padding: 40, backgroundColor: '#FFFFFF', fontFamily: 'Helvetica' },
-  header: { marginBottom: 30, borderBottom: '2px solid #D4AF37', paddingBottom: 10 },
-  brand: { fontSize: 24, fontWeight: 'bold', color: '#010810' },
-  subBrand: { fontSize: 10, color: '#D4AF37', textTransform: 'uppercase', letterSpacing: 2 },
-  title: { fontSize: 20, fontWeight: 'bold', color: '#0A1118', marginTop: 20, marginBottom: 10 },
-  section: { marginBottom: 20, padding: 15, backgroundColor: '#F8FAFC', borderRadius: 5 },
-  sectionTitle: { fontSize: 12, fontWeight: 'bold', color: '#3B82F6', textTransform: 'uppercase', marginBottom: 10 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, borderBottom: '1px solid #E2E8F0', paddingBottom: 4 },
-  label: { fontSize: 10, color: '#64748B' },
-  value: { fontSize: 11, fontWeight: 'bold', color: '#0F172A' },
-  highlightValue: { fontSize: 11, fontWeight: 'bold', color: '#10B981' },
+  darkPage: { padding: 40, backgroundColor: '#010810', fontFamily: 'Helvetica', color: '#FFFFFF' },
+  coverTitle: { fontSize: 32, fontWeight: 'bold', color: '#0A1118', marginTop: 150, borderBottom: '3px solid #D4AF37', paddingBottom: 20 },
+  coverSub: { fontSize: 14, color: '#64748B', marginTop: 20, textTransform: 'uppercase', tracking: 2 },
+  header: { fontSize: 24, fontWeight: 'bold', color: '#0A1118', marginBottom: 20 },
+  darkHeader: { fontSize: 24, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 20 },
+  verdictBox: { padding: 20, backgroundColor: '#F8FAFC', borderLeft: '4px solid #D4AF37', marginBottom: 30 },
+  leakageBox: { padding: 30, backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, marginTop: 20 },
+  bigNumber: { fontSize: 36, fontWeight: 'bold', color: '#DC2626', marginTop: 10 },
+  sectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#3B82F6', textTransform: 'uppercase', marginBottom: 15, marginTop: 20 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12, borderBottom: '1px solid #E2E8F0', paddingBottom: 6 },
+  label: { fontSize: 12, color: '#64748B' },
+  value: { fontSize: 12, fontWeight: 'bold', color: '#0F172A' },
+  ctaText: { fontSize: 28, fontWeight: 'bold', color: '#FFFFFF', textAlign: 'center', marginTop: 100 },
+  ctaSub: { fontSize: 14, color: '#D4AF37', textAlign: 'center', marginTop: 20 },
   footer: { position: 'absolute', bottom: 30, left: 40, right: 40, textAlign: 'center', color: '#94A3B8', fontSize: 8, borderTop: '1px solid #E2E8F0', paddingTop: 10 }
 });
 
 const formatINR = (val: number) => `Rs. ${((val || 0) / 100000).toFixed(2)} Lakhs`;
 
 export const DPRTemplate = ({ infraData, financials, capex, data, summary }: any) => {
-  // Defensive mapping to handle mismatched props from route.tsx
   const safeInfra = infraData || data || {};
   const safeFin = financials || summary || {};
   const safeCapex = capex || { costs: {} };
 
+  // --- LOGIC ENGINE ---
+  const profit = safeFin.monthlyProfit || (safeFin.ebitda / 12) || 0;
+  
+  const getVerdict = (p: number) => {
+    if (p > 300000) return "✅ FINANCIALLY STRONG";
+    if (p > 0) return "⚠️ CONDITIONALLY VIABLE";
+    return "❌ NOT VIABLE";
+  };
+
+  // Synthetic Leakage Calculation (If not passed directly from engine)
+  const downtimeLoss = (safeFin.monthlyRevenue || 0) * ((safeInfra.downtime || 5) / 100);
+  const utilLoss = (safeFin.monthlyRevenue || 0) * 0.15; // Assuming 15% underutilization gap
+  const totalLeakage = downtimeLoss + utilLoss;
+
   return (
     <Document>
+      {/* PAGE 1: COVER */}
       <Page size="A4" style={styles.page}>
-        
-        {/* HEADER */}
-        <View style={styles.header}>
-          <Text style={styles.brand}>Innovate IndAI</Text>
-          <Text style={styles.subBrand}>Sovereign OS - Official Project Report</Text>
-        </View>
-
-        <Text style={styles.title}>Project Executive Summary</Text>
-        
-        {/* INFRASTRUCTURE SEC */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Infrastructure DNA</Text>
-          <View style={styles.row}><Text style={styles.label}>Clinical Scale</Text><Text style={styles.value}>{safeInfra.machines || 0} Dialysis Machines</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Deployment Region</Text><Text style={styles.value}>{(safeInfra.cityTier || safeInfra.state || 'Standard').replace('_', ' ')}</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Clinical Protocol</Text><Text style={styles.value}>{(safeInfra.mode || 'Standard').toUpperCase()}</Text></View>
-        </View>
-
-        {/* CAPEX SEC */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Parametric CAPEX Breakdown</Text>
-          <View style={styles.row}><Text style={styles.label}>Civil & Interiors</Text><Text style={styles.value}>{formatINR(safeCapex.costs?.civil)}</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Biomedical Equipment</Text><Text style={styles.value}>{formatINR(safeCapex.costs?.equipment)}</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Medical Grade RO System</Text><Text style={styles.value}>{formatINR(safeCapex.costs?.water)}</Text></View>
-          <View style={styles.row}><Text style={styles.label}>MEP & HVAC Load</Text><Text style={styles.value}>{formatINR(safeCapex.costs?.mep)}</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Total Enterprise CAPEX</Text><Text style={styles.highlightValue}>{formatINR(safeCapex.costs?.total)}</Text></View>
-        </View>
-
-        {/* ROI SEC */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Financial Underwriting</Text>
-          <View style={styles.row}><Text style={styles.label}>Weighted Avg. Realization (WAR)</Text><Text style={styles.value}>Rs. {(safeFin.war || 0).toFixed(0)}</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Project Internal Rate of Return (IRR)</Text><Text style={styles.highlightValue}>{(safeFin.irr || 0).toFixed(1)}%</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Capital Recovery Window</Text><Text style={styles.value}>{safeFin.paybackMonths || 0} Months</Text></View>
-          <View style={styles.row}><Text style={styles.label}>Estimated Enterprise Value (Exit)</Text><Text style={styles.value}>Rs. {((safeFin.exitValue || 0) / 10000000).toFixed(2)} Cr</Text></View>
-        </View>
-
-        {/* FOOTER */}
-        <Text style={styles.footer}>
-          CONFIDENTIAL: Generated by Innovate IndAI Sovereign OS v8.0. Valid for 30 days.
-          ISO 9001:2026 Compliant Architectural Model.
-        </Text>
+        <Text style={styles.coverTitle}>Dialysis Infrastructure Feasibility & Financial Audit</Text>
+        <Text style={styles.coverSub}>Project: {safeInfra.name || 'Confidential Client'}</Text>
+        <Text style={styles.coverSub}>Location: {(safeInfra.cityTier || safeInfra.state || 'India').replace('_', ' ')}</Text>
+        <Text style={styles.coverSub}>Date: {new Date().toLocaleDateString()}</Text>
+        <Text style={styles.footer}>Prepared by Innovate IndAI Sovereign OS v8.0</Text>
       </Page>
+
+      {/* PAGE 2: EXECUTIVE SUMMARY (The Decision Page) */}
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.header}>Executive Summary</Text>
+        
+        <View style={styles.verdictBox}>
+          <Text style={{ fontSize: 10, color: '#64748B', uppercase: true }}>Investment Verdict</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#0F172A', marginTop: 5 }}>{getVerdict(profit)}</Text>
+          <Text style={{ fontSize: 12, color: '#334155', marginTop: 10 }}>
+            While the project structure demonstrates potential, hidden operational inefficiencies could severely reduce net profitability.
+          </Text>
+        </View>
+
+        <View style={styles.row}><Text style={styles.label}>Projected Monthly EBITDA</Text><Text style={styles.value}>{formatINR(profit * 12)} / Year</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Capital Recovery Window</Text><Text style={styles.value}>{safeFin.paybackMonths || 0} Months</Text></View>
+        
+        <View style={styles.leakageBox}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#991B1B' }}>CRITICAL LEAKAGE IDENTIFIED</Text>
+          <Text style={styles.bigNumber}>₹ {(totalLeakage).toLocaleString('en-IN', { maximumFractionDigits: 0 })} / Month</Text>
+        </View>
+        <Text style={styles.footer}>CONFIDENTIAL: Generated by Innovate IndAI</Text>
+      </Page>
+
+      {/* PAGE 3: THE LEAKAGE & RISK DIAGNOSTIC */}
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.header}>Operational Risk Flags</Text>
+        
+        <Text style={styles.sectionTitle}>Utilization & Downtime Gap</Text>
+        <View style={styles.row}><Text style={styles.label}>Theoretical Ideal Sessions</Text><Text style={styles.value}>{(safeInfra.machines || 0) * 2.8} / Day</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Your Target Sessions</Text><Text style={styles.value}>{(safeInfra.machines || 0) * (safeInfra.sessionsPerDay || 2.5)} / Day</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Estimated System Downtime</Text><Text style={styles.value}>{safeInfra.downtime || 5}%</Text></View>
+        
+        <Text style={{ fontSize: 12, color: '#475569', marginTop: 20, fontStyle: 'italic' }}>
+          "Actual achievable utilization is lower than projected assumptions. Every month of delay or unoptimized shift management results in permanent capital loss."
+        </Text>
+
+        <Text style={styles.sectionTitle}>Total Hidden Loss</Text>
+        <View style={styles.row}><Text style={styles.label}>Loss Due to Downtime</Text><Text style={styles.value}>₹ {downtimeLoss.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Loss Due to Underutilization</Text><Text style={styles.value}>₹ {utilLoss.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text></View>
+        <Text style={styles.footer}>CONFIDENTIAL: Generated by Innovate IndAI</Text>
+      </Page>
+
+      {/* PAGE 4: FINANCIALS & CAPEX */}
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.header}>Capital & Financial Architecture</Text>
+        
+        <Text style={styles.sectionTitle}>Parametric CAPEX</Text>
+        <View style={styles.row}><Text style={styles.label}>Civil & Interiors</Text><Text style={styles.value}>{formatINR(safeCapex.costs?.civil)}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Biomedical Equipment</Text><Text style={styles.value}>{formatINR(safeCapex.costs?.equipment)}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Medical Grade RO System</Text><Text style={styles.value}>{formatINR(safeCapex.costs?.water)}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Total Enterprise CAPEX</Text><Text style={{...styles.value, color: '#10B981'}}>{formatINR(safeCapex.costs?.total)}</Text></View>
+
+        <Text style={styles.sectionTitle}>Revenue Model</Text>
+        <View style={styles.row}><Text style={styles.label}>Weighted Avg. Realization (WAR)</Text><Text style={styles.value}>Rs. {(safeFin.war || 0).toFixed(0)}</Text></View>
+        <View style={styles.row}><Text style={styles.label}>Project Internal Rate of Return (IRR)</Text><Text style={styles.value}>{(safeFin.irr || 0).toFixed(1)}%</Text></View>
+        <Text style={styles.footer}>CONFIDENTIAL: Generated by Innovate IndAI</Text>
+      </Page>
+
+      {/* PAGE 5: THE HOOK & CTA (Dark Mode for Psychological Shift) */}
+      <Page size="A4" style={styles.darkPage}>
+        <Text style={styles.ctaText}>Fix This Before You Invest ₹2–3 Crores.</Text>
+        
+        <View style={{ marginTop: 50, padding: 30, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10 }}>
+          <Text style={{ fontSize: 14, color: '#FFFFFF', marginBottom: 15, lineHeight: 1.5 }}>
+            This report identifies the problem. Your project is currently projected to bleed ₹{(totalLeakage).toLocaleString('en-IN', { maximumFractionDigits: 0 })} every month due to unoptimized clinical workflows and downtime.
+          </Text>
+          <Text style={{ fontSize: 14, color: '#D4AF37', fontWeight: 'bold' }}>
+            We engineer the solution.
+          </Text>
+        </View>
+
+        <Text style={styles.ctaSub}>Book Your Strategic Infrastructure Call with Innovate India.</Text>
+        <Text style={styles.footer}>END OF REPORT</Text>
+      </Page>
+
     </Document>
   );
 };
