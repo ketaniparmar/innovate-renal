@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
-// ✅ FIXED: Correct path and function name as per your "CRITICAL" requirements
 import { generateDPRNarrative } from '@/lib/engine/narrative';
 
 const styles = StyleSheet.create({
@@ -61,9 +60,10 @@ const formatINR = (val: number) =>
 
 export const DPRTemplate = ({ data }: any) => {
   
-  // ✅ DATA EXTRACTION (Monthly values - No /12)
+  // ✅ ADDED: monthlyRevenue (from engine) & downtime (from context/engine)
   const {
     ebitda = 0,
+    monthlyRevenue = 0, 
     grossRevenue = 0,
     totalOpex = 0,
     breakevenMonths = 0,
@@ -71,16 +71,21 @@ export const DPRTemplate = ({ data }: any) => {
     underutilizationLoss = 0, 
     machines = 0,
     sessionsPerDay = 0,
+    downtime = 0,
     downtimePercentage = 0,
     payorMix = { pmjay: 0, private: 0, tpa: 0 }
   } = data || {};
 
-  // ✅ NARRATIVE CALL (Correct function name)
+  // Safely resolve naming overlaps between DB and Engine
+  const revenueToDisplay = monthlyRevenue || grossRevenue;
+  const downtimeToDisplay = downtime || downtimePercentage;
+
+  // ✅ FIXED: Corrected `privateMix` to `payorMix: { private }` to satisfy TypeScript
   const summary = generateDPRNarrative({
     ebitda,
     downtimeLoss,
     underutilizationLoss,
-    privateMix: payorMix.private || 0
+    payorMix: { private: payorMix.private || 0 }
   });
 
   return (
@@ -91,7 +96,6 @@ export const DPRTemplate = ({ data }: any) => {
         <Text style={styles.header}>Executive Investment Verdict</Text>
 
         <View style={styles.verdictBox}>
-          {/* ✅ Correct Fields: verdictTitle & verdictColor */}
           <Text style={{ fontSize: 18, fontWeight: 'bold', color: summary.verdictColor }}>
             {summary.verdictTitle}
           </Text>
@@ -108,7 +112,7 @@ export const DPRTemplate = ({ data }: any) => {
 
         <View style={styles.row}>
           <Text style={styles.label}>Monthly Gross Revenue</Text>
-          <Text style={styles.value}>{formatINR(grossRevenue)}</Text>
+          <Text style={styles.value}>{formatINR(revenueToDisplay)}</Text>
         </View>
 
         <View style={styles.row}>
@@ -179,6 +183,8 @@ export const DPRTemplate = ({ data }: any) => {
           <Text style={{ fontSize: 10, color: '#D4AF37', marginBottom: 15, fontWeight: 'bold' }}>PROJECT DNA</Text>
           <View style={styles.row}><Text style={{...styles.label, color: '#94A3B8'}}>Clinical Scale</Text><Text style={{...styles.value, color: '#FFF'}}>{machines} Units</Text></View>
           <View style={styles.row}><Text style={{...styles.label, color: '#94A3B8'}}>Target Sessions</Text><Text style={{...styles.value, color: '#FFF'}}>{sessionsPerDay} / Day</Text></View>
+          {/* ✅ ADDED: Restored the missing Downtime Buffer row */}
+          <View style={styles.row}><Text style={{...styles.label, color: '#94A3B8'}}>Downtime Buffer</Text><Text style={{...styles.value, color: '#FFF'}}>{downtimeToDisplay}%</Text></View>
         </View>
 
         <Text style={styles.footer}>END OF REPORT | ISO 9001:2026 Compliant Model</Text>

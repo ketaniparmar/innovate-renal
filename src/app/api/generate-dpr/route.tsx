@@ -2,14 +2,8 @@
 import { NextResponse } from 'next/server';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { supabase } from '@/lib/supabase';
-
-// ✅ FIX 1: Import the standardized function name
 import { generateDPRNarrative } from '@/lib/engine/narrative';
-
-// ✅ FIX 2: Import the core engine to calculate math before rendering
 import { calculateV7Sovereign } from '@/lib/sovereign-engine';
-
-// ✅ FIX 3: Import the finalized template
 import { DPRTemplate } from '@/components/pdf/DPRTemplate';
 
 export async function POST(req: Request) {
@@ -28,40 +22,47 @@ export async function POST(req: Request) {
     }
 
     // 🔥 STEP 1: RUN THE ENGINE (Critical: This creates the numbers)
-    // Map DB fields to engine inputs
+    // Map DB fields to engine inputs safely
     const engineResults = calculateV7Sovereign({
-      machines: project.machines,
-      sessionsPerDay: project.sessions_per_day,
-      downtime: project.downtime_percentage,
-      pmjay: project.payor_mix_pmjay,
-      pvt: project.payor_mix_private,
-      tpa: project.payor_mix_tpa,
-      mode: project.dialyzer_mode
+      machines: project.machines || 0,
+      sessionsPerDay: project.sessions_per_day || 0,
+      downtime: project.downtime_percentage || 0,
+      pmjay: project.payor_mix_pmjay || 0,
+      pvt: project.payor_mix_private || 0,
+      tpa: project.payor_mix_tpa || 0,
+      mode: project.dialyzer_mode || 'standard'
     });
 
     // 🔥 STEP 2: GENERATE NARRATIVE
-    // Uses the standardized logic we just finalized
     const summary = generateDPRNarrative({
-      ebitda: engineResults.ebitda,
-      downtimeLoss: engineResults.downtimeLoss,
-      underutilizationLoss: engineResults.underutilizationLoss,
-      payorMix: { private: project.payor_mix_private }
+      ebitda: engineResults.ebitda || 0,
+      downtimeLoss: engineResults.downtimeLoss || 0,
+      underutilizationLoss: engineResults.underutilizationLoss || 0,
+      payorMix: { private: project.payor_mix_private || 0 }
     });
 
     // 🔥 STEP 3: RENDER PDF
-    // Pass both inputs (project) and outputs (engineResults + summary)
+    // Pass inputs, outputs, AND explicitly map the payorMix object
     const pdfBuffer = await renderToBuffer(
       <DPRTemplate 
         data={{
           ...project,
           ...engineResults,
-          ...summary
+          ...summary,
+          // ✅ CRITICAL FIX: Explicitly format the object the PDF expects
+          payorMix: {
+            pmjay: project.payor_mix_pmjay || 0,
+            private: project.payor_mix_private || 0,
+            tpa: project.payor_mix_tpa || 0
+          }
         }} 
       />
     );
 
     // 🔥 STEP 4: UPLOAD TO SUPABASE
-    const fileName = `DPR_${project.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+    // ✅ CRITICAL FIX: Safe fallback if project.name is null/empty
+    const safeName = (project.name || 'Project').replace(/\s+/g, '_');
+    const fileName = `DPR_${safeName}_${Date.now()}.pdf`;
     
     const { error: uploadError } = await supabase.storage
       .from('dprs')
