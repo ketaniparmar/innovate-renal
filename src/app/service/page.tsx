@@ -1,258 +1,256 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { 
-  Activity, ShieldCheck, Wrench, Droplets, Cpu, BarChart3 
-} from "lucide-react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import {
+  Activity,
+  ShieldCheck,
+  Wrench,
+  BarChart3,
+  ExternalLink,
+  AlertTriangle,
+  Zap,
+  Lock
+} from "lucide-react";
 
-// --- 1. IMPORT GLOBAL STATE & ENGINE ---
 import { useInfra } from "@/context/InfrastructureContext";
 import { calculateV7Sovereign } from "@/lib/sovereign-engine";
 
-// --- TYPESCRIPT INTERFACES ---
-interface LifecycleCardProps {
-  icon: React.ReactNode;
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid
+} from "recharts";
+
+// --- TYPES ---
+interface MetricProps {
   label: string;
-  value: string | number;
-  status: string;
-  health: number;
+  value: string;
+  danger?: boolean;
+  warning?: boolean;
 }
 
-interface LogItemProps {
-  date: string;
-  task: string;
-  machine: string;
-  tech: string;
-  status: "Complete" | "Pending" | "Failed";
-}
+export default function AMCIntelligencePage() {
+  const infra = useInfra();
 
-export default function AMCIntelPage() {
-  // HOOK INTO GLOBAL DATA (With safety fallbacks)
-  const infraContext = useInfra();
-  const machines = infraContext?.machines || 10;
-  const sessionsPerDay = infraContext?.sessionsPerDay || 2.5;
-  const downtime = infraContext?.downtime || 5;
-  const pmjay = infraContext?.pmjay || 40;
-  const pvt = infraContext?.pvt || 40;
-  const tpa = infraContext?.tpa || 20;
-  const mode = infraContext?.mode || "standard";
+  const {
+    machines = 10,
+    sessionsPerDay = 2.5,
+    downtime = 5,
+    pmjay = 40,
+    pvt = 40,
+    tpa = 20,
+    mode = "standard",
+    amcCostPerMachine = 45000
+  } = infra || {};
 
-  // CALCULATE FINANCIAL IMPACT OF SERVICE
+  // --- NEW RISK STATES ---
+  const [withAMC, setWithAMC] = useState(false);
+  const [withInsurance, setWithInsurance] = useState(false);
+
+  // --- CFO RISK ENGINE ---
   const metrics = useMemo(() => {
-    try {
-      const res = calculateV7Sovereign({ machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode });
-      
-      const safeTotalCapex = res?.totalCapex || 0;
-      const safeExitValue = res?.exitValue || 0;
+    const res = calculateV7Sovereign({ machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode });
 
-      // Theoretical Leakage vs. Recoverable Yield
-      const monthlyLeakage = (safeTotalCapex * 0.02) / 12; // Simplified benchmark
-      const recoverableYield = monthlyLeakage * 0.85; // Recapture 85% through predictive AMC
-      
-      return { 
-        ...res, 
-        exitValue: safeExitValue,
-        monthlyLeakage, 
-        recoverableYield 
-      };
-    } catch (error) {
-      console.error("Engine calculation failed:", error);
-      return { exitValue: 0, monthlyLeakage: 0, recoverableYield: 0 };
+    const monthlyRevenue = res?.monthlyRevenue || 0;
+    const totalCapex = res?.totalCapex || 0;
+
+    // Loss Segmentation
+    const downtimeLoss = res?.downtimeLoss || monthlyRevenue * (downtime / 100);
+    const utilLoss = res?.underutilizationLoss || 0;
+    const totalExposure = downtimeLoss + utilLoss;
+
+    // Split: 70% Operational (AMC), 30% Catastrophic (Insurance)
+    const recoverableLoss = totalExposure * 0.7;
+    const catastrophicLoss = totalExposure * 0.3;
+
+    // AMC Logic
+    const monthlyAMC = (amcCostPerMachine * machines) / 12;
+    const optimizedDowntimeLoss = monthlyRevenue * 0.01;
+    const amcSavings = recoverableLoss - optimizedDowntimeLoss;
+
+    // Insurance (EEI) Logic - 1% CAPEX annually
+    const yearlyInsurance = totalCapex * 0.01;
+    const monthlyInsurance = yearlyInsurance / 12;
+    const insuredLossReduction = catastrophicLoss * 0.9; // 90% risk transfer
+
+    // Combined ROI
+    const totalCost = (withAMC ? monthlyAMC : 0) + (withInsurance ? monthlyInsurance : 0);
+    const totalGain = (withAMC ? amcSavings : 0) + (withInsurance ? insuredLossReduction : 0);
+    const netSavings = totalGain - totalCost;
+    const roi = totalCost > 0 ? (netSavings / totalCost) * 100 : 0;
+
+    // Risk Coverage %
+    const covered = (withAMC ? recoverableLoss : 0) + (withInsurance ? catastrophicLoss : 0);
+    const riskCoverage = totalExposure > 0 ? (covered / totalExposure) * 100 : 0;
+
+    // --- AUTO RECOMMENDATION ENGINE ---
+    let recommendation = "BASE RISK PROFILE";
+    let recColor = "text-gray-400";
+    
+    if (roi > 200 && !withAMC) {
+      recommendation = "CRITICAL: AMC MANDATORY";
+      recColor = "text-red-500";
+    } else if (catastrophicLoss > 200000 && !withInsurance) {
+      recommendation = "HIGH EXPOSURE: INSURANCE CRITICAL";
+      recColor = "text-orange-500";
+    } else if (withAMC && withInsurance) {
+      recommendation = "FULLY HEDGED SYSTEM";
+      recColor = "text-emerald-400";
     }
-  }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode]);
+
+    return {
+      monthlyRevenue,
+      totalExposure,
+      recoverableLoss,
+      catastrophicLoss,
+      monthlyAMC,
+      monthlyInsurance,
+      netSavings,
+      roi,
+      riskCoverage,
+      totalCapex,
+      recommendation,
+      recColor
+    };
+  }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode, amcCostPerMachine, withAMC, withInsurance]);
+
+  const formatINR = (val: number) => `₹${new Intl.NumberFormat("en-IN").format(Math.round(val || 0))}`;
 
   return (
-    <main className="min-h-screen bg-[#010810] p-6 lg:p-12 font-sans">
-      
-      {/* 2. HEADER: ASSET HEALTH OVERVIEW */}
-      <div className="max-w-7xl mx-auto mb-12">
-        <header className="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-white/5 pb-10">
+    <main className="min-h-screen bg-[#010810] text-white p-6 lg:p-12 font-sans">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* HEADER */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-white/5 pb-8 gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500 flex items-center gap-2">
-                <ShieldCheck size={12} /> Predictive AMC Active
-              </span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">Service Intelligence.</h2>
-            <p className="text-gray-500 mt-2 text-sm max-w-xl">
-              Monitoring <span className="text-white font-bold">{machines} Machines</span> and RO Infrastructure to protect your <span className="text-[#D4AF37] font-bold">₹ {(metrics.exitValue / 10000000).toFixed(2)} Cr</span> enterprise value.
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter">Risk Intelligence</h1>
+            <p className="text-gray-400 text-sm mt-2">
+              Downside Neutralization for <span className="text-[#D4AF37] font-bold">₹{(metrics.totalCapex / 10000000).toFixed(2)} Cr</span> Asset Base.
             </p>
           </div>
-
-          <div className="flex gap-4">
-            <div className="bg-white/[0.03] border border-white/5 p-4 rounded-2xl text-right">
-              <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Recoverable Leakage</p>
-              <p className="text-xl font-black text-emerald-400">
-                ₹ {new Intl.NumberFormat('en-IN').format(Math.round(metrics.recoverableYield))} <span className="text-[10px] text-gray-600">/MO</span>
-              </p>
-            </div>
+          <div className="text-right">
+            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Risk Coverage</p>
+            <p className={`text-3xl font-black tracking-tighter ${metrics.riskCoverage > 80 ? 'text-emerald-400' : 'text-red-500'}`}>
+              {metrics.riskCoverage.toFixed(0)}%
+            </p>
           </div>
         </header>
-      </div>
 
-      <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-8">
-        
-        {/* 3. LEFT COLUMN: REAL-TIME TELEMETRY */}
-        <div className="lg:col-span-8 space-y-8">
-          
-          {/* UPTIME MONITOR */}
-          <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 overflow-hidden relative">
-             <div className="flex justify-between items-center mb-8">
-                <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                  <Activity size={14} className="text-emerald-500" /> Fleet Uptime Status
-                </h4>
-                <span className="text-xs font-black text-white">99.8% Average</span>
-             </div>
-
-             <div className="grid grid-cols-5 md:grid-cols-10 gap-3">
-                {Array.from({ length: Math.max(1, machines) }).map((_, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="aspect-square bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center group relative cursor-help"
-                  >
-                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                    {/* Tooltip */}
-                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black border border-white/10 px-2 py-1 rounded text-[8px] font-bold opacity-0 group-hover:opacity-100 whitespace-nowrap z-20 pointer-events-none transition-opacity">
-                      Machine #{100 + i} - ONLINE
-                    </div>
-                  </motion.div>
-                ))}
-             </div>
-          </div>
-
-          {/* CRITICAL COMPONENTS LIFECYCLE */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <LifecycleCard 
-              icon={<Droplets className="text-blue-400" />} 
-              label="RO Membrane Permeability" 
-              value="82%" 
-              status="Optimal" 
-              health={82}
-            />
-            <LifecycleCard 
-              icon={<Cpu className="text-purple-400" />} 
-              label="Power Supply Module (PSU)" 
-              value="1,420 Hrs" 
-              status="Review at 2k" 
-              health={65}
-            />
-          </div>
-
-          {/* MAINTENANCE LOG */}
-          <div className="bg-black/40 border border-white/5 rounded-[2.5rem] overflow-hidden">
-            <div className="p-6 border-b border-white/5 flex justify-between items-center">
-              <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Recent Activity Log</h4>
-              <button className="text-[10px] text-[#D4AF37] font-black uppercase hover:text-yellow-400 transition-colors">
-                View Full Audit
-              </button>
+        {/* CFO CONTROL PANEL */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem]">
+            <h3 className="text-[10px] font-black text-gray-500 uppercase mb-6 tracking-widest flex items-center gap-2">
+              <Zap size={14} className="text-yellow-400" /> Operational Efficiency (AMC)
+            </h3>
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold text-gray-400">Target: 85% Recovery</span>
+              <Toggle active={withAMC} onClick={() => setWithAMC(!withAMC)} color="bg-emerald-500" />
             </div>
-            <div className="divide-y divide-white/5">
-              <LogItem date="24 APR" task="RO System Descaling" machine="Main Plant" tech="K. Parmar" status="Complete" />
-              <LogItem date="22 APR" task="Machine #104 Periodic Service" machine="Unit 104" tech="R. Mehta" status="Pending" />
-              <LogItem date="19 APR" task="Endotoxin Filter Replacement" machine="Fleet-Wide" tech="System" status="Complete" />
+          </div>
+
+          <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem]">
+            <h3 className="text-[10px] font-black text-gray-500 uppercase mb-6 tracking-widest flex items-center gap-2">
+              <ShieldCheck size={14} className="text-blue-400" /> Risk Transfer (Insurance)
+            </h3>
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-bold text-gray-400">Target: 90% Protection</span>
+              <Toggle active={withInsurance} onClick={() => setWithInsurance(!withInsurance)} color="bg-blue-500" />
             </div>
           </div>
         </div>
 
-        {/* 4. RIGHT COLUMN: SERVICE ACTION HUB */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          {/* AMC STATUS CARD */}
-          <div className="bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-8 text-center relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-3xl pointer-events-none" />
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-6">Next Scheduled Audit</p>
-            <div className="flex justify-center items-end gap-2 mb-2">
-              <span className="text-6xl font-black text-white tracking-tighter">14</span>
-              <span className="text-xl font-bold text-gray-600 mb-2">Days</span>
-            </div>
-            <p className="text-xs text-emerald-500 font-bold mb-8">System Health: 94%</p>
-            <button className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-black py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">
-              Request On-Site Tech
-            </button>
-          </div>
-
-          {/* LEAKAGE RECAPTURE WIDGET */}
-          <div className="bg-[#0A1118] border border-white/5 rounded-[2.5rem] p-8">
-            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-              <BarChart3 size={14} className="text-[#D4AF37]" /> Yield Protection
-            </h4>
-            <div className="space-y-6">
-               <div className="flex justify-between items-end">
-                  <span className="text-xs text-gray-400">Monthly Opex Saved</span>
-                  <span className="text-lg font-black text-emerald-400">₹ {new Intl.NumberFormat('en-IN').format(Math.round(metrics.recoverableYield))}</span>
-               </div>
-               <div className="flex justify-between items-end">
-                  <span className="text-xs text-gray-400">Downtime Prevented</span>
-                  <span className="text-lg font-black text-white">42 Hours</span>
-               </div>
-               <div className="pt-4 border-t border-white/5">
-                 <p className="text-[9px] text-gray-600 italic uppercase leading-tight">
-                   "By reducing technical friction, the Innovate OS recaptures enough yield to cover your SaaS subscription 14x over."
-                 </p>
-               </div>
-            </div>
-          </div>
-
-          {/* SPARE PARTS QUICK ORDER */}
-          <button className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-5 rounded-2xl flex items-center justify-center gap-3 transition-all text-[10px] font-black uppercase tracking-widest">
-            <Wrench size={16} className="text-blue-400" /> Order Verified Spares
-          </button>
+        {/* METRICS GRID */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          <Metric label="Recoverable (AMC)" value={formatINR(metrics.recoverableLoss)} warning />
+          <Metric label="Catastrophic Risk" value={formatINR(metrics.catastrophicLoss)} danger />
+          <Metric label="Current Exposure" value={formatINR(metrics.totalExposure - (metrics.netSavings > 0 ? metrics.netSavings : 0))} />
         </div>
 
+        {/* STRATEGIC IMPACT BOX */}
+        <div className="bg-gradient-to-br from-black/60 to-[#0A1118] border border-white/10 rounded-[2.5rem] p-10 mb-8 relative overflow-hidden">
+          <div className="relative z-10">
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${metrics.recColor}`}>
+              {metrics.recommendation}
+            </p>
+            <h2 className={`text-5xl font-black tracking-tighter mb-4 ${metrics.netSavings > 0 ? 'text-emerald-400' : 'text-red-500'}`}>
+              {formatINR(metrics.netSavings)} <span className="text-xl text-gray-600">/MO</span>
+            </h2>
+            <p className="text-gray-400 text-sm max-w-2xl leading-relaxed">
+              {withAMC && withInsurance 
+                ? "Your system is fully hedged. Inefficiencies are eliminated via AMC, and catastrophic risks are transferred via insurance. Unpredictable loss is now a controlled cost."
+                : withAMC 
+                ? "Operational profit is stabilized, but you remain exposed to catastrophic capital breakdown."
+                : "You are leaking operational profit daily. Your risk coverage is suboptimal for this asset scale."}
+            </p>
+          </div>
+        </div>
+
+        {/* 3-SCENARIO CHART */}
+        <div className="bg-[#0A1118] border border-white/5 rounded-[2rem] p-8 mb-8">
+           <h3 className="text-[10px] text-gray-500 mb-6 uppercase font-black tracking-widest flex items-center gap-2">
+            <BarChart3 size={14} className="text-[#D4AF37]" /> Financial Exposure Scenarios
+          </h3>
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={[
+                { name: "Break-Fix", loss: metrics.totalExposure },
+                { name: "AMC Enabled", loss: withAMC ? metrics.catastrophicLoss + metrics.monthlyAMC : metrics.totalExposure },
+                { name: "Full Hedge", loss: (withAMC && withInsurance) ? metrics.monthlyAMC + metrics.monthlyInsurance : metrics.totalExposure }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                <XAxis dataKey="name" stroke="#475569" fontSize={10} fontWeight="bold" />
+                <YAxis stroke="#475569" fontSize={10} />
+                <Tooltip contentStyle={{ backgroundColor: '#010810', border: '1px solid #1e293b', borderRadius: '12px' }} />
+                <Line type="monotone" dataKey="loss" stroke="#D4AF37" strokeWidth={4} dot={{ fill: '#D4AF37', r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* ACTION LINKS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <ActionCard label="Underwriting" title="Full CAPEX Model" icon={<Activity size={18}/>} href="/capex" />
+          <ActionCard label="WhatsApp ROI" title="Send CFO Audit" icon={<Zap size={18}/>} href="https://wa.me/9879576332" highlight />
+          <ActionCard label="PDF Logic" title="Generate DPR" icon={<ExternalLink size={18}/>} href="/dpr" />
+        </div>
       </div>
     </main>
   );
 }
 
-// --- REUSABLE SUB-COMPONENTS ---
-
-function LifecycleCard({ icon, label, value, status, health }: LifecycleCardProps) {
+// --- COMPONENTS ---
+function Toggle({ active, onClick, color }: { active: boolean, onClick: () => void, color: string }) {
   return (
-    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 hover:bg-white/[0.04] transition-all group">
-      <div className="flex justify-between items-start mb-4">
-        <div className="p-3 bg-white/5 rounded-xl group-hover:scale-110 transition-transform">
-          {icon}
-        </div>
-        <div className="text-right">
-          <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest block mb-1">Status</span>
-          <span className={`text-[10px] font-bold uppercase ${health > 70 ? 'text-emerald-500' : 'text-orange-500'}`}>
-            {status}
-          </span>
-        </div>
-      </div>
-      <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2">{label}</p>
-      <div className="flex items-center gap-4">
-        <h3 className="text-2xl font-black text-white">{value}</h3>
-        <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
-          <motion.div 
-            initial={{ width: 0 }} 
-            animate={{ width: `${Math.min(100, Math.max(0, health))}%` }}
-            className={`h-full ${health > 70 ? "bg-emerald-500" : "bg-orange-500"}`} 
-          />
-        </div>
-      </div>
+    <button onClick={onClick} className={`w-12 h-6 rounded-full relative transition ${active ? color : "bg-gray-700"}`}>
+      <motion.div layout className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-lg" animate={{ x: active ? 24 : 0 }} />
+    </button>
+  );
+}
+
+function Metric({ label, value, danger, warning }: MetricProps) {
+  return (
+    <div className="bg-white/[0.02] p-6 rounded-2xl border border-white/5">
+      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">{label}</p>
+      <p className={`text-xl font-black tracking-tight ${danger ? "text-red-400" : warning ? "text-orange-400" : "text-white"}`}>
+        {value}
+      </p>
     </div>
   );
 }
 
-function LogItem({ date, task, machine, tech, status }: LogItemProps) {
+function ActionCard({ label, title, icon, href, highlight }: any) {
   return (
-    <div className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-all">
-      <div className="flex items-center gap-4">
-        <span className="text-[10px] font-black text-gray-600 w-12">{date}</span>
-        <div>
-          <p className="text-xs font-bold text-white">{task}</p>
-          <p className="text-[10px] text-gray-500 uppercase font-bold">{machine} • {tech}</p>
-        </div>
+    <a href={href} className={`${highlight ? 'bg-[#D4AF37] text-black' : 'bg-white/[0.02] border border-white/5 text-white'} p-6 rounded-2xl hover:scale-[1.02] transition-all flex justify-between items-center`}>
+      <div>
+        <p className="text-[10px] font-black uppercase mb-1 opacity-60">{label}</p>
+        <h4 className="text-lg font-bold">{title}</h4>
       </div>
-      <div className="flex items-center gap-2">
-        <div className={`w-1.5 h-1.5 rounded-full ${status === "Complete" ? "bg-emerald-500" : status === "Pending" ? "bg-orange-500" : "bg-red-500"}`} />
-        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{status}</span>
-      </div>
-    </div>
+      {icon}
+    </a>
   );
 }

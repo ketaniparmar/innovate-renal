@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 // --- 1. TYPE DEFINITIONS ---
 interface InfraContextType {
+  downtime: number;
   // Core Clinical Capacity
   machines: number;
   setMachines: (val: number) => void;
