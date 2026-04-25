@@ -1,3 +1,4 @@
+import { generateExecutiveSummary } from "@/lib/engine/narrative";
 import { renderToBuffer } from '@react-pdf/renderer';
 import { DPRTemplate } from '@/components/pdf/DPRTemplate'; // Your React-PDF component
 import { supabase } from '@/lib/supabase';
