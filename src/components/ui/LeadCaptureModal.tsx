@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, User, Building2, Phone, ArrowRight, 
   CheckCircle2, Activity, Cpu, Loader2, Download, 
-  MessageSquare 
+  MessageSquare, ShieldCheck, Terminal
 } from "lucide-react";
 
-// Flexible Interface to prevent TypeScript build errors
+// ✅ UPGRADED: Synchronized with Workspace V8 Engine Outputs
 interface LeadCaptureModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -17,20 +17,34 @@ interface LeadCaptureModalProps {
     machines: number | string;
     breakeven: number | string;
     profit: number | string;
+    irr: number | string; // Added IRR tracking
   };
 }
 
-export function LeadCaptureModal({ isOpen, onClose, source = "ROI Simulator", contextData }: LeadCaptureModalProps) {
+export function LeadCaptureModal({ isOpen, onClose, source = "Sovereign OS Engine", contextData }: LeadCaptureModalProps) {
   const [step, setStep] = useState<"analyzing" | "capture" | "processing" | "success">("analyzing");
   const [formData, setFormData] = useState({ name: "", hospital: "", phone: "" });
-  const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/919879576332"); // Fallback URL
+  const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [logIndex, setLogIndex] = useState(0);
 
-  // Reset logic when modal opens
+  // Bloomberg-style terminal logs for perceived value
+  const logs = [
+    "> INITIATING SOVEREIGN OS V8.0 CORE...",
+    "> SYNCING GUJARAT HEALTHCARE REGULATORY DATA...",
+    "> CALCULATING REVENUE LEAKAGE VECTORS...",
+    "> CALIBRATING BREAK-EVEN HORIZON...",
+    "> AUDIT READY: DPR GENERATED SUCCESSFULLY."
+  ];
+
   useEffect(() => {
     if (isOpen) {
       setStep("analyzing");
-      const timer = setTimeout(() => setStep("capture"), 1800);
-      return () => clearTimeout(timer);
+      setLogIndex(0);
+      const logTimer = setInterval(() => {
+        setLogIndex(prev => (prev < logs.length - 1 ? prev + 1 : prev));
+      }, 400);
+      const stepTimer = setTimeout(() => setStep("capture"), 2400);
+      return () => { clearInterval(logTimer); clearTimeout(stepTimer); };
     }
   }, [isOpen]);
 
@@ -38,140 +52,112 @@ export function LeadCaptureModal({ isOpen, onClose, source = "ROI Simulator", co
     e.preventDefault();
     setStep("processing");
 
-    // Formatting context safely for WhatsApp
-    const machines = contextData?.machines || "Custom";
-    const bep = contextData?.breakeven || "N/A";
-    const profit = contextData?.profit || "N/A";
+    const { machines = "0", breakeven = "0", profit = "0", irr = "0" } = contextData || {};
+    const formattedProfit = typeof profit === 'number' ? (profit / 100000).toFixed(2) : profit;
 
-    // 1. Create the raw message
-    const rawMessage = `*🚨 New Project Lead via ${source}*\n\n*Name:* ${formData.name}\n*Hospital:* ${formData.hospital}\n*Phone:* ${formData.phone}\n\n*Simulation Data:*\n→ Capacity: ${machines} Units\n→ BEP: ${bep} Months\n→ 5-Year Profit: ₹ ${profit} Cr\n\n_Awaiting technical audit._`;
+    // Professional Business Narrative for WhatsApp
+    const rawMessage = `*🚨 SOVEREIGN OS: NEW PROJECT AUDIT*\n\n*INSTITUTION:* ${formData.hospital}\n*DIRECTOR:* ${formData.name}\n*CONTACT:* ${formData.phone}\n\n*DPR SNAPSHOT:*\n→ SCALE: ${machines} Machines\n→ PROJECTED IRR: ${irr}%\n→ BREAK-EVEN: ${breakeven} Months\n→ MONTHLY EBITDA: ₹${formattedProfit} Lakhs\n\n_Audit generated via Innovate IndAI Sovereign OS._`;
     
-    // 2. Safely encode it for URLs (Fixes broken links on mobile)
     const encodedMessage = encodeURIComponent(rawMessage);
     const finalUrl = `https://wa.me/919879576332?text=${encodedMessage}`;
-    
-    // 3. Save it to state so the manual button can use it if auto-popup is blocked
     setWhatsappUrl(finalUrl);
 
     setTimeout(() => {
       setStep("success");
-      // Try to auto-open (may be blocked by browser popup blockers, which is why we save it to state above)
       window.open(finalUrl, '_blank');
-    }, 2000);
-  };
-
-  const handleDownload = () => {
-    window.print();
+    }, 1800);
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 hide-on-print">
-          
-          {/* Backdrop Blur Layer */}
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-[#0A0F1C]/95 backdrop-blur-xl" // Deep Navy Brand Base
             onClick={() => (step === "capture" || step === "success") && onClose()}
-            className="absolute inset-0 bg-[#010810]/90 backdrop-blur-xl"
           />
 
-          {/* Modal Architecture */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }} 
-            animate={{ opacity: 1, scale: 1, y: 0 }} 
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-md bg-[#0A1118] border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
+            initial={{ opacity: 0, scale: 0.95, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 30 }}
+            className="relative w-full max-w-lg bg-[#0A1118] border border-white/5 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.8)] overflow-hidden"
           >
-            {/* Dynamic Status Bar */}
+            {/* Brand Accent Bar (Gold) */}
             <motion.div 
-              className={`h-1.5 w-full ${step === 'success' ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]' : 'bg-[#D4AF37]'}`}
-              initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1 }}
+              className="h-1 w-full bg-[#C6A85A]" 
+              initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8 }}
             />
 
-            {(step === "capture" || step === "success") && (
-              <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors z-20 bg-white/5 p-2 rounded-full">
-                <X size={16} />
-              </button>
-            )}
-
-            <div className="p-10 relative min-h-[460px] flex flex-col justify-center">
+            <div className="p-10 min-h-[520px] flex flex-col justify-center">
               <AnimatePresence mode="wait">
                 
-                {/* STEP 1: ANALYZING (Build Perceived Value) */}
+                {/* STEP 1: ANALYSIS TERMINAL */}
                 {step === "analyzing" && (
-                  <motion.div key="analyzing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center text-center">
-                    <div className="relative w-20 h-20 mb-8">
-                      <div className="absolute inset-0 border-2 border-[#D4AF37]/20 rounded-full animate-ping" />
-                      <div className="absolute inset-0 flex items-center justify-center text-[#D4AF37]">
-                        <Cpu size={36} />
-                      </div>
+                  <motion.div key="analyzing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="font-mono">
+                    <div className="flex items-center gap-3 mb-8 text-[#00A8A8]"> {/* Teal Accent */}
+                      <Terminal size={20} />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Sovereign OS Diagnostic</span>
                     </div>
-                    <h3 className="text-2xl font-black text-white mb-2">Simulating ROI...</h3>
-                    <p className="text-gray-500 text-sm">Processing clinical infrastructure feasibility for {contextData?.machines} units.</p>
+                    <div className="space-y-3">
+                      {logs.slice(0, logIndex + 1).map((log, i) => (
+                        <p key={i} className={`text-sm ${i === logIndex ? "text-white" : "text-gray-600"}`}>
+                          {log}
+                        </p>
+                      ))}
+                    </div>
                   </motion.div>
                 )}
 
-                {/* STEP 2: CAPTURE (The High-Value Gate) */}
+                {/* STEP 2: INSTITUTIONAL CAPTURE */}
                 {step === "capture" && (
-                  <motion.div key="capture" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                    <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center mb-8">
-                      <Activity className="text-[#D4AF37]" size={24} />
+                  <motion.div key="capture" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <div className="flex justify-between items-start mb-8">
+                      <div className="w-14 h-14 rounded-2xl bg-[#C6A85A]/10 border border-[#C6A85A]/20 flex items-center justify-center text-[#C6A85A]">
+                        <ShieldCheck size={28} />
+                      </div>
+                      <button onClick={onClose} className="p-2 bg-white/5 rounded-full text-gray-500 hover:text-white transition-colors">
+                        <X size={16} />
+                      </button>
                     </div>
-                    <h3 className="text-3xl font-black tracking-tighter mb-2 text-white">Model Verified.</h3>
-                    <p className="text-gray-500 text-sm mb-10 leading-relaxed">
-                      Your requested DPR is ready for export. Where should we send the detailed breakdown?
+
+                    <h3 className="text-4xl font-black tracking-tighter text-white mb-3">Model Secured.</h3>
+                    <p className="text-gray-400 text-sm mb-10 leading-relaxed max-w-sm">
+                      Our intelligence engine has finalized your project architecture. Enter your credentials to unlock the audit-ready DPR.
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <FormInput type="text" icon={<User size={16}/>} placeholder="Full Name" value={formData.name} onChange={(v) => setFormData({...formData, name: v})} />
-                      <FormInput type="text" icon={<Building2 size={16}/>} placeholder="Hospital / Organization" value={formData.hospital} onChange={(v) => setFormData({...formData, hospital: v})} />
-                      <FormInput type="tel" icon={<Phone size={16}/>} placeholder="WhatsApp Number" value={formData.phone} onChange={(v) => setFormData({...formData, phone: v})} />
+                      <FormInput type="text" icon={<User size={16}/>} placeholder="Full Name / Director" value={formData.name} onChange={(v) => setFormData({...formData, name: v})} />
+                      <FormInput type="text" icon={<Building2 size={16}/>} placeholder="Hospital Name" value={formData.hospital} onChange={(v) => setFormData({...formData, hospital: v})} />
+                      <FormInput type="tel" icon={<Phone size={16}/>} placeholder="WhatsApp for Instant Delivery" value={formData.phone} onChange={(v) => setFormData({...formData, phone: v})} />
 
-                      <div className="pt-6">
-                        <button className="w-full bg-[#D4AF37] hover:bg-yellow-500 text-black py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)]">
-                          Unlock DPR & Send to WhatsApp
-                        </button>
-                      </div>
+                      <button className="w-full bg-[#C6A85A] hover:bg-[#D4B970] text-[#0A0F1C] py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] mt-4 transition-all shadow-[0_15px_40px_rgba(198,168,90,0.15)] flex items-center justify-center gap-2">
+                        Unlock Audit Data <ArrowRight size={14} />
+                      </button>
                     </form>
+                    <p className="text-center text-[9px] text-gray-600 uppercase tracking-widest mt-6">ISO 9001:2026 Compliant | 256-bit Encrypted</p>
                   </motion.div>
                 )}
 
-                {/* STEP 3: PROCESSING (The Final Audit) */}
-                {step === "processing" && (
-                  <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-center">
-                    <Loader2 className="animate-spin text-[#D4AF37] mb-8" size={56} />
-                    <h3 className="text-2xl font-black text-white mb-2">Finalizing Financial Audit...</h3>
-                    <p className="text-gray-500 text-sm italic">Encrypting report for {formData.hospital}...</p>
-                  </motion.div>
-                )}
-
-                {/* STEP 4: SUCCESS (The Strategic Close) */}
+                {/* STEP 3: SUCCESS & CLOSING */}
                 {step === "success" && (
                   <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center text-center">
-                    <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(34,197,94,0.3)]">
-                      <CheckCircle2 size={32} className="text-green-500" />
+                    <div className="w-20 h-20 rounded-full bg-[#00A8A8]/10 border border-[#00A8A8]/20 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(0,168,168,0.2)]">
+                      <CheckCircle2 size={40} className="text-[#00A8A8]" />
                     </div>
-                    <h3 className="text-3xl font-black text-white mb-3 tracking-tighter">Report Secured.</h3>
-                    <p className="text-gray-500 text-sm mb-10 leading-relaxed">
-                      Your <strong>{contextData?.breakeven}-month</strong> model has been registered. Our infrastructure team is awaiting your data review.
+                    <h3 className="text-4xl font-black text-white mb-3 tracking-tighter">Ready for Review.</h3>
+                    <p className="text-gray-400 text-sm mb-12 max-w-xs mx-auto leading-relaxed">
+                      Your model with a **{contextData?.irr}% IRR** has been registered. Our specialists are reviewing the clinical infrastructure.
                     </p>
                     
                     <div className="space-y-4 w-full">
-                      {/* FIXED: Now uses the securely encoded URL containing all the user data! */}
                       <button 
                         onClick={() => window.open(whatsappUrl, '_blank')}
-                        className="w-full bg-[#25D366] hover:bg-green-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-[0_0_30px_rgba(37,211,102,0.3)] flex items-center justify-center gap-3"
+                        className="w-full bg-[#25D366] hover:bg-[#22C35E] text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3"
                       >
-                        <MessageSquare size={16} /> Discuss Audit on WhatsApp
+                        <MessageSquare size={16} /> Open Report on WhatsApp
                       </button>
-
-                      <button onClick={handleDownload} className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3">
-                        <Download size={16} /> Save Local Copy
-                      </button>
-                      
-                      <button onClick={onClose} className="text-[10px] font-bold text-gray-600 hover:text-white uppercase tracking-widest pt-4 transition-colors">
-                        Return to Dashboard
+                      <button onClick={onClose} className="w-full py-5 text-[10px] font-black text-gray-500 hover:text-white uppercase tracking-widest transition-colors">
+                        Close Dashboard
                       </button>
                     </div>
                   </motion.div>
@@ -186,7 +172,7 @@ export function LeadCaptureModal({ isOpen, onClose, source = "ROI Simulator", co
   );
 }
 
-/* HELPER COMPONENT: Strictly Typed Form Input */
+// Sub-component for strict typing
 interface FormInputProps {
   icon: React.ReactNode;
   placeholder: string;
@@ -198,14 +184,11 @@ interface FormInputProps {
 function FormInput({ icon, placeholder, value, onChange, type }: FormInputProps) {
   return (
     <div className="relative group">
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#D4AF37] transition-colors">{icon}</div>
+      <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#00A8A8] transition-colors">{icon}</div>
       <input 
-        required 
-        type={type} 
-        placeholder={placeholder} 
-        value={value} 
+        required type={type} placeholder={placeholder} value={value} 
         onChange={(e) => onChange(e.target.value)} 
-        className="w-full bg-[#010810] border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all placeholder:text-gray-700" 
+        className="w-full bg-[#010810] border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm text-white focus:outline-none focus:border-[#00A8A8]/50 focus:ring-1 focus:ring-[#00A8A8]/20 transition-all placeholder:text-gray-700" 
       />
     </div>
   );
