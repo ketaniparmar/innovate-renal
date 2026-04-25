@@ -1,0 +1,122 @@
+// src/lib/pdf/template.ts
+
+export function generateDPRHtml(financials: any, narrative: any, inputs: any) {
+  const format = (n: number) => new Intl.NumberFormat("en-IN").format(Math.round(n));
+
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+      
+      body { 
+        font-family: 'Inter', sans-serif; 
+        background: #050505; 
+        color: #f1f5f9; 
+        margin: 0; 
+        padding: 60px; 
+        -webkit-print-color-adjust: exact; 
+      }
+      .page-break { page-break-before: always; }
+      
+      .header { border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 40px; }
+      .logo { font-size: 14px; font-weight: 800; letter-spacing: 2px; color: #0d9488; text-transform: uppercase; }
+      
+      .title { font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 10px; color: #fff; }
+      .subtitle { font-size: 16px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+      
+      .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 30px; margin-bottom: 30px; }
+      .card-title { font-size: 12px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; }
+      .card-value { font-size: 48px; font-weight: 800; color: #fff; letter-spacing: -2px; }
+      
+      .text-teal { color: #2dd4bf; }
+      .text-rose { color: #f43f5e; }
+      
+      .grid { display: table; width: 100%; table-layout: fixed; margin-bottom: 30px; }
+      .col { display: table-cell; padding-right: 20px; }
+      
+      .verdict-box { border-left: 4px solid ${narrative.verdictColor}; padding-left: 20px; margin: 40px 0; }
+      .verdict-title { font-size: 24px; font-weight: 800; color: ${narrative.verdictColor}; margin-bottom: 10px; }
+      
+      .footer { position: fixed; bottom: 30px; left: 60px; right: 60px; font-size: 10px; color: #475569; text-align: center; border-top: 1px solid #222; padding-top: 20px; }
+    </style>
+  </head>
+  <body>
+
+    <div class="header">
+      <div class="logo">Innovate IndAI Infrastructure</div>
+    </div>
+    
+    <div class="subtitle">Detailed Project Report (DPR)</div>
+    <div class="title">${inputs.name || 'Dialysis Infrastructure'}</div>
+    <div style="color: #94a3b8; margin-bottom: 50px;">Jurisdiction: ${inputs.state} | Capacity: ${inputs.machines} Machines</div>
+
+    <div class="verdict-box">
+      <div class="verdict-title">${narrative.verdictTitle}</div>
+      <div style="font-size: 16px; line-height: 1.6; color: #cbd5e1;">${narrative.verdictText}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Projected Monthly EBITDA</div>
+      <div class="card-value text-teal">₹ ${format(financials.ebitda)}</div>
+    </div>
+
+    <div class="grid">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Monthly Revenue</div>
+          <div style="font-size: 32px; font-weight: 800;">₹ ${format(financials.monthlyRevenue)}</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Monthly OPEX</div>
+          <div style="font-size: 32px; font-weight: 800;">₹ ${format(financials.totalOpex)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="header">
+      <div class="logo">Operational Risk Audit</div>
+    </div>
+
+    <div class="title" style="margin-bottom: 40px;">Hidden Financial Leakage</div>
+
+    <div class="card" style="border-color: #9f1239; background: #4c0519;">
+      <div class="card-title" style="color: #fda4af;">Total Unhedged Capital Loss</div>
+      <div class="card-value text-rose">-₹ ${format(narrative.totalLeakage)} <span style="font-size: 20px; color: #fda4af;">/ month</span></div>
+      <div style="margin-top: 15px; font-size: 14px; line-height: 1.6; color: #ffe4e6;">${narrative.leakageNarrative}</div>
+    </div>
+
+    <div class="grid">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Downtime Leakage</div>
+          <div style="font-size: 28px; font-weight: 800; color: #f43f5e;">-₹ ${format(financials.downtimeLoss)}</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">Shift Demand Leakage</div>
+          <div style="font-size: 28px; font-weight: 800; color: #f43f5e;">-₹ ${format(financials.underutilizationLoss)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 50px;">
+      <div class="subtitle" style="color: #d97706; margin-bottom: 10px;">Strategic Constraint Identified</div>
+      <div style="font-size: 20px; font-weight: 600; color: #fff;">${financials.constraint}</div>
+      <div style="margin-top: 15px; font-size: 16px; line-height: 1.6; color: #94a3b8;">${narrative.strategicInsight}</div>
+    </div>
+
+    <div class="footer">
+      Generated by SovereignEngine v4.1 • Innovate India Group • Confidential Document
+    </div>
+  </body>
+  </html>
+  `;
+}

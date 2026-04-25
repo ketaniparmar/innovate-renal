@@ -3,56 +3,64 @@ import { PrismaClient } from '@prisma/client';
 import { SovereignUnderwriter } from '@/lib/engine/underwriter';
 import type { SovereignInputs } from '@/lib/engine/types';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    // 1. Grab the JSON payload from the request
-    const body: SovereignInputs = await request.json();
+    // 🛑 1. Initialize Prisma INSIDE the try block to catch fatal boot errors
+    const prisma = new PrismaClient();
 
-    // 2. Pass to the isolated math engine
+    const body: SovereignInputs = await request.json();
+    
+    // 2. Run Financial Math
     const engine = new SovereignUnderwriter(body);
     const result = engine.evaluate();
 
-    // 3. Save to Supabase via Prisma
-    const project = await prisma.project.create({
-      data: {
-        organizationId: "innovate-india-group", 
-        name: result.identity.name,
-        location: result.identity.location,
+    // 3. Ensure Tenant Exists
+    await prisma.tenant.upsert({
+      where: { id: 'innovate-india-group' },
+      update: {},
+      create: { id: 'innovate-india-group', name: "Innovate India Group" }
+    });
+
+    // 4. Save Project Data
+    const project = await prisma.project.upsert({
+      where: { 
+        id: body.name.toLowerCase().replace(/\s+/g, '-') 
+      },
+      update: {
         machines: body.machines,
-        beds: body.beds,
         cityTier: body.cityTier,
         tdsLevel: body.tdsLevel,
-        mode: body.mode,
-        pmjayPct: body.pmjayPct,
-        pvtPct: body.pvtPct,
-        
-        audits: {
+      },
+      create: {
+        id: body.name.toLowerCase().replace(/\s+/g, '-'),
+        tenantId: 'innovate-india-group',
+        name: result.identity.name,
+        machines: body.machines,
+        cityTier: body.cityTier,
+        tdsLevel: body.tdsLevel,
+        simulations: {
           create: {
-            totalCapex: result.capex,
-            annualEbitda: result.ebitda,
             irr: result.irr,
-            dscr: result.dscr,
-            creditRating: result.rating,
-            npv: 0
+            totalCapex: result.capexBreakdown.totalCapex
           }
         }
-      },
-      include: { audits: true }
+      }
     });
 
-    // Inside src/app/api/v8/projects/underwrite/route.ts (bottom of the POST function)
-
-    // 4. Return success to the frontend
     return NextResponse.json({
       status: "SUCCESS",
-      message: `Project ${project.name} underwritten successfully.`,
-      data: project,
-      engineResult: result // <--- ADD THIS LINE
+      databaseId: project.id,
+      engineResult: result 
     });
-  } catch (error) {
-    console.error("Underwriting Error:", error);
-    return NextResponse.json({ error: "Failed to process underwriting" }, { status: 500 });
+
+  } catch (error: any) {
+    console.error("❌ DIAGNOSTIC ROUTE ERROR:", error.message);
+    // Returning JSON ensures the frontend doesn't throw the "<!DOCTYPE" error
+    return NextResponse.json({ 
+      error: "Engine or Database failed to boot", 
+      details: error.message 
+    }, { status: 500 });
   }
 }
