@@ -278,7 +278,7 @@ export default function DPREngineWorkspace() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         source="AI DPR Engine Dashboard"
-        contextData={{ machines: machines, breakeven: breakevenMonths }}
+        contextData={{ machines: machines, breakeven: breakevenMonths, profit: monthlyEBITDA }}
       />
 
       {/* Custom Scrollbar CSS for this specific terminal layout */}
