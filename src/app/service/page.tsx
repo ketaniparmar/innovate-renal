@@ -8,13 +8,13 @@ import {
   Wrench,
   BarChart3,
   ExternalLink,
-  AlertTriangle,
   Zap,
-  Lock
+  ChevronRight,
+  ShieldAlert
 } from "lucide-react";
 
 import { useInfra } from "@/context/InfrastructureContext";
-import { calculateV7Sovereign } from "@/lib/sovereign-engine";
+import { calculateV8Capex } from "@/lib/capex-engine-v8";
 
 import {
   LineChart,
@@ -26,7 +26,7 @@ import {
   CartesianGrid
 } from "recharts";
 
-// --- TYPES ---
+// --- STRICT TYPES (Prevents Vercel Build Crashes) ---
 interface MetricProps {
   label: string;
   value: string;
@@ -34,34 +34,61 @@ interface MetricProps {
   warning?: boolean;
 }
 
-export default function AMCIntelligencePage() {
-  const infra = useInfra();
+interface ActionCardProps {
+  label: string;
+  title: string;
+  icon: React.ReactNode;
+  href: string;
+  highlight?: boolean;
+}
 
+interface ToggleProps {
+  active: boolean;
+  onClick: () => void;
+  color: string;
+}
+
+export default function AMCIntelligencePage() {
+  // Safe extraction of Context
+  const infraContext = useInfra();
+  const infra = infraContext || {};
+
+  // --- 1. CORE INFRA DNA (Synchronized with V8 Context) ---
   const {
-    machines = 10,
-    sessionsPerDay = 2.5,
+    machines = 15,
+    sessionsPerDay = 2.8,
     downtime = 5,
     pmjay = 40,
     pvt = 40,
     tpa = 20,
-    mode = "standard",
-    amcCostPerMachine = 45000
-  } = infra || {};
+    mode = "single",
+    amcCostPerMachine = 22000, // Aligned with your local South Gujarat/Maharashtra rate
+    cityTier = "Tier_2",
+    tdsLevel = 850,
+    buildGrade = "Premium"
+  } = infra;
 
   // --- NEW RISK STATES ---
   const [withAMC, setWithAMC] = useState(false);
   const [withInsurance, setWithInsurance] = useState(false);
 
-  // --- CFO RISK ENGINE ---
+  // --- CFO RISK ENGINE (Upgraded to V8 Architecture) ---
   const metrics = useMemo(() => {
-    const res = calculateV7Sovereign({ machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode });
+    // Sync with V8 CAPEX math
+    const capexData = calculateV8Capex({ machines, cityTier, tdsLevel, buildGrade });
+    const totalCapex = capexData.totalCapex;
 
-    const monthlyRevenue = res?.monthlyRevenue || 0;
-    const totalCapex = res?.totalCapex || 0;
+    // Sync with V8 Revenue Realization
+    const totalMix = Math.max(pmjay + pvt + tpa, 1);
+    const weights = { pmjay: pmjay / totalMix, pvt: pvt / totalMix, tpa: tpa / totalMix };
+    const WAR = (weights.pmjay * 1300) + (weights.pvt * 2600) + (weights.tpa * 2100);
+
+    const monthlySessions = machines * sessionsPerDay * 26;
+    const monthlyRevenue = monthlySessions * WAR;
 
     // Loss Segmentation
-    const downtimeLoss = res?.downtimeLoss || monthlyRevenue * (downtime / 100);
-    const utilLoss = res?.underutilizationLoss || 0;
+    const downtimeLoss = monthlyRevenue * (downtime / 100);
+    const utilLoss = monthlyRevenue * 0.12; // Base underutilization factor
     const totalExposure = downtimeLoss + utilLoss;
 
     // Split: 70% Operational (AMC), 30% Catastrophic (Insurance)
@@ -88,19 +115,19 @@ export default function AMCIntelligencePage() {
     const covered = (withAMC ? recoverableLoss : 0) + (withInsurance ? catastrophicLoss : 0);
     const riskCoverage = totalExposure > 0 ? (covered / totalExposure) * 100 : 0;
 
-    // --- AUTO RECOMMENDATION ENGINE ---
+    // --- AUTO RECOMMENDATION ENGINE (Brand Palette Applied) ---
     let recommendation = "BASE RISK PROFILE";
     let recColor = "text-gray-400";
     
     if (roi > 200 && !withAMC) {
       recommendation = "CRITICAL: AMC MANDATORY";
-      recColor = "text-red-500";
+      recColor = "text-[#A6192E]"; // Brand Red
     } else if (catastrophicLoss > 200000 && !withInsurance) {
       recommendation = "HIGH EXPOSURE: INSURANCE CRITICAL";
       recColor = "text-orange-500";
     } else if (withAMC && withInsurance) {
       recommendation = "FULLY HEDGED SYSTEM";
-      recColor = "text-emerald-400";
+      recColor = "text-[#00A8A8]"; // Brand Teal
     }
 
     return {
@@ -117,83 +144,93 @@ export default function AMCIntelligencePage() {
       recommendation,
       recColor
     };
-  }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode, amcCostPerMachine, withAMC, withInsurance]);
+  }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, mode, amcCostPerMachine, cityTier, tdsLevel, buildGrade, withAMC, withInsurance]);
 
   const formatINR = (val: number) => `₹${new Intl.NumberFormat("en-IN").format(Math.round(val || 0))}`;
 
   return (
-    <main className="min-h-screen bg-[#010810] text-white p-6 lg:p-12 font-sans">
+    <main className="min-h-screen bg-[#0A0F1C] text-slate-200 p-6 lg:p-12 font-sans overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
         
-        {/* HEADER */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-white/5 pb-8 gap-6">
+        {/* INSTITUTIONAL HEADER */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-white/5 pb-10 gap-6">
           <div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter">Risk Intelligence</h1>
-            <p className="text-gray-400 text-sm mt-2">
-              Downside Neutralization for <span className="text-[#D4AF37] font-bold">₹{(metrics.totalCapex / 10000000).toFixed(2)} Cr</span> Asset Base.
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#00A8A8] mb-3">
+              Sovereign OS <ChevronRight size={12} /> Service & AMC
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white">Risk Intelligence</h1>
+            <p className="text-gray-500 text-sm mt-3">
+              Downside Neutralization for <span className="text-[#C6A85A] font-bold">₹{(metrics.totalCapex / 10000000).toFixed(2)} Cr</span> Asset Base.
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Risk Coverage</p>
-            <p className={`text-3xl font-black tracking-tighter ${metrics.riskCoverage > 80 ? 'text-emerald-400' : 'text-red-500'}`}>
+            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">Risk Coverage</p>
+            <p className={`text-4xl font-black tracking-tighter ${metrics.riskCoverage > 80 ? 'text-[#00A8A8]' : 'text-[#A6192E]'}`}>
               {metrics.riskCoverage.toFixed(0)}%
             </p>
           </div>
         </header>
 
         {/* CFO CONTROL PANEL */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem]">
-            <h3 className="text-[10px] font-black text-gray-500 uppercase mb-6 tracking-widest flex items-center gap-2">
-              <Zap size={14} className="text-yellow-400" /> Operational Efficiency (AMC)
+        <div className="grid md:grid-cols-2 gap-6 mb-10">
+          <div className={`p-8 rounded-[2rem] border transition-all ${withAMC ? 'bg-[#00A8A8]/10 border-[#00A8A8]/30' : 'bg-[#0D1525] border-white/5'}`}>
+            <h3 className="text-[10px] font-black text-gray-400 uppercase mb-6 tracking-widest flex items-center gap-2">
+              <Wrench size={14} className={withAMC ? "text-[#00A8A8]" : "text-gray-500"} /> Operational Efficiency (AMC)
             </h3>
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold text-gray-400">Target: 85% Recovery</span>
-              <Toggle active={withAMC} onClick={() => setWithAMC(!withAMC)} color="bg-emerald-500" />
+              <Toggle active={withAMC} onClick={() => setWithAMC(!withAMC)} color="bg-[#00A8A8]" />
             </div>
           </div>
 
-          <div className="bg-white/[0.02] border border-white/5 p-6 rounded-[2rem]">
-            <h3 className="text-[10px] font-black text-gray-500 uppercase mb-6 tracking-widest flex items-center gap-2">
-              <ShieldCheck size={14} className="text-blue-400" /> Risk Transfer (Insurance)
+          <div className={`p-8 rounded-[2rem] border transition-all ${withInsurance ? 'bg-[#C6A85A]/10 border-[#C6A85A]/30' : 'bg-[#0D1525] border-white/5'}`}>
+            <h3 className="text-[10px] font-black text-gray-400 uppercase mb-6 tracking-widest flex items-center gap-2">
+              <ShieldCheck size={14} className={withInsurance ? "text-[#C6A85A]" : "text-gray-500"} /> Risk Transfer (Insurance)
             </h3>
             <div className="flex justify-between items-center">
               <span className="text-xs font-bold text-gray-400">Target: 90% Protection</span>
-              <Toggle active={withInsurance} onClick={() => setWithInsurance(!withInsurance)} color="bg-blue-500" />
+              <Toggle active={withInsurance} onClick={() => setWithInsurance(!withInsurance)} color="bg-[#C6A85A]" />
             </div>
           </div>
         </div>
 
         {/* METRICS GRID */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
           <Metric label="Recoverable (AMC)" value={formatINR(metrics.recoverableLoss)} warning />
           <Metric label="Catastrophic Risk" value={formatINR(metrics.catastrophicLoss)} danger />
           <Metric label="Current Exposure" value={formatINR(metrics.totalExposure - (metrics.netSavings > 0 ? metrics.netSavings : 0))} />
         </div>
 
         {/* STRATEGIC IMPACT BOX */}
-        <div className="bg-gradient-to-br from-black/60 to-[#0A1118] border border-white/10 rounded-[2.5rem] p-10 mb-8 relative overflow-hidden">
-          <div className="relative z-10">
-            <p className={`text-[10px] font-black uppercase tracking-widest mb-4 ${metrics.recColor}`}>
-              {metrics.recommendation}
-            </p>
-            <h2 className={`text-5xl font-black tracking-tighter mb-4 ${metrics.netSavings > 0 ? 'text-emerald-400' : 'text-red-500'}`}>
-              {formatINR(metrics.netSavings)} <span className="text-xl text-gray-600">/MO</span>
-            </h2>
-            <p className="text-gray-400 text-sm max-w-2xl leading-relaxed">
-              {withAMC && withInsurance 
-                ? "Your system is fully hedged. Inefficiencies are eliminated via AMC, and catastrophic risks are transferred via insurance. Unpredictable loss is now a controlled cost."
-                : withAMC 
-                ? "Operational profit is stabilized, but you remain exposed to catastrophic capital breakdown."
-                : "You are leaking operational profit daily. Your risk coverage is suboptimal for this asset scale."}
-            </p>
+        <div className="bg-[#0A1118] border border-white/5 rounded-[3rem] p-12 mb-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+            <ShieldAlert size={200} />
+          </div>
+          <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <p className={`text-[10px] font-black uppercase tracking-[0.3em] mb-4 ${metrics.recColor}`}>
+                {metrics.recommendation}
+              </p>
+              <h2 className={`text-6xl font-black tracking-tighter mb-4 tabular-nums ${metrics.netSavings > 0 ? 'text-[#00A8A8]' : 'text-[#A6192E]'}`}>
+                {formatINR(metrics.netSavings)} <span className="text-xl text-gray-600">/MO</span>
+              </h2>
+            </div>
+            <div className="bg-white/5 p-8 rounded-3xl border border-white/5">
+              <p className="text-sm text-gray-400 leading-relaxed font-medium">
+                {withAMC && withInsurance 
+                  ? "Your system is fully hedged. Inefficiencies are eliminated via AMC, and catastrophic risks are transferred via insurance. Unpredictable loss is now a controlled cost."
+                  : withAMC 
+                  ? "Operational profit is stabilized, but you remain exposed to catastrophic capital breakdown."
+                  : "You are leaking operational profit daily. Your risk coverage is suboptimal for this asset scale."}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* 3-SCENARIO CHART */}
-        <div className="bg-[#0A1118] border border-white/5 rounded-[2rem] p-8 mb-8">
-           <h3 className="text-[10px] text-gray-500 mb-6 uppercase font-black tracking-widest flex items-center gap-2">
-            <BarChart3 size={14} className="text-[#D4AF37]" /> Financial Exposure Scenarios
+        <div className="bg-[#0D1525] border border-white/5 rounded-[2.5rem] p-10 mb-10">
+           <h3 className="text-[10px] text-gray-500 mb-8 uppercase font-black tracking-widest flex items-center gap-2">
+            <BarChart3 size={14} className="text-[#C6A85A]" /> Financial Exposure Scenarios
           </h3>
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -204,53 +241,64 @@ export default function AMCIntelligencePage() {
               ]}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                 <XAxis dataKey="name" stroke="#475569" fontSize={10} fontWeight="bold" />
-                <YAxis stroke="#475569" fontSize={10} />
-                <Tooltip contentStyle={{ backgroundColor: '#010810', border: '1px solid #1e293b', borderRadius: '12px' }} />
-                <Line type="monotone" dataKey="loss" stroke="#D4AF37" strokeWidth={4} dot={{ fill: '#D4AF37', r: 6 }} />
+                <YAxis stroke="#475569" fontSize={10} tickFormatter={(val) => `₹${val / 1000}k`} />
+                <Tooltip 
+                  formatter={(value: any) => [formatINR(Number(value)), "Total Exposure"]}
+                  contentStyle={{ backgroundColor: '#0A0F1C', border: '1px solid #1e293b', borderRadius: '12px' }} 
+                />
+                <Line type="monotone" dataKey="loss" stroke="#C6A85A" strokeWidth={4} dot={{ fill: '#C6A85A', r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* ACTION LINKS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ActionCard label="Underwriting" title="Full CAPEX Model" icon={<Activity size={18}/>} href="/capex" />
-          <ActionCard label="WhatsApp ROI" title="Send CFO Audit" icon={<Zap size={18}/>} href="https://wa.me/9879576332" highlight />
-          <ActionCard label="PDF Logic" title="Generate DPR" icon={<ExternalLink size={18}/>} href="/dpr" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ActionCard label="Underwriting" title="Full CAPEX Model" icon={<Activity size={20}/>} href="/tools" />
+          <ActionCard label="WhatsApp ROI" title="Send CFO Audit" icon={<Zap size={20}/>} href="https://wa.me/9879576332" highlight />
+          <ActionCard label="PDF Logic" title="Generate DPR" icon={<ExternalLink size={20}/>} href="/tools" />
         </div>
       </div>
     </main>
   );
 }
 
-// --- COMPONENTS ---
-function Toggle({ active, onClick, color }: { active: boolean, onClick: () => void, color: string }) {
+// --- STRICT COMPONENTS ---
+
+function Toggle({ active, onClick, color }: ToggleProps) {
   return (
-    <button onClick={onClick} className={`w-12 h-6 rounded-full relative transition ${active ? color : "bg-gray-700"}`}>
-      <motion.div layout className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-lg" animate={{ x: active ? 24 : 0 }} />
+    <button 
+      onClick={onClick} 
+      role="switch"
+      aria-checked={active}
+      className={`w-14 h-7 rounded-full p-1 transition-all ${active ? color : "bg-gray-800"}`}
+    >
+      <motion.div layout className="w-5 h-5 bg-white rounded-full shadow-lg" animate={{ x: active ? 28 : 0 }} />
     </button>
   );
 }
 
 function Metric({ label, value, danger, warning }: MetricProps) {
   return (
-    <div className="bg-white/[0.02] p-6 rounded-2xl border border-white/5">
-      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2">{label}</p>
-      <p className={`text-xl font-black tracking-tight ${danger ? "text-red-400" : warning ? "text-orange-400" : "text-white"}`}>
+    <div className="bg-[#0D1525] p-8 rounded-3xl border border-white/5">
+      <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3">{label}</p>
+      <p className={`text-2xl font-black tracking-tight tabular-nums ${danger ? "text-[#A6192E]" : warning ? "text-orange-400" : "text-white"}`}>
         {value}
       </p>
     </div>
   );
 }
 
-function ActionCard({ label, title, icon, href, highlight }: any) {
+function ActionCard({ label, title, icon, href, highlight }: ActionCardProps) {
   return (
-    <a href={href} className={`${highlight ? 'bg-[#D4AF37] text-black' : 'bg-white/[0.02] border border-white/5 text-white'} p-6 rounded-2xl hover:scale-[1.02] transition-all flex justify-between items-center`}>
+    <a href={href} className={`p-8 rounded-[2rem] border transition-all flex justify-between items-center group ${highlight ? 'bg-[#C6A85A] border-[#C6A85A] text-[#0A0F1C]' : 'bg-[#0D1525] border-white/5 text-white hover:bg-white/10'}`}>
       <div>
-        <p className="text-[10px] font-black uppercase mb-1 opacity-60">{label}</p>
-        <h4 className="text-lg font-bold">{title}</h4>
+        <p className={`text-[10px] font-black uppercase tracking-widest mb-1.5 ${highlight ? 'text-[#0A0F1C]/70' : 'text-gray-500'}`}>{label}</p>
+        <h4 className="text-lg font-black">{title}</h4>
       </div>
-      {icon}
+      <div className="group-hover:translate-x-1 transition-transform">
+        {icon}
+      </div>
     </a>
   );
 }

@@ -5,11 +5,14 @@ import { motion } from "framer-motion";
 import {
   Activity,
   ShieldCheck,
+  Wrench,
   BarChart3,
   ExternalLink,
   AlertTriangle,
   Zap,
   Lock,
+  MessageSquare,
+  FileText,
   ChevronRight,
   ShieldAlert
 } from "lucide-react";

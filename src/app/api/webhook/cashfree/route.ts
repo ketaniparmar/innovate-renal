@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { sendWhatsAppText } from "@/lib/whatsapp";
 import crypto from 'crypto';
 import { supabase } from '@/lib/supabase';
 

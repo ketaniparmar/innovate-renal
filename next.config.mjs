@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // ✅ Supabase Image Support
   images: {
     remotePatterns: [
       {
@@ -11,13 +12,23 @@ const nextConfig = {
     ],
   },
 
-  // 🟢 FIX: Moved out of 'experimental' and renamed for Next.js 16+
-  serverExternalPackages: ['@prisma/client'],
+  experimental: {
+    // ✅ Prisma Optimization only (appDir is removed because it's now default)
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
 
+  // ✅ Vercel Analytics/Debugging
   logging: {
     fetches: {
       fullUrl: true,
     },
+  },
+
+  // ✅ Required for @react-pdf/renderer
+  webpack: (config) => {
+    config.resolve.alias.canvas = false;
+    config.resolve.alias.encoding = false;
+    return config;
   },
 };
 
