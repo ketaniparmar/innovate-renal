@@ -7,12 +7,12 @@ import { Activity, Menu, X, ChevronRight } from "lucide-react";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const navLinks = [
-    { name: "Capital Setup (CAPEX)", href: "/capex" },
-    { name: "Risk Control", href: "/risk" },
-    { name: "Turnkey Execution", href: "/solutions" },
-    { name: "Case Studies", href: "/success" },
-  ];
+const navLinks = [
+  { name: "Capital Setup (CAPEX)", href: "/capex" },
+  { name: "Risk Control", href: "/risk-control" }, // Changed from /risk
+  { name: "Turnkey Execution", href: "/turnkey" },
+  { name: "Case Studies", href: "/success-stories" }, // Changed from /success
+];
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#0A0F1C]/90 backdrop-blur-md border-b border-white/5">
