@@ -4,11 +4,19 @@ import React from "react";
 import Link from "next/link";
 import { Server, Droplets, Zap, ShieldCheck, ChevronRight } from "lucide-react";
 
+// --- STRICT TYPES (Prevents Vercel Build Crashes) ---
+interface InvestmentBlockProps {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}
+
 export default function CapexPage() {
   return (
     <main className="min-h-screen bg-[#0A0F1C] pt-32 pb-24 px-6 selection:bg-[#C6A85A] selection:text-[#0A0F1C]">
       <div className="max-w-5xl mx-auto animate-in slide-in-from-bottom duration-500">
         
+        {/* HEADER SECTION */}
         <header className="text-center mb-20">
           <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter mb-6">
             Doctor, where exactly is your <br/><span className="text-[#C6A85A]">₹2–5 Crore</span> investment going?
@@ -18,6 +26,7 @@ export default function CapexPage() {
           </p>
         </header>
 
+        {/* INVESTMENT BLOCKS */}
         <div className="grid md:grid-cols-2 gap-8 mb-20">
           <InvestmentBlock 
             icon={<Server className="text-[#00A8A8]" size={28} />}
@@ -41,9 +50,11 @@ export default function CapexPage() {
           />
         </div>
 
-        <div className="bg-[#0D1525] border border-white/5 rounded-3xl p-10 text-center shadow-2xl">
+        {/* CTA CONVERSION BLOCK (Fixed Routing to /os) */}
+        <div className="bg-[#0D1525] border border-white/5 rounded-[2.5rem] p-10 text-center shadow-2xl">
           <h3 className="text-2xl font-black text-white mb-4">Ready to structure your capital?</h3>
           <p className="text-gray-400 mb-8 font-medium">Evaluate your exact capacity and see your projected setup cost.</p>
+          
           <Link href="/os">
             <button className="bg-[#C6A85A] text-[#0A0F1C] px-8 py-4 rounded-xl font-black uppercase tracking-widest text-xs transition-all hover:bg-[#D4B970] inline-flex items-center gap-2 shadow-[0_10px_20px_rgba(198,168,90,0.15)]">
               Evaluate Your Project <ChevronRight size={16} />
@@ -56,11 +67,13 @@ export default function CapexPage() {
   );
 }
 
-function InvestmentBlock({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
+// --- STRICT SUB-COMPONENTS ---
+function InvestmentBlock({ icon, title, desc }: InvestmentBlockProps) {
   return (
     <div className="bg-[#0D1525] p-8 border border-white/5 rounded-[2rem] hover:border-white/10 transition-all shadow-lg">
       <div className="w-14 h-14 rounded-xl bg-[#0A0F1C] border border-white/5 flex items-center justify-center mb-6 shadow-md">
-        {icon}
+        {/* Type-safe cloneElement to prevent build crashes */}
+        {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { size: 28 })}
       </div>
       <h3 className="text-xl font-black text-white mb-3 tracking-tight">{title}</h3>
       <p className="text-sm text-gray-400 leading-relaxed font-medium">{desc}</p>

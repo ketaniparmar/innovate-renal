@@ -22,6 +22,7 @@ export default function ContactPage() {
     const text = `*New ${formType === "project" ? "Project Advisory" : "AMC & Operations"} Inquiry*%0A%0A*Doctor/Director:* ${formData.name}%0A*Hospital:* ${formData.hospital}%0A*Message:* ${formData.message}`;
     
     setTimeout(() => {
+      // Routes directly to your Innovate India advisory line
       window.open(`https://wa.me/919879576332?text=${encodeURIComponent(text)}`, '_blank');
       setIsSubmitting(false);
     }, 1000);
@@ -35,7 +36,7 @@ export default function ContactPage() {
 
       <div className="max-w-[1280px] mx-auto px-6 relative z-10">
         
-        {/* Header */}
+        {/* HEADER SECTION */}
         <div className="text-center mb-16 max-w-3xl mx-auto animate-in fade-in zoom-in duration-500">
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 text-white">
             Speak directly with a <br/>
@@ -50,7 +51,7 @@ export default function ContactPage() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           
-          {/* LEFT: FORM SECTION */}
+          {/* LEFT: ADVISORY FORM */}
           <div className="lg:col-span-2 animate-in slide-in-from-bottom duration-500 delay-100">
             <div className="bg-[#0D1525] border border-white/5 rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
               
@@ -78,7 +79,7 @@ export default function ContactPage() {
                 </button>
               </div>
 
-              {/* Contact Form */}
+              {/* Input Fields */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -114,6 +115,7 @@ export default function ContactPage() {
                   />
                 </div>
                 
+                {/* CTA Submit Button */}
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
@@ -133,7 +135,7 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* RIGHT: CONTACT INFO */}
+          {/* RIGHT: CONTACT INFO & QUICK CONNECT */}
           <aside className="flex flex-col gap-6 animate-in slide-in-from-bottom duration-500 delay-200">
             
             {/* Regional HQ Card */}
@@ -173,7 +175,7 @@ function InfoRow({ icon, title, desc }: InfoRowProps) {
   return (
     <div className="flex gap-4 items-start">
       <div className="text-gray-500 mt-0.5">
-        {/* Safely clone the icon to prevent TypeScript build errors */}
+        {/* Safely clone the icon to prevent TypeScript build crashes */}
         {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { size: 18 })}
       </div>
       <div>
