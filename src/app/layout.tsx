@@ -13,30 +13,30 @@ const inter = Inter({
   display: "swap",
 });
 
-// --- METADATA (Doctor/CFO Language) ---
+// --- METADATA (CFO & Institutional Authority) ---
 export const metadata: Metadata = {
   title: {
-    default: "Dialysis Center Financial Planning | Innovate India",
+    default: "Sovereign OS v9.0 | Dialysis Infrastructure Underwriting",
     template: "%s | Innovate India",
   },
   description:
-    "Plan your dialysis center with complete financial clarity. Know your setup cost, monthly running cost, profit, and investment recovery timeline.",
+    "Institutional-grade financial planning for dialysis centers. Precise CAPEX modeling, EBITDA projections, and risk-hedged operational architecture.",
   keywords: [
-    "Dialysis Setup Cost India",
-    "Dialysis Center Profit Calculation",
+    "Dialysis Infrastructure Underwriting",
+    "Sovereign OS Dialysis",
+    "Healthcare CAPEX Modeling",
     "Dialysis Project Report DPR",
-    "PMJAY Dialysis Revenue",
-    "Dialysis AMC Cost",
-    "Hospital Financial Planning"
+    "PMJAY Revenue Optimization",
+    "Medical Facility Financial Planning"
   ],
   authors: [{ name: "Innovate India", url: "https://innovate-india.com" }],
 };
 
-// --- VIEWPORT ---
+// --- VIEWPORT (Deep Navy Theme) ---
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#010810",
+  themeColor: "#0A0F1C",
 };
 
 export default function RootLayout({
@@ -45,127 +45,128 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
+    <html lang="en" className="scroll-smooth">
       <body
-        className={`${inter.variable} font-sans bg-[#010810] text-white antialiased relative selection:bg-[#D4AF37] selection:text-black`}
+        className={`${inter.variable} font-sans bg-[#0A0F1C] text-slate-200 antialiased relative selection:bg-[#C6A85A] selection:text-[#0A0F1C]`}
       >
-        {/* GLOBAL STATE */}
+        {/* GLOBAL STATE ENGINE */}
         <InfraProvider>
 
-          {/* BACKGROUND EFFECT */}
+          {/* BRANDED BACKGROUND AMBIENCE */}
           <div className="fixed inset-0 -z-10 pointer-events-none">
-            <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#D4AF37]/5 blur-[140px] rounded-full" />
-            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#3B82F6]/5 blur-[140px] rounded-full" />
+            <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#C6A85A]/5 blur-[140px] rounded-full" />
+            {/* Swapped generic blue for Intelligence Teal */}
+            <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#00A8A8]/5 blur-[140px] rounded-full" />
           </div>
 
-          {/* NAVBAR */}
+          {/* NAVIGATION BAR */}
           <Navbar />
 
-          {/* MAIN */}
+          {/* MAIN CONTENT AREA */}
           <main className="min-h-[calc(100vh-80px)] pt-[88px]">
             {children}
           </main>
 
-          {/* FOOTER */}
-          <footer className="border-t border-white/5 bg-[#010810] relative overflow-hidden mt-20">
+          {/* INSTITUTIONAL FOOTER */}
+          <footer className="border-t border-white/5 bg-[#0A0F1C] relative overflow-hidden mt-20">
             
             <div className="max-w-[1280px] mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-4 gap-12">
 
-              {/* BRAND */}
+              {/* BRAND ARCHITECTURE */}
               <div>
                 <Link href="/" className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-xl flex items-center justify-center">
-                    <Activity className="text-[#D4AF37]" size={20} />
+                  <div className="w-10 h-10 bg-[#C6A85A]/10 border border-[#C6A85A]/30 rounded-xl flex items-center justify-center">
+                    <Activity className="text-[#C6A85A]" size={20} />
                   </div>
                   <div>
-                    <h1 className="font-black text-xl tracking-tight text-white">
+                    <h1 className="font-black text-xl tracking-tight text-white uppercase italic">
                       Innovate India
                     </h1>
-                    <p className="text-[10px] text-[#D4AF37] font-bold uppercase">
-                      Dialysis Consultancy
+                    <p className="text-[10px] text-[#00A8A8] font-black uppercase tracking-widest">
+                      Infrastructure Intelligence
                     </p>
                   </div>
                 </Link>
 
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  We help doctors and hospital owners plan dialysis centers with
-                  clear numbers — from setup cost to monthly profit and risk protection.
+                <p className="text-sm text-gray-500 leading-relaxed font-medium">
+                  We engineer medical infrastructure as high-yield financial systems. 
+                  Providing institutional clarity for nephrologists and hospital owners.
                 </p>
 
-                <div className="mt-6 flex items-center gap-2 text-gray-500 text-xs font-bold">
-                  <ShieldCheck size={14} className="text-emerald-500" />
-                  NABH & PMJAY aligned planning
+                <div className="mt-6 flex items-center gap-2 text-gray-600 text-xs font-black uppercase tracking-widest">
+                  <ShieldCheck size={14} className="text-[#00A8A8]" />
+                  NABH & PM-JAY Compliance Audit
                 </div>
               </div>
 
-              {/* WHAT YOU CAN PLAN */}
+              {/* STRATEGIC TOOLS */}
               <div className="flex flex-col gap-3 text-sm">
-                <span className="text-gray-500 font-bold mb-2">
-                  What You Can Plan
+                <span className="text-gray-600 font-black uppercase tracking-widest text-[10px] mb-4">
+                  Planning Hub
                 </span>
-                <Link href="/capex" className="text-gray-400 hover:text-white">
-                  Dialysis Setup Cost
+                <Link href="/capex" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                  Setup Cost Engine
                 </Link>
-                <Link href="/tools" className="text-gray-400 hover:text-white">
-                  Monthly Income & Profit
+                <Link href="/tools" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                  Yield & Profit Projections
                 </Link>
-                <Link href="/service" className="text-gray-400 hover:text-white">
-                  AMC & Maintenance Cost
+                <Link href="/service" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                  Risk & AMC Intel
                 </Link>
-                <Link href="/solutions" className="text-gray-400 hover:text-white">
-                  Complete Dialysis Setup
+                <Link href="/solutions" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                  Turnkey Infrastructure
                 </Link>
               </div>
 
-              {/* COMPLIANCE */}
+              {/* COMPLIANCE STANDARDS */}
               <div className="flex flex-col gap-3 text-sm">
-                <span className="text-gray-500 font-bold mb-2">
-                  Compliance & Safety
+                <span className="text-gray-600 font-black uppercase tracking-widest text-[10px] mb-4">
+                  Frameworks
                 </span>
-                <span className="text-gray-400">PM-JAY Guidelines</span>
-                <span className="text-gray-400">ESIC / CGHS Protocols</span>
-                <span className="text-gray-400">Infection Control Standards</span>
-                <span className="text-gray-400">Insurance & Risk Planning</span>
+                <span className="text-gray-500 font-bold">PM-JAY v2.0 Guidelines</span>
+                <span className="text-gray-500 font-bold">ESIC / CGHS Underwriting</span>
+                <span className="text-gray-500 font-bold">AAMI Water Standards</span>
+                <span className="text-gray-500 font-bold">Capital Risk Hedging</span>
               </div>
 
-              {/* CTA */}
-              <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6 flex flex-col justify-between">
+              {/* CONVERSION ENGINE CTA */}
+              <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 flex flex-col justify-between shadow-2xl">
                 <div>
-                  <h3 className="text-lg font-black mb-3">
-                    Plan Your Dialysis Center
+                  <h3 className="text-lg font-black mb-3 text-white">
+                    Operationalize Assets
                   </h3>
-                  <p className="text-sm text-gray-400 mb-6">
-                    See your monthly income, running cost, and how fast you can recover your investment.
+                  <p className="text-xs text-gray-500 mb-6 leading-relaxed font-medium">
+                    Convert clinical uncertainty into predictable monthly yield through the Sovereign v9.0 Engine.
                   </p>
                 </div>
 
                 <Link href="/os">
-                  <button className="w-full bg-[#D4AF37] text-black py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-yellow-500 transition">
-                    Start Planning <ArrowRight size={16} />
+                  <button className="w-full bg-[#C6A85A] text-[#0A0F1C] py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#D4B970] transition-all shadow-[0_10px_20px_rgba(198,168,90,0.15)]">
+                    Start Underwriting <ArrowRight size={14} />
                   </button>
                 </Link>
               </div>
             </div>
 
-            {/* BOTTOM */}
-            <div className="border-t border-white/5 py-8 text-center">
-              <p className="text-xs text-gray-500">
-                © {new Date().getFullYear()} Innovate India — Dialysis Consultancy & Infrastructure Planning
+            {/* COPYRIGHT BAR */}
+            <div className="border-t border-white/5 py-10 text-center">
+              <p className="text-[10px] text-gray-600 font-black uppercase tracking-[0.4em]">
+                © {new Date().getFullYear()} Innovate India — Healthcare Infrastructure Intelligence
               </p>
             </div>
           </footer>
 
         </InfraProvider>
 
-        {/* SCROLLBAR */}
+        {/* CUSTOM BRANDED SCROLLBAR */}
         <style
           dangerouslySetInnerHTML={{
             __html: `
-          ::-webkit-scrollbar { width: 6px; }
-          ::-webkit-scrollbar-track { background: #010810; }
-          ::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.2); border-radius: 10px; }
-          ::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
-        `,
+            ::-webkit-scrollbar { width: 5px; }
+            ::-webkit-scrollbar-track { background: #0A0F1C; }
+            ::-webkit-scrollbar-thumb { background: rgba(198,168,90,0.1); border-radius: 10px; }
+            ::-webkit-scrollbar-thumb:hover { background: #C6A85A; }
+          `,
           }}
         />
       </body>
