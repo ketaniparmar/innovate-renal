@@ -1,35 +1,30 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
-import {
-  ShieldCheck,
-  Zap,
-  ChevronRight,
-  ShieldAlert
+import { 
+  ShieldCheck, AlertTriangle, ChevronRight, Activity, 
+  MessageSquare, CheckCircle2, Zap, Package, FileText 
 } from "lucide-react";
-
 import { useInfra } from "@/context/InfrastructureContext";
-// Ensure this path matches your v8 capex engine location
-import { calculateV8Capex } from "@/lib/capex-engine-v8"; 
+import { calculateV8Capex } from "@/lib/capex-engine-v8";
 
-// --- STRICT TYPES (Prevents Vercel Build Crashes) ---
-interface ToggleProps {
+// --- STRICT TYPES ---
+interface ToggleRowProps {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
   active: boolean;
   onClick: () => void;
   color: string;
+  cost: number;
+  recovery: number;
 }
 
-interface MetricProps {
-  label: string;
-  value: string;
-}
-
-export default function RiskControlPage() {
+export default function RiskStackDecisionEngine() {
   const infra = useInfra();
 
-  // --- 1. CORE INFRA DNA (Safe Fallbacks for Direct/SEO Traffic) ---
+  // Safe fallbacks for direct routing
   const {
     machines = 15,
     sessionsPerDay = 2.8,
@@ -42,174 +37,211 @@ export default function RiskControlPage() {
     buildGrade = "Premium"
   } = infra || {};
 
-  const [withAMC, setWithAMC] = useState(false);
-  const [withInsurance, setWithInsurance] = useState(false);
+  // Unified Stack State (Default to Assumed Close)
+  const [withAMC, setWithAMC] = useState(true);
+  const [withInsurance, setWithInsurance] = useState(true);
+  const [withDiacare, setWithDiacare] = useState(true);
 
-  // --- 2. HEDGING ENGINE (v8.0 Sync) ---
   const metrics = useMemo(() => {
-    // Sync with V8 CAPEX math safely
-    let totalCapex = 0;
+    // CAPEX & Base Revenue
+    let totalCapex = machines * 1200000;
     try {
       const capex = calculateV8Capex({ machines, cityTier, tdsLevel, buildGrade });
       totalCapex = capex.totalCapex;
-    } catch (e) {
-      totalCapex = machines * 1200000; // Safe fallback if engine is missing
-    }
+    } catch (e) { /* Fallback used */ }
 
-    // Sync with V8 Revenue Realization
-    const WAR = (pmjay/100 * 1300) + (pvt/100 * 2600) + (tpa/100 * 2100);
-    const monthlyRevenue = (machines * sessionsPerDay * 26) * WAR;
+    const WAR = (pmjay / 100) * 1300 + (pvt / 100) * 2600 + (tpa / 100) * 2100;
+    const monthlyRevenue = machines * sessionsPerDay * 26 * WAR;
 
-    // Exposure Segmentation
+    // 1. AMC Economics
     const downtimeLoss = monthlyRevenue * (downtime / 100);
-    const clinicalLeakage = monthlyRevenue * 0.12; // Standard underutilization/leakage factor
-    const totalExposure = downtimeLoss + clinicalLeakage;
+    const amcCost = (45000 * machines) / 12;
+    const amcRecovery = (downtimeLoss - (monthlyRevenue * 0.01)) * 0.85;
 
-    // Hedge Logic: 85% Recovery via Managed Service (AMC)
-    const monthlyAMC = (45000 * machines) / 12; // AMC Unit Cost
-    const netDowntimePostAMC = monthlyRevenue * 0.01; // Optimized to 1%
-    const amcGain = (downtimeLoss - netDowntimePostAMC) * 0.85; // Realistic 85% conversion
+    // 2. Insurance Economics
+    const insuranceCost = (totalCapex * 0.01) / 12;
+    const insuranceProtection = (monthlyRevenue * 0.12) * 0.95; // Hedging 95% of catastrophic risk
 
-    // Hedge Logic: Insurance (EEI) Risk Transfer
-    const monthlyInsurance = (totalCapex * 0.01) / 12;
-    const catastrophicRisk = clinicalLeakage * 0.95; // 95% risk transfer on breakdown
+    // 3. Diacare Supply Economics
+    const baseConsumableCost = machines * sessionsPerDay * 26 * 455;
+    const diacareSavings = baseConsumableCost * 0.18; // 18% margin improvement
 
-    // ROI Integration
-    const totalCost = (withAMC ? monthlyAMC : 0) + (withInsurance ? monthlyInsurance : 0);
-    const totalProtection = (withAMC ? amcGain : 0) + (withInsurance ? catastrophicRisk : 0);
-    const netSavings = totalProtection - totalCost;
-    const riskCoverage = totalExposure > 0 ? (totalProtection / totalExposure) * 100 : 0;
+    // Stack Aggregation
+    const totalExposedRisk = downtimeLoss + insuranceProtection + diacareSavings;
+    
+    let netImpact = 0;
+    let totalRecovered = 0;
+    let totalPremium = 0;
+
+    if (withAMC) { netImpact += (amcRecovery - amcCost); totalRecovered += amcRecovery; totalPremium += amcCost; }
+    else { netImpact -= downtimeLoss; }
+
+    if (withInsurance) { netImpact += (insuranceProtection - insuranceCost); totalRecovered += insuranceProtection; totalPremium += insuranceCost; }
+    else { netImpact -= insuranceProtection; }
+
+    if (withDiacare) { netImpact += diacareSavings; totalRecovered += diacareSavings; }
+    else { netImpact -= diacareSavings; }
+
+    // Analytics
+    const riskCoveragePct = totalExposedRisk > 0 ? (totalRecovered / totalExposedRisk) * 100 : 0;
+    const unhedgedMoney = totalExposedRisk - totalRecovered;
+
+    // Dynamic Recommendation (FIX 1)
+    const isHighlyRecommended = downtime > 2 || machines >= 10;
+    const confidenceScore = isHighlyRecommended ? 98 : 82;
 
     return {
-      monthlyRevenue,
-      totalExposure,
-      totalCapex,
-      netSavings,
-      riskCoverage,
-      monthlyAMC,
-      monthlyInsurance,
-      downtimeLoss,
-      clinicalLeakage
+      netImpact,
+      totalExposedRisk,
+      riskCoveragePct,
+      unhedgedMoney,
+      amcCost, amcRecovery, downtimeLoss,
+      insuranceCost, insuranceProtection,
+      diacareSavings,
+      isHighlyRecommended,
+      confidenceScore
     };
-  }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, cityTier, tdsLevel, buildGrade, withAMC, withInsurance]);
+  }, [machines, sessionsPerDay, downtime, pmjay, pvt, tpa, cityTier, tdsLevel, buildGrade, withAMC, withInsurance, withDiacare]);
 
-  const formatINR = (val: number) => `₹${new Intl.NumberFormat("en-IN").format(Math.round(val))}`;
+  const formatINR = (val: number) =>
+    `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(val))}`;
+
+  // Assumed Close WhatsApp Injection (FIX 4)
+  const handleWhatsApp = () => {
+    const stackStatus = [
+      withAMC ? "AMC" : "", 
+      withInsurance ? "EEI" : "", 
+      withDiacare ? "Diacare" : ""
+    ].filter(Boolean).join(" + ") || "None";
+
+    const text = `*Innovate India Advisory - Risk Stack Integration*%0A%0A*Proceeding with:* ${stackStatus}%0A*Net Monthly Financial Impact:* ${metrics.netImpact >= 0 ? '+' : '-'}${formatINR(Math.abs(metrics.netImpact))}%0A*Risk Shielded:* ${metrics.riskCoveragePct.toFixed(0)}%%0A%0AProceeding with Risk Stack integration. Please share execution details and DPR formatting.`;
+    
+    window.open(`https://wa.me/919879576332?text=${text}`, '_blank');
+  };
+
+  const stackIsFull = withAMC && withInsurance && withDiacare;
 
   return (
-    <main className="min-h-screen bg-[#0A0F1C] text-slate-200 p-6 lg:p-12 font-sans overflow-x-hidden selection:bg-[#C6A85A] selection:text-[#0A0F1C] pt-24">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* --- STRATEGIC ADD 1: PRE-FRAME --- */}
-        <div className="max-w-3xl mb-12 animate-in fade-in duration-500">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter">
-            Doctor, this is how you <span className="text-[#00A8A8]">stop the leakage.</span>
-          </h2>
-          <p className="text-gray-400 text-lg md:text-xl font-medium leading-relaxed">
-            In the previous step, you saw where money is lost.  
-            Now, let's simulate how structured operational systems recover and protect your income.
+    <main className="min-h-screen bg-[#0A0F1C] text-slate-200 flex flex-col items-center justify-center px-6 py-24 selection:bg-[#00A8A8] selection:text-white relative overflow-hidden">
+      
+      {/* Background Ambience */}
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] blur-[150px] rounded-full pointer-events-none transition-colors duration-700 ${metrics.netImpact > 0 ? 'bg-[#00A8A8]/10' : 'bg-[#A6192E]/10'}`} />
+
+      <div className="max-w-4xl w-full relative z-10 animate-in fade-in zoom-in-95 duration-500">
+
+        {/* HEADLINE */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl md:text-5xl font-black mb-4 text-white tracking-tight">
+            The Risk Stack Engine
+          </h1>
+          <p className="text-gray-400 text-lg font-medium">
+            Toggle your operational controls to finalize your financial projection.
           </p>
         </div>
 
-        {/* INSTITUTIONAL HEADER */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-white/5 pb-10 gap-8 animate-in slide-in-from-bottom duration-500 delay-100">
-          <div>
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#00A8A8] mb-3">
-              Financial Underwriting <ChevronRight size={12} /> Risk Neutralization
-            </div>
-            <h1 className="text-4xl font-black tracking-tighter text-white">Downside Intelligence</h1>
-            <p className="text-gray-500 text-sm mt-3 font-medium">
-              Safeguarding <span className="text-[#C6A85A] font-bold">₹{(metrics.totalCapex / 10000000).toFixed(2)} Cr</span> in Clinical Infrastructure.
-            </p>
+        {/* 1. DYNAMIC AUTO RECOMMENDATION ENGINE (FIX 1 & 2) */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="bg-[#0D1525] border border-white/10 px-6 py-3 rounded-full flex items-center gap-3 shadow-lg">
+            <Activity size={18} className="text-[#C6A85A]" />
+            <span className="text-xs font-black uppercase tracking-widest text-gray-400">System Recommendation:</span>
+            <span className={`text-xs font-black uppercase tracking-widest flex items-center gap-1 ${metrics.isHighlyRecommended ? "text-[#00A8A8]" : "text-[#C6A85A]"}`}>
+              <CheckCircle2 size={14} /> 
+              {metrics.isHighlyRecommended ? "FULL STACK" : "OPTIONAL"} ({metrics.confidenceScore}% Confidence)
+            </span>
           </div>
-          <div className="text-left md:text-right bg-[#0D1525] p-4 rounded-2xl border border-white/5">
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Exposure Hedged</p>
-            <p className={`text-4xl font-black tracking-tighter ${metrics.riskCoverage > 80 ? 'text-[#00A8A8]' : 'text-[#A6192E]'}`}>
-              {metrics.riskCoverage.toFixed(0)}%
-            </p>
-          </div>
-        </header>
-
-        {/* --- STRATEGIC ADD 2: SIMPLIFIED INSIGHT LAYER --- */}
-        <div className="bg-[#A6192E]/10 border border-[#A6192E]/20 p-8 rounded-[2rem] mb-10 shadow-lg animate-in slide-in-from-bottom duration-500 delay-200">
-          <div className="flex items-center gap-3 mb-2">
-            <ShieldAlert className="text-[#A6192E]" size={24} />
-            <p className="text-white font-black text-xl tracking-tight">
-              Without control systems, 15–30% of your revenue is exposed every month.
-            </p>
-          </div>
-          <p className="text-gray-400 text-sm mt-2 font-medium pl-9">
-            This leakage is rarely visible in standard accounting reports — but it directly and continuously impacts your net profit margin. Activate the safety protocols below to model the recovery.
+          {/* Decision Justification Anchor */}
+          <p className="text-[11px] text-gray-500 mt-3 text-center font-bold tracking-wide uppercase">
+            {metrics.isHighlyRecommended
+              ? `A fleet of ${machines} machines with ${downtime}% expected downtime makes full integration financially dominant.`
+              : "Low operational scale reduces absolute urgency, but capital exposure still exists."}
           </p>
         </div>
 
-        {/* RISK HEDGING CONTROLS */}
-        <div className="grid md:grid-cols-2 gap-6 mb-10 animate-in slide-in-from-bottom duration-500 delay-300">
-          <div className={`p-8 rounded-[2.5rem] border transition-all shadow-xl ${withAMC ? 'bg-[#00A8A8]/10 border-[#00A8A8]/30' : 'bg-[#0D1525] border-white/5'}`}>
-            <div className="flex justify-between items-start mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-[#00A8A8]/10 flex items-center justify-center text-[#00A8A8] border border-[#00A8A8]/20">
-                <Zap size={28} fill={withAMC ? "#00A8A8" : "none"} />
-              </div>
-              <Toggle active={withAMC} onClick={() => setWithAMC(!withAMC)} color="bg-[#00A8A8]" />
-            </div>
-            <h3 className="text-xl font-black text-white mb-2">Predictive Maintenance (AMC)</h3>
-            <p className="text-sm font-medium text-gray-400 leading-relaxed">Eliminate catastrophic downtime leakage via 24/7 technical oversight and preventive parts replacement.</p>
+        {/* 2. UNIFIED DECISION CARD */}
+        <div className={`p-8 md:p-12 rounded-[2.5rem] border transition-all duration-500 shadow-2xl mb-8
+          ${metrics.netImpact >= 0 ? "bg-[#0A0F1C] border-[#00A8A8]/30 shadow-[#00A8A8]/10" : "bg-[#0A0F1C] border-[#A6192E]/30 shadow-[#A6192E]/10"}`}>
+
+          {/* STACK TOGGLES */}
+          <div className="space-y-4 mb-12">
+            <ToggleRow 
+              title="AMC Protection" subtitle="Managed predictive maintenance"
+              icon={<Zap size={20} />} color="bg-[#00A8A8]"
+              active={withAMC} onClick={() => setWithAMC(!withAMC)}
+              cost={metrics.amcCost} recovery={metrics.amcRecovery}
+            />
+            <ToggleRow 
+              title="EEI Insurance" subtitle="Catastrophic asset risk transfer"
+              icon={<ShieldCheck size={20} />} color="bg-[#C6A85A]"
+              active={withInsurance} onClick={() => setWithInsurance(!withInsurance)}
+              cost={metrics.insuranceCost} recovery={metrics.insuranceProtection}
+            />
+            <ToggleRow 
+              title="Diacare Supply" subtitle="Optimized clinical procurement"
+              icon={<Package size={20} />} color="bg-[#00A8A8]"
+              active={withDiacare} onClick={() => setWithDiacare(!withDiacare)}
+              cost={0} recovery={metrics.diacareSavings}
+            />
           </div>
 
-          <div className={`p-8 rounded-[2.5rem] border transition-all shadow-xl ${withInsurance ? 'bg-[#C6A85A]/10 border-[#C6A85A]/30' : 'bg-[#0D1525] border-white/5'}`}>
-            <div className="flex justify-between items-start mb-6">
-              <div className="w-14 h-14 rounded-2xl bg-[#C6A85A]/10 flex items-center justify-center text-[#C6A85A] border border-[#C6A85A]/20">
-                <ShieldCheck size={28} fill={withInsurance ? "#C6A85A" : "none"} />
-              </div>
-              <Toggle active={withInsurance} onClick={() => setWithInsurance(!withInsurance)} color="bg-[#C6A85A]" />
-            </div>
-            <h3 className="text-xl font-black text-white mb-2">Asset Risk Transfer (EEI)</h3>
-            <p className="text-sm font-medium text-gray-400 leading-relaxed">Transfer massive electronic and mechanical breakdown capital risk directly to underwriters.</p>
+          {/* IMPACT NUMBER */}
+          <div className="text-center mb-10 pt-10 border-t border-white/5">
+            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-500 mb-4">Total Net Monthly Impact</p>
+            <h2 className={`text-7xl md:text-8xl font-black tracking-tighter tabular-nums transition-colors duration-500 ${metrics.netImpact >= 0 ? "text-[#00A8A8]" : "text-[#A6192E]"}`}>
+              {metrics.netImpact >= 0 ? "+" : "-"}{formatINR(Math.abs(metrics.netImpact))}
+            </h2>
           </div>
-        </div>
 
-        {/* FINANCIAL IMPACT */}
-        <div className="bg-[#0A1118] border border-white/5 rounded-[3rem] p-10 md:p-14 mb-10 relative overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-500 delay-300">
-          <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-            <ShieldAlert size={250} />
-          </div>
-          
-          <div className="relative z-10 grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4">Projected Monthly Net Impact</p>
-              <h2 className={`text-6xl md:text-7xl font-black tracking-tighter tabular-nums ${metrics.netSavings > 0 ? 'text-[#00A8A8]' : 'text-[#A6192E]'}`}>
-                {formatINR(metrics.netSavings)}
-              </h2>
-              <div className="mt-8 flex flex-wrap gap-6">
-                <Metric label="Contract Cost" value={formatINR(withAMC ? metrics.monthlyAMC : 0)} />
-                <Metric label="Premium Cost" value={formatINR(withInsurance ? metrics.monthlyInsurance : 0)} />
-              </div>
+          {/* DYNAMIC RISK METER (FIX 3) */}
+          <div className="mb-10">
+            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">
+              <span>Total Risk Covered: {metrics.riskCoveragePct.toFixed(0)}%</span>
+              <span className={stackIsFull ? "text-[#00A8A8]" : "text-[#A6192E]"}>
+                {stackIsFull 
+                  ? "Minimal residual risk" 
+                  : `${formatINR(metrics.unhedgedMoney)} at risk monthly`}
+              </span>
             </div>
-            
-            <div className="bg-white/[0.02] p-8 rounded-[2rem] border border-white/10">
-               <p className="text-sm text-gray-300 leading-relaxed font-medium">
-                {withAMC && withInsurance 
-                  ? <span className="text-[#00A8A8] font-bold block mb-2">SYSTEM FULLY HEDGED</span>
-                  : <span className="text-[#A6192E] font-bold block mb-2">EXPOSURE DETECTED</span>
-                }
-                {withAMC && withInsurance 
-                  ? "You have successfully converted unpredictable clinical leakage into a fixed, manageable operational cost. Your EBITDA is now resilient to sudden mechanical failure."
-                  : "You are currently operating with unhedged clinical risks. Machine downtime and catastrophic capital failure remain direct threats to your projected monthly yield."}
+            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+               <div 
+                 className={`h-full transition-all duration-700 ${stackIsFull ? 'bg-[#00A8A8]' : 'bg-[#A6192E]'}`}
+                 style={{ width: `${Math.max(5, metrics.riskCoveragePct)}%` }}
+               />
+            </div>
+          </div>
+
+          {/* LOSS AVERSION SPIKE (FIX 5) */}
+          {!stackIsFull && (
+            <div className="mt-8 p-5 bg-[#A6192E]/10 border border-[#A6192E]/20 rounded-xl text-center animate-in fade-in duration-300">
+              <p className="text-sm text-[#A6192E] font-bold flex items-center justify-center gap-2">
+                <AlertTriangle size={18} />
+                You are abandoning {formatINR(metrics.unhedgedMoney)} in unhedged losses and unrealized gains every month.
               </p>
             </div>
-          </div>
+          )}
+
+          {/* POSITIVE REINFORCEMENT */}
+          {stackIsFull && (
+            <div className="mt-8 p-5 bg-[#00A8A8]/10 border border-[#00A8A8]/20 rounded-xl text-center animate-in fade-in duration-300">
+              <p className="text-sm text-[#00A8A8] font-bold flex items-center justify-center gap-2">
+                <ShieldCheck size={18} />
+                Your capital and clinical yield are structurally insulated.
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* --- STRATEGIC ADD 3: FUNNEL CTA BRIDGE --- */}
-        <div className="grid md:grid-cols-2 gap-4 mt-12 animate-in slide-in-from-bottom duration-500 delay-400">
-          <Link href="/turnkey">
-            <button className="w-full bg-[#C6A85A] hover:bg-[#D4B970] text-[#0A0F1C] py-5 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all shadow-[0_10px_20px_rgba(198,168,90,0.15)] flex justify-center items-center gap-2">
-              Implement Full Turnkey System <ChevronRight size={16} />
-            </button>
-          </Link>
-
-          <Link href="/os">
-            <button className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white py-5 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all flex justify-center items-center gap-2">
-              Recalculate with Protection <ChevronRight size={16} />
+        {/* 3. HARDER CTA LAYER (FIX 4) */}
+        <div className="grid md:grid-cols-2 gap-4 mt-8">
+          <button 
+            onClick={handleWhatsApp}
+            className="w-full bg-[#25D366] hover:bg-[#1EBE5A] text-white py-5 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all shadow-[0_5px_15px_rgba(37,211,102,0.2)] flex justify-center items-center gap-2"
+          >
+            <MessageSquare size={16}/> Proceed with Risk Stack
+          </button>
+          
+          <Link href="/loan">
+            <button className="w-full bg-[#C6A85A] hover:bg-[#D4B970] text-[#0A0F1C] py-5 rounded-xl font-black uppercase tracking-widest text-[11px] transition-all shadow-[0_5px_15px_rgba(198,168,90,0.2)] flex justify-center items-center gap-2">
+              <FileText size={16} /> Export Board DPR / Loan Report
             </button>
           </Link>
         </div>
@@ -220,27 +252,36 @@ export default function RiskControlPage() {
 }
 
 // --- STRICT SUB-COMPONENTS ---
-function Toggle({ active, onClick, color }: ToggleProps) {
-  return (
-    <button 
-      onClick={onClick} 
-      className={`w-14 h-7 rounded-full p-1 transition-all flex items-center ${active ? color : "bg-gray-800"}`}
-    >
-      <motion.div 
-        layout 
-        className="w-5 h-5 bg-white rounded-full shadow-sm" 
-        animate={{ x: active ? 28 : 0 }} 
-        transition={{ type: "spring", stiffness: 500, damping: 30 }}
-      />
-    </button>
-  );
-}
+function ToggleRow({ title, subtitle, icon, active, onClick, color, cost, recovery }: ToggleRowProps) {
+  const formatINR = (val: number) => `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(Math.round(val))}`;
 
-function Metric({ label, value }: MetricProps) {
   return (
-    <div className="bg-[#0A0F1C] border border-white/5 p-4 rounded-xl flex-1">
-      <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">{label}</p>
-      <p className="text-lg font-black text-white tabular-nums tracking-tight">{value}</p>
+    <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${active ? 'bg-white/5 border-white/10' : 'bg-black/20 border-white/5 opacity-60 hover:opacity-100'}`}>
+      <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${active ? `${color}/20 text-white` : 'border-white/5 text-gray-500'}`}>
+          {React.cloneElement(icon as React.ReactElement<any>, { className: active ? color.replace('bg-', 'text-') : 'text-gray-500' })}
+        </div>
+        <div>
+          <h4 className="text-base font-black text-white tracking-tight">{title}</h4>
+          <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">{subtitle}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-6">
+        <div className="text-right hidden sm:block">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-600 mb-1">Net Impact</p>
+          <p className={`text-sm font-bold tabular-nums ${active ? 'text-white' : 'text-gray-600'}`}>
+            {active ? `+ ${formatINR(recovery - cost)}` : 'Deactivated'}
+          </p>
+        </div>
+
+        <button
+          onClick={onClick}
+          className={`w-14 h-7 rounded-full p-1 transition-all shadow-inner flex items-center ${active ? color : "bg-gray-800"}`}
+        >
+          <div className={`w-5 h-5 bg-white rounded-full transition-all shadow-sm ${active ? "translate-x-7" : ""}`} />
+        </button>
+      </div>
     </div>
   );
 }
