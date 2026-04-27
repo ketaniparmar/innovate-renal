@@ -171,7 +171,7 @@ function FeatureRow({ icon, title, desc }: FeatureRowProps) {
     <div className="flex gap-5 items-start group">
       <div className="w-12 h-12 rounded-xl bg-[#0A0F1C] flex items-center justify-center shrink-0 border border-white/5 text-gray-500 group-hover:text-[#00A8A8] group-hover:border-[#00A8A8]/30 transition-all shadow-lg">
         {/* ✅ CRITICAL FIX: Cast as ReactElement<any> to prevent Vercel type crash */}
-        {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}
+       {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { size: 20 })}
       </div>
       <div>
         <h4 className="font-black text-white text-xl mb-2 tracking-tight">{title}</h4>
