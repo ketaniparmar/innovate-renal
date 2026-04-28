@@ -9,7 +9,7 @@ import {
 import Link from "next/link";
 
 // 🧠 ARCHITECTURE RULE: Import logic from isolated engines and PDF builder
-import { calculateTurnkeyCapex, NewCenterInputs } from "@/lib/advisory-engine/cost-model";
+import { calculateTurnkeyCapex, NewCenterInputs } from "@/lib/advisory/cost-model";
 import { DownloadReportButton } from "@/components/advisory/DownloadReportButton";
 
 export default function NewCenterAdvisory() {

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { FacilityInputs } from '../advisory-engine/leakage-engine';
-import { NewCenterInputs } from '../advisory-engine/cost-model';
+import { FacilityInputs } from '../advisory/leakage-engine';
+import { NewCenterInputs } from '../advisory/cost-model';
 
 interface AdvisorySessionState {
   // Store the user's active journey

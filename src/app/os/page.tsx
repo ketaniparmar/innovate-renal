@@ -2,7 +2,16 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { CheckCircle2, ChevronRight, AlertTriangle, ShieldCheck, Activity, Landmark, PhoneCall } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  CheckCircle2, ChevronRight, AlertTriangle, 
+  Activity, Server, ShieldAlert, BarChart3, TrendingUp,
+  Landmark, Clock, ArrowRight, ShieldCheck, Phone
+} from "lucide-react";
+
+// --- ⚙️ V2.0 UNDERWRITING CONSTANTS ---
+const SESSIONS_PER_DAY = 2.5;
+const WORKING_DAYS = 26;
 
 // --- STRICT TYPES ---
 interface ConsultationCardProps {
@@ -17,7 +26,8 @@ interface DecisionBoxProps {
   title: string;
   active: boolean;
   onClick: () => void;
-  color: string;
+  colorHex: string; // e.g., "198,168,90" for rgba injection
+  accentTailwind: string; // e.g., "bg-[#C6A85A]"
   impactText: string;
 }
 
@@ -32,397 +42,384 @@ interface SliderProps {
   color?: string;
 }
 
-export default function GuidedConsultationSystem() {
-  // --- CONSULTATION STATE ---
+export default function GuidedAdvisoryOS() {
   const [step, setStep] = useState(0);
-  const [viewMode, setViewMode] = useState<"doctor" | "investor">("doctor");
+  const [viewMode, setViewMode] = useState<"doctor" | "investor">("investor");
   const [isExistingCenter, setIsExistingCenter] = useState(false);
 
-  // --- CLINICAL SETUP ---
+  // --- STATE ---
   const [machines, setMachines] = useState(15);
-  const [sessionsPerDay, setSessionsPerDay] = useState(2.5);
-  const [downtime, setDowntime] = useState(5);
+  const [occupancy, setOccupancy] = useState(75);
+  const [cityTier, setCityTier] = useState<"A" | "B" | "C">("B");
+  const [pmjay, setPmjay] = useState(40);
+  const [cghs, setCghs] = useState(20);
+  const [cash, setCash] = useState(30);
+  const [insurance, setInsurance] = useState(10);
+  const [withAMC, setWithAMC] = useState(true);
+  const [withDiacare, setWithDiacare] = useState(true);
 
-  // --- REVENUE PIPELINE ---
-  const [pmjay, setPmjay] = useState(30);
-  const [esic, setEsic] = useState(10);
-  const [cghs, setCghs] = useState(10);
-  const [cash, setCash] = useState(25);
-  const [corporate, setCorporate] = useState(25);
-
-  // --- STRATEGIC CONTROLS ---
-  const [withAMC, setWithAMC] = useState(false);
-  const [withInsurance, setWithInsurance] = useState(false);
-  const [withDiacare, setWithDiacare] = useState(false);
-
-  // --- FINANCIAL ENGINE (Fixed & Normalized) ---
+  // --- 🧠 V2.0 ENGINE ---
   const financials = useMemo(() => {
-    // 1. Normalize mix strictly to 100%
-    const totalMix = pmjay + esic + cghs + cash + corporate || 1;
+    const totalMix = pmjay + cghs + cash + insurance || 1;
+    const mix = { pmjay: pmjay / totalMix, cghs: cghs / totalMix, cash: cash / totalMix, insurance: insurance / totalMix };
 
-    const normalized = {
-      pmjay: pmjay / totalMix,
-      esic: esic / totalMix,
-      cghs: cghs / totalMix,
-      cash: cash / totalMix,
-      corporate: corporate / totalMix
+    const MARKET_TRUTH = {
+      pmjay: { rate: 1100, realization: 0.88, delay: 90 },
+      cghs: { rate: 1250, realization: 0.90, delay: 60 },
+      cash: { rate: 2200, realization: 0.98, delay: 0 },
+      insurance: { rate: 1900, realization: 0.85, delay: 45 }
     };
 
-    // 2. Weighted Average Realization
-    const WAR =
-      normalized.pmjay * 1300 +
-      normalized.esic * 1500 +
-      normalized.cghs * 2000 +
-      normalized.cash * 2600 +
-      normalized.corporate * 2200;
+    const baseRate = (mix.pmjay * (MARKET_TRUTH.pmjay.rate * MARKET_TRUTH.pmjay.realization)) + 
+                     (mix.cghs * (MARKET_TRUTH.cghs.rate * MARKET_TRUTH.cghs.realization)) + 
+                     (mix.cash * (MARKET_TRUTH.cash.rate * MARKET_TRUTH.cash.realization)) + 
+                     (mix.insurance * (MARKET_TRUTH.insurance.rate * MARKET_TRUTH.insurance.realization));
 
-    // 3. Capacity & Revenue
-    const actualSessions = machines * sessionsPerDay * 26;
-    const theoreticalSessions = machines * 3 * 26;
+    const weightedDelayDays = (mix.pmjay * MARKET_TRUTH.pmjay.delay) + (mix.cghs * MARKET_TRUTH.cghs.delay) + 
+                              (mix.cash * MARKET_TRUTH.cash.delay) + (mix.insurance * MARKET_TRUTH.insurance.delay);
 
-    const grossRevenue = actualSessions * WAR;
-    const theoreticalRevenue = theoreticalSessions * WAR;
+    const cityMultiplier = cityTier === 'A' ? 1.15 : cityTier === 'B' ? 1.00 : 0.85;
+    const rentPerSqFt = cityTier === 'A' ? 120 : cityTier === 'B' ? 65 : 35;
+    const realizedRate = baseRate * cityMultiplier;
 
-    // 4. Losses & Real-World Floor
-    const downtimeLoss = grossRevenue * (downtime / 100);
-    const utilLoss = theoreticalRevenue - grossRevenue;
-    const baseLeakage = grossRevenue * 0.10; // FORCE INEFFICIENCY FLOOR
-    const totalLoss = downtimeLoss + utilLoss + baseLeakage;
+    const monthlySessions = machines * SESSIONS_PER_DAY * (occupancy / 100) * WORKING_DAYS;
+    const grossRevenue = monthlySessions * realizedRate;
 
-    // 5. Realistic AMC Recovery (85% practical conversion)
-    const amcRecovery = withAMC ? grossRevenue * ((downtime - 1) / 100) * 0.85 : 0;
-
-    // 6. OPEX & Savings
-    const baseConsumable = 455;
-    const consumableCost = actualSessions * baseConsumable;
-    const diacareSavings = withDiacare ? consumableCost * 0.18 : 0;
+    const staffCost = Math.max(machines / 10, 0.8) * 125000; 
+    const rentCost = machines * 125 * rentPerSqFt; 
+    const consumableRate = withDiacare ? 400 : 550; 
+    const variableCost = monthlySessions * (consumableRate + 135); 
+    const maintenanceCost = withAMC ? (machines * 3500) : 0; 
     
-    const fixedOpex = 600000 + machines * 18000;
-    const insuranceCost = withInsurance ? (machines * 1200000 * 0.01) / 12 : 0;
-    const amcCost = withAMC ? (machines * 22000) / 12 : 0;
+    const totalOpex = staffCost + rentCost + variableCost + maintenanceCost;
+    const dailyRevPerMachine = SESSIONS_PER_DAY * realizedRate;
+    const downtimeLoss = !withAMC ? (dailyRevPerMachine * 3 * machines) : 0; 
+    const monthlyEBITDA = grossRevenue - totalOpex - downtimeLoss;
+    const ebitdaMargin = (monthlyEBITDA / grossRevenue) * 100;
+    const totalCapex = machines * 1000000; 
+    const paybackMonths = monthlyEBITDA > 0 ? totalCapex / monthlyEBITDA : 999;
+    const workingCapitalBuffer = totalOpex * (weightedDelayDays / 30); 
 
-    const totalOpex = consumableCost - diacareSavings + fixedOpex + insuranceCost + amcCost;
-    const netIncome = grossRevenue - totalOpex;
-    const totalCapex = machines * 1200000;
+    let finalScore = 0;
+    if (ebitdaMargin >= 25) finalScore += 40; else if (ebitdaMargin >= 18) finalScore += 25; else finalScore += 10;
+    if (paybackMonths <= 24) finalScore += 35; else if (paybackMonths <= 36) finalScore += 20; else finalScore += 5;
+    if (weightedDelayDays <= 30) finalScore += 25; else if (weightedDelayDays <= 60) finalScore += 15; else finalScore += 5;
 
-    const paybackMonths = netIncome > 0 ? (totalCapex / netIncome).toFixed(1) : "Not viable";
+    let grade = "D"; let gradeColor = "text-[#A6192E]"; let gradeRgb = "166,25,46";
+    if (finalScore >= 85) { grade = "A"; gradeColor = "text-[#00A8A8]"; gradeRgb = "0,168,168"; }
+    else if (finalScore >= 65) { grade = "B"; gradeColor = "text-[#C6A85A]"; gradeRgb = "198,168,90"; }
+    else if (finalScore >= 45) { grade = "C"; gradeColor = "text-[#FFA500]"; gradeRgb = "255,165,0"; }
 
     return {
-      WAR, actualSessions, grossRevenue, downtimeLoss, utilLoss, totalLoss,
-      amcRecovery, diacareSavings, totalOpex, netIncome, totalCapex, paybackMonths
+      realizedRate, monthlySessions, grossRevenue, 
+      totalOpex, downtimeLoss, monthlyEBITDA, ebitdaMargin, 
+      totalCapex, paybackMonths, workingCapitalBuffer, weightedDelayDays,
+      grade, gradeColor, gradeRgb,
+      savingsDiacare: monthlySessions * (550 - 400) 
     };
-  }, [machines, sessionsPerDay, downtime, pmjay, esic, cghs, cash, corporate, withAMC, withInsurance, withDiacare]);
+  }, [machines, occupancy, cityTier, pmjay, cghs, cash, insurance, withAMC, withDiacare]);
 
   const formatINR = (val: number) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(val));
+  const formatLakhs = (val: number) => `₹${(val / 100000).toFixed(2)}L`;
 
   const handleWhatsApp = () => {
-    const text = `Doctor, based on your dialysis setup:
+    const text = `Underwriting Request (${viewMode.toUpperCase()} VIEW) - ${isExistingCenter ? 'EXISTING CENTER' : 'NEW SETUP'}:
+• Scale: ${machines} Machines (Tier ${cityTier})
+• Asset Grade: ${financials.grade}
+• Cash Flow (EBITDA): ₹${formatINR(financials.monthlyEBITDA)}/mo
+Need detailed DPR & Execution strategy.`;
+    window.open(`https://wa.me/919879576332?text=${encodeURIComponent(text)}`, "_blank");
+  };
 
-• Monthly Revenue: ₹${formatINR(financials.grossRevenue)}
-• Current Loss: ₹${formatINR(financials.totalLoss)}
-• With AMC: +₹${formatINR(financials.amcRecovery)} recovery
-• Net Monthly Income: ₹${formatINR(financials.netIncome)}
-• Payback: ${financials.paybackMonths} months
-
-This setup is financially viable with proper structuring.`;
-
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  const recordSimulation = async () => {
+    try {
+      await fetch("/api/advisory/record", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          viewMode, cityTier, machines, occupancy,
+          pmjay, cghs, cash, insurance, withAMC, withDiacare, isExistingCenter, financials 
+        })
+      });
+    } catch (error) { console.log("Silent capture failed, proceeding."); }
   };
 
   return (
-    <main className="min-h-screen bg-[#0A0F1C] text-slate-200 p-6 lg:p-12 font-sans selection:bg-[#C6A85A] selection:text-[#0A0F1C]">
-      <div className="max-w-4xl mx-auto">
-        
-        {/* DOCTOR VS INVESTOR TOGGLE */}
-        {step > 0 && (
-          <div className="flex bg-[#0D1525] border border-white/10 rounded-xl p-1 mb-10 w-fit shadow-lg">
-            <button 
-              onClick={() => setViewMode("doctor")}
-              className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${viewMode === "doctor" ? "bg-[#00A8A8] text-white" : "text-gray-500 hover:text-gray-300"}`}
-            >
-              👨‍⚕️ Clinical Operations Focus
-            </button>
-            <button 
-              onClick={() => setViewMode("investor")}
-              className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${viewMode === "investor" ? "bg-[#C6A85A] text-[#0A0F1C]" : "text-gray-500 hover:text-gray-300"}`}
-            >
-              💼 Financial ROI Focus
-            </button>
-          </div>
-        )}
-
-        {/* --- STEP 0: ENTRY POSITIONING --- */}
-        {step === 0 && (
-          <div className="text-center py-20 animate-in fade-in zoom-in duration-500">
-            <div className="w-20 h-20 mx-auto bg-[#C6A85A]/10 border border-[#C6A85A]/30 rounded-2xl flex items-center justify-center mb-8">
-              <Activity className="text-[#C6A85A]" size={40} />
+    <main className="relative min-h-screen bg-[#0A0F1C] text-slate-200 font-sans selection:bg-[#C6A85A] selection:text-[#0A0F1C] overflow-hidden">
+      
+      {/* 🌌 Ambient Background (Apple Depth) */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute w-[800px] h-[800px] bg-[#C6A85A]/5 blur-[150px] top-[-200px] left-[-200px]" />
+        <div className="absolute w-[600px] h-[600px] bg-[#00A8A8]/5 blur-[150px] bottom-[-100px] right-[-100px]" />
+      </div>
+      
+      {/* 🌐 GLOBAL NAVBAR WITH LOGO */}
+      <nav className="fixed top-0 w-full z-50 bg-[#0A0F1C]/80 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3">
+            <img src="/logo.png" alt="Innovate India" className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(198,168,90,0.2)]" />
+            <div className="flex flex-col justify-center border-l border-white/10 pl-3">
+              <span className="font-black text-white tracking-[0.2em] text-sm leading-none mb-1">INNOVATE INDIA</span>
+              <span className="text-[8px] text-[#00A8A8] font-bold tracking-widest uppercase">Healthcare Advisory</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white mb-6 leading-tight">
-              Doctor, before you invest <br/>₹2–5 Crore...
-            </h1>
-            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Let’s understand whether your dialysis center will generate stable monthly income or silently lose money every month.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
+          </Link>
+          <div className="hidden md:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <Link href="/machines" className="hover:text-[#C6A85A] transition-colors">CAPEX Setup</Link>
+            <Link href="/maintenance" className="hover:text-[#C6A85A] transition-colors">Risk Control</Link>
+            <Link href="/consumables" className="hover:text-[#C6A85A] transition-colors">Supply Chain</Link>
+          </div>
+        </div>
+      </nav>
+
+      <div className="pt-32 pb-24 px-6 lg:px-12 relative z-10">
+        <div className="max-w-5xl mx-auto">
+          
+          {/* DOCTOR VS INVESTOR TOGGLE */}
+          {step > 0 && (
+            <div className="flex bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-xl p-1 mb-10 w-fit shadow-lg mx-auto md:mx-0">
               <button 
-                onClick={() => setStep(1)} 
-                className="bg-[#C6A85A] hover:bg-[#D4B970] text-[#0A0F1C] px-8 py-4 rounded-xl font-black uppercase tracking-[0.2em] transition-all shadow-[0_10px_30px_rgba(198,168,90,0.2)]"
+                onClick={() => setViewMode("doctor")}
+                className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${viewMode === "doctor" ? "bg-[#00A8A8] text-white shadow-[0_0_20px_rgba(0,168,168,0.3)]" : "text-gray-500 hover:text-gray-300"}`}
               >
-                Start Financial Assessment
+                👨‍⚕️ Clinical Priority
               </button>
               <button 
-                onClick={() => { setIsExistingCenter(true); setStep(3); }} 
-                className="bg-transparent border border-white/20 text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-white/5 transition-all"
+                onClick={() => setViewMode("investor")}
+                className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${viewMode === "investor" ? "bg-[#C6A85A] text-[#0A0F1C] shadow-[0_0_20px_rgba(198,168,90,0.3)]" : "text-gray-500 hover:text-gray-300"}`}
               >
-                I Already Have a Running Center
+                💼 Financial Underwriting
               </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* --- STEP 1: DIALYSIS SETUP --- */}
-        {step === 1 && (
-          <ConsultationCard step={1} title="Let’s understand your dialysis setup." onNext={() => setStep(2)} onPrev={() => setStep(0)}>
-            <div className="space-y-8">
-              <Slider label="How many dialysis machines are you planning?" value={machines} max={50} onChange={setMachines} />
-              <Slider label="On average, how many patients per machine per day?" value={sessionsPerDay} max={4} step={0.1} onChange={setSessionsPerDay} />
-              <Slider label="What level of machine downtime do you expect?" value={downtime} max={20} suffix="%" onChange={setDowntime} color="accent-[#A6192E]" />
-            </div>
-            <div className="mt-10 p-6 bg-white/5 rounded-2xl border border-white/10">
-              <p className="text-lg text-white font-medium">
-                Based on your setup, your center can generate approximately <span className="font-black text-[#00A8A8]">₹{formatINR(financials.grossRevenue)} per month.</span>
-              </p>
-              <p className="text-xs text-[#A6192E] font-bold mt-2 italic">Even in the best-managed centers, a 10–15% operational inefficiency floor always exists.</p>
-            </div>
-          </ConsultationCard>
-        )}
+          <AnimatePresence mode="wait">
+            {/* --- STEP 0: THE HYBRID HERO GATEWAY --- */}
+            {step === 0 && (
+              <motion.div 
+                key="step0"
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+                className="text-center py-10"
+              >
+                <p className="text-[11px] tracking-[0.3em] uppercase text-[#C6A85A] font-bold mb-6">
+                  Healthcare Infrastructure Intelligence
+                </p>
+                <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight leading-[1.1] mb-6">
+                  Build Dialysis Centers <br />
+                  <span className="text-white/60">With Financial Certainty.</span>
+                </h1>
+                <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-16">
+                  A clinical underwriting system that converts infrastructure into predictable cash flow.
+                </p>
 
-        {/* --- STEP 2: PATIENT MIX --- */}
-        {step === 2 && (
-          <ConsultationCard step={2} title="Who will your patients be?" onNext={() => setStep(3)} onPrev={() => setStep(1)}>
-            <div className="mb-8 p-5 bg-[#00A8A8]/10 border border-[#00A8A8]/20 rounded-xl space-y-2">
-              <div className="flex items-center gap-2 text-xs text-[#00A8A8] font-bold uppercase tracking-widest"><CheckCircle2 size={14} /> PM-JAY aligned pricing</div>
-              <div className="flex items-center gap-2 text-xs text-[#00A8A8] font-bold uppercase tracking-widest"><CheckCircle2 size={14} /> NABH-compatible infrastructure assumptions</div>
-              <div className="flex items-center gap-2 text-xs text-[#00A8A8] font-bold uppercase tracking-widest"><CheckCircle2 size={14} /> State-wise reuse compliance applied</div>
-            </div>
+                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                  <motion.div
+                    whileHover={{ scale: 1.02, y: -4 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    onClick={() => { setIsExistingCenter(false); setStep(1); }} 
+                    className="group relative p-10 rounded-[2.5rem] cursor-pointer bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-[#C6A85A]/40 transition-colors text-left"
+                  >
+                    <div className="absolute inset-0 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition duration-500 shadow-[0_0_80px_rgba(198,168,90,0.15)] pointer-events-none" />
+                    <Server className="text-[#C6A85A] mb-6" size={32} />
+                    <h3 className="text-2xl font-black text-white mb-3">Plan New Center</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed mb-6">CAPEX modeling, infrastructure design, and payback forecasting.</p>
+                    <span className="text-[#C6A85A] text-sm font-bold tracking-widest flex items-center gap-2">ENTER SYSTEM <ArrowRight size={14}/></span>
+                  </motion.div>
 
-            <div className="space-y-6 mb-8">
-              <Slider label="PM-JAY (%)" value={pmjay} max={100} onChange={setPmjay} color="accent-[#00A8A8]" />
-              <Slider label="ESIC (%)" value={esic} max={100} onChange={setEsic} color="accent-[#00A8A8]" />
-              <Slider label="CGHS (%)" value={cghs} max={100} onChange={setCghs} color="accent-[#00A8A8]" />
-              <Slider label="Cash Paying (%)" value={cash} max={100} onChange={setCash} color="accent-[#C6A85A]" />
-              <Slider label="Corporate / Insurance (%)" value={corporate} max={100} onChange={setCorporate} color="accent-[#C6A85A]" />
-            </div>
+                  <motion.div
+                    whileHover={{ scale: 1.02, y: -4 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    onClick={() => { setIsExistingCenter(true); setStep(1); }} 
+                    className="group relative p-10 rounded-[2.5rem] cursor-pointer bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-[#00A8A8]/40 transition-colors text-left"
+                  >
+                    <div className="absolute inset-0 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition duration-500 shadow-[0_0_80px_rgba(0,168,168,0.15)] pointer-events-none" />
+                    <Activity className="text-[#00A8A8] mb-6" size={32} />
+                    <h3 className="text-2xl font-black text-white mb-3">Optimize Running Center</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed mb-6">Identify leakage, improve EBITDA, and stabilize operations.</p>
+                    <span className="text-[#00A8A8] text-sm font-bold tracking-widest flex items-center gap-2">ANALYZE SYSTEM <ArrowRight size={14}/></span>
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
 
-            <div className="p-6 bg-[#0D1525] rounded-2xl border border-white/5">
-              <p className="text-lg text-white">Your blended average earning per dialysis normalizes to <span className="font-black text-[#C6A85A]">₹{formatINR(financials.WAR)}</span>.</p>
-            </div>
-          </ConsultationCard>
-        )}
+            {/* --- STEP 1: SCALE & ECONOMICS --- */}
+            {step === 1 && (
+              <ConsultationCard key="step1" step={1} title={isExistingCenter ? "Current Operations & Scale" : "Scale & Location Economics"} onNext={() => setStep(2)} onPrev={() => setStep(0)}>
+                <div className="space-y-8 mb-8">
+                  <Slider label={isExistingCenter ? "Active Machine Count" : "Planned Machine Scale"} value={machines} max={50} onChange={setMachines} color="accent-[#00A8A8]" />
+                  <Slider label={isExistingCenter ? "Current Clinical Occupancy" : "Target Clinical Occupancy"} value={occupancy} max={100} suffix="%" onChange={setOccupancy} color="accent-[#00A8A8]" />
+                </div>
+                <div className="mb-10">
+                  <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">Location Infrastructure Tier (Impacts Rent & Wages)</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {(['A', 'B', 'C'] as const).map(tier => (
+                      <button key={tier} onClick={() => setCityTier(tier)} className={`py-4 rounded-[1.5rem] font-black text-sm transition-all ${cityTier === tier ? 'bg-[#C6A85A] text-[#0A0F1C] shadow-[0_0_20px_rgba(198,168,90,0.3)]' : 'bg-white/[0.03] text-gray-500 border border-white/5 hover:border-white/20'}`}>
+                        Tier {tier}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </ConsultationCard>
+            )}
 
-        {/* --- STEP 3: HIDDEN LOSSES --- */}
-        {step === 3 && (
-          <ConsultationCard step={3} title="Now let’s look at where money is leaking." onNext={() => setStep(4)} onPrev={() => isExistingCenter ? setStep(0) : setStep(2)}>
-            <p className="text-xl text-white mb-8 font-medium">Doctor, this is the part most spreadsheets ignore.</p>
-            <div className="space-y-4 mb-10">
-              <div className="flex justify-between items-center p-6 bg-[#A6192E]/10 rounded-2xl border border-[#A6192E]/20">
-                <span className="text-gray-300 font-bold">Loss due to downtime:</span>
-                <span className="text-2xl font-black text-[#A6192E]">₹ {formatINR(financials.downtimeLoss)}</span>
-              </div>
-              <div className="flex justify-between items-center p-6 bg-white/5 rounded-2xl border border-white/10">
-                <span className="text-gray-400 font-bold">Loss due to empty clinical slots:</span>
-                <span className="text-xl font-bold text-gray-300">₹ {formatINR(financials.utilLoss)}</span>
-              </div>
-            </div>
-            <div className="text-center p-6 border-t border-white/10">
-              <p className="text-2xl text-white">You are losing <span className="font-black text-[#A6192E]">₹{formatINR(financials.totalLoss)}</span> every month without realizing it.</p>
-            </div>
-          </ConsultationCard>
-        )}
+            {/* --- STEP 2: PAYOR MIX --- */}
+            {step === 2 && (
+              <ConsultationCard key="step2" step={2} title="Define Your Revenue Pipeline" onNext={() => setStep(3)} onPrev={() => setStep(1)}>
+                <div className="mb-8 p-5 bg-[#A6192E]/5 border border-[#A6192E]/20 rounded-2xl">
+                  <p className="text-sm text-gray-300 font-medium">
+                    <strong className="text-white">Underwriting Rule:</strong> Our engine applies real-world realization haircuts. A ₹1,100 PMJAY claim is underwritten at 88% realization to protect cash-flow accuracy.
+                  </p>
+                </div>
+                <div className="space-y-6">
+                  <Slider label="Ayushman Bharat (PMJAY) %" value={pmjay} max={100} onChange={setPmjay} color="accent-[#00A8A8]" />
+                  <Slider label="Government (CGHS/ESIC) %" value={cghs} max={100} onChange={setCghs} color="accent-[#00A8A8]" />
+                  <Slider label="Private Cash Paying %" value={cash} max={100} onChange={setCash} color="accent-[#C6A85A]" />
+                  <Slider label="Insurance / TPA %" value={insurance} max={100} onChange={setInsurance} color="accent-[#C6A85A]" />
+                </div>
+              </ConsultationCard>
+            )}
 
-        {/* --- STEP 4: OPERATIONAL CONTROL --- */}
-        {step === 4 && (
-          <ConsultationCard step={4} title="Let's take operational control." onNext={() => setStep(5)} onPrev={() => setStep(3)}>
-            <div className="space-y-6">
-              <DecisionBox 
-                title="Do you have a proper Annual Maintenance Contract (AMC)?"
-                active={withAMC} onClick={() => setWithAMC(!withAMC)} color="bg-[#00A8A8]"
-                impactText={withAMC ? `Your downtime reduces to ~1%. You recover approximately ₹${formatINR(financials.amcRecovery)}/month.` : "Without AMC, you remain exposed to maximum downtime leakage."}
-              />
-              <DecisionBox 
-                title="Is your investment protected against major breakdowns?"
-                active={withInsurance} onClick={() => setWithInsurance(!withInsurance)} color="bg-[#C6A85A]"
-                impactText={withInsurance ? "Cost: ~1% CAPEX. Protection: 85–90%. One major failure can wipe out months of income." : "Capital remains 100% exposed to electrical/mechanical failure."}
-              />
-              <DecisionBox 
-                title="Will you use an optimized supply chain (Diacare)?"
-                active={withDiacare} onClick={() => setWithDiacare(!withDiacare)} color="bg-[#00A8A8]"
-                impactText={withDiacare ? `Your consumable cost reduces by 15–20%. This directly increases your monthly income by ₹${formatINR(financials.diacareSavings)}.` : "Standard fragmented procurement will artificially inflate your OPEX."}
-              />
-            </div>
-          </ConsultationCard>
-        )}
+            {/* --- STEP 3: OPERATIONAL CONTROL --- */}
+            {step === 3 && (
+              <ConsultationCard 
+                key="step3"
+                step={3} 
+                title={isExistingCenter ? "Identify Hidden Leakage" : "Risk Mitigation & Supply Protocol"} 
+                onNext={() => { recordSimulation(); setStep(4); }} 
+                onPrev={() => setStep(2)}
+              >
+                <div className="space-y-6">
+                  <DecisionBox 
+                    title={isExistingCenter ? "Switch to Diacare ₹400/Session Supply Rail?" : "Include Diacare ₹400/Session Supply Rail?"}
+                    active={withDiacare} onClick={() => setWithDiacare(!withDiacare)} colorHex="198,168,90" accentTailwind="bg-[#C6A85A]"
+                    impactText={withDiacare ? `Secured PMJAY-compliant pricing. Margin protected.` : `Using fragmented market supply. Bleeding ~₹${formatINR(financials.savingsDiacare)} monthly.`}
+                  />
+                  <DecisionBox 
+                    title={isExistingCenter ? "Upgrade to Zero-Downtime AMC Cover?" : "Include Zero-Downtime AMC Cover?"}
+                    active={withAMC} onClick={() => setWithAMC(!withAMC)} colorHex="0,168,168" accentTailwind="bg-[#00A8A8]"
+                    impactText={withAMC ? `Downtime risk transferred to vendor. Uptime protected.` : `Exposed to breakdown loss. 3 days of downtime will cost ₹${formatINR(financials.downtimeLoss || (SESSIONS_PER_DAY * financials.realizedRate * 3 * machines))}.`}
+                  />
+                </div>
+              </ConsultationCard>
+            )}
 
-        {/* --- STEP 5: FINAL CFO SUMMARY & CONVERSION --- */}
-        {step === 5 && (
-          <div className="animate-in slide-in-from-right duration-500 pb-20">
-            <h2 className="text-4xl font-black text-white mb-8">Doctor, here is your complete financial picture.</h2>
-            
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <div className="p-8 bg-[#0D1525] rounded-[2rem] border border-white/5">
-                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Total Investment (CAPEX)</p>
-                <p className="text-3xl font-black text-white">₹ {formatINR(financials.totalCapex)}</p>
-              </div>
-              <div className="p-8 bg-[#0D1525] rounded-[2rem] border border-white/5">
-                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Monthly Revenue</p>
-                <p className="text-3xl font-black text-[#00A8A8]">₹ {formatINR(financials.grossRevenue)}</p>
-              </div>
-              
-              <div className="p-8 bg-[#0D1525] rounded-[2rem] border border-white/5 md:col-span-2">
-                <div className="flex flex-col md:flex-row justify-between md:items-center gap-6">
+            {/* --- STEP 4: THE CFO SUMMARY --- */}
+            {step === 4 && (
+              <motion.div key="step4" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="pb-20">
+                
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                   <div>
-                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Monthly Operating Cost (OPEX)</p>
-                    <p className="text-3xl font-black text-[#A6192E] mb-2">₹ {formatINR(financials.totalOpex)}</p>
-                    <p className="text-xs text-gray-500 max-w-xs">This includes fixed and variable costs required to run your center daily.</p>
+                    <h2 className="text-4xl font-black text-white mb-2">{isExistingCenter ? "Center Optimization Audit" : "Project Underwriting"}</h2>
+                    <p className="text-gray-400 font-medium">Bank-grade evaluation based on Tier {cityTier} economics.</p>
                   </div>
-                  <div className="bg-[#0A0F1C] p-5 rounded-xl border border-white/5 flex-1">
-                    <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-2">OPEX Includes:</p>
-                    <ul className="text-xs text-gray-400 space-y-1 font-medium">
-                      <li>• Dialysis consumables (dialyzer, tubing, fluids)</li>
-                      <li>• Staff salaries (technicians, nurses)</li>
-                      <li>• Electricity & RO plant load</li>
-                      <li>• Machine maintenance (AMC)</li>
-                      <li>• Equipment protection (insurance)</li>
-                    </ul>
+                  <div className="px-8 py-4 rounded-[2rem] bg-white/[0.03] backdrop-blur-xl border border-white/10 text-center shadow-lg relative group">
+                    <div className={`absolute inset-0 rounded-[2rem] opacity-50 shadow-[0_0_40px_rgba(${financials.gradeRgb},0.3)] pointer-events-none`} />
+                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1 relative z-10">Asset Health Grade</p>
+                    <p className={`text-5xl font-black ${financials.gradeColor} relative z-10`}>{financials.grade}</p>
                   </div>
                 </div>
-              </div>
-
-              <div className="p-8 bg-[#C6A85A]/10 rounded-[2rem] border border-[#C6A85A]/30 md:col-span-2 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div>
-                  <p className="text-[10px] text-[#C6A85A] font-black uppercase tracking-widest mb-2">Net Monthly Income</p>
-                  <p className="text-5xl font-black text-[#C6A85A]">₹ {formatINR(financials.netIncome)}</p>
+                
+                {/* DYNAMIC METRICS */}
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                  {isExistingCenter ? (
+                    <>
+                      <GlassCard label="Identifiable Leakage" value={`₹${formatINR(financials.downtimeLoss + financials.savingsDiacare)}`} subText="Lost to downtime & expensive consumables." icon={<TrendingUp size={14} className="text-[#A6192E]"/>} />
+                      <GlassCard label="Realized Rate / Session" value={`₹${Math.round(financials.realizedRate)}`} />
+                      <GlassCard label="Monthly OPEX Load" value={formatLakhs(financials.totalOpex)} />
+                    </>
+                  ) : viewMode === "investor" ? (
+                    <>
+                      <GlassCard label="Core EBITDA Margin" value={`${financials.ebitdaMargin.toFixed(1)}%`} icon={<TrendingUp size={14} className="text-[#C6A85A]"/>} />
+                      <GlassCard label="Capital Payback" value={`${financials.paybackMonths.toFixed(1)} Mos`} icon={<Clock size={14} className="text-[#00A8A8]"/>} />
+                      <GlassCard label="Required Working Capital" value={formatLakhs(financials.workingCapitalBuffer)} subText={`Buffer for ${Math.round(financials.weightedDelayDays)} day claims delay.`} icon={<Landmark size={14}/>} />
+                    </>
+                  ) : (
+                    <>
+                      <GlassCard label="Monthly Sessions" value={Math.round(financials.monthlySessions).toString()} />
+                      <GlassCard label="Realized Rate / Session" value={`₹${Math.round(financials.realizedRate)}`} />
+                      <GlassCard label="Downtime Leakage Risk" value={financials.downtimeLoss > 0 ? formatLakhs(financials.downtimeLoss) : "₹0"} />
+                    </>
+                  )}
                 </div>
-                {viewMode === "investor" && (
-                  <div className="text-right">
-                    <p className="text-[10px] text-[#00A8A8] font-black uppercase tracking-widest mb-2">Capital Recovery</p>
-                    <p className="text-2xl font-black text-white">Payback: {financials.paybackMonths} Months</p>
+
+                {/* THE HIGHLIGHT BLOCK */}
+                <div className="relative group p-8 md:p-12 bg-white/[0.02] backdrop-blur-xl rounded-[2.5rem] border border-white/10 mb-10 flex flex-col md:flex-row justify-between items-center gap-6 overflow-hidden">
+                  <div className="absolute inset-0 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition duration-500 shadow-[0_0_80px_rgba(198,168,90,0.15)] pointer-events-none" />
+                  <div className="relative z-10">
+                    <p className="text-[10px] text-[#C6A85A] font-black uppercase tracking-widest mb-2">{isExistingCenter ? "Optimized Cash Flow" : "Monthly Cash Flow (EBITDA)"}</p>
+                    <p className="text-5xl font-black text-[#C6A85A]">₹ {formatINR(financials.monthlyEBITDA)}</p>
+                    <p className="text-sm font-bold text-gray-400 mt-2">OPEX Load: {formatLakhs(financials.totalOpex)} / mo</p>
                   </div>
-                )}
-                {viewMode === "doctor" && (
-                  <div className="text-right">
-                    <p className="text-[10px] text-[#00A8A8] font-black uppercase tracking-widest mb-2">Clinical Output</p>
-                    {/* BUG FIXED: formatINR properly applied */}
-                    <p className="text-2xl font-black text-white">{formatINR(financials.actualSessions)} Sessions/Mo</p>
+                  <div className="w-full md:w-auto relative z-10">
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                      onClick={handleWhatsApp} 
+                      className="w-full bg-[#C6A85A] text-[#0A0F1C] px-8 py-5 rounded-xl font-black uppercase tracking-widest text-xs shadow-[0_0_30px_rgba(198,168,90,0.3)] flex justify-center items-center gap-2"
+                    >
+                      {isExistingCenter ? "Request Optimization Plan" : "Request DPR Execution"} <ArrowRight size={16}/>
+                    </motion.button>
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            {/* STRATEGIC ADD 1: SUCCESS POSITIONING */}
-            <div className="p-8 bg-[#00A8A8]/10 border border-[#00A8A8]/20 rounded-2xl mb-6">
-              <h4 className="text-lg font-bold text-white mb-4">What successful centers do differently:</h4>
-              <ul className="space-y-3 text-gray-300 text-sm">
-                <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#00A8A8]" /> Maintain &gt;85% machine utilization</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#00A8A8]" /> Use AMC to reduce downtime to ~1%</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#00A8A8]" /> Control consumable costs through structured supply</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={16} className="text-[#00A8A8]" /> Protect capital with insurance</li>
-              </ul>
-            </div>
+                {/* CROSS SELL EXECUTION GATES */}
+                <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 border-b border-white/5 pb-4">Phase 2: Procurement & Setup</h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <CrossSellCard href="/machines" icon={<Server className="text-[#00A8A8] mb-4" size={24} />} title="Hardware Setup" desc="Deploy Diacare Units" colorRgb="0,168,168" />
+                  <CrossSellCard href="/consumables" icon={<Activity className="text-[#C6A85A] mb-4" size={24} />} title="Supply Protocol" desc="Lock ₹400/Session Rail" colorRgb="198,168,90" />
+                  <CrossSellCard href="/financing" icon={<Landmark className="text-[#A6192E] mb-4" size={24} />} title="Liquidity Security" desc="Secure Working Capital" colorRgb="166,25,46" />
+                </div>
+                
+                <div className="mt-12 text-center">
+                  <button onClick={() => setStep(0)} className="text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors">Restart Simulation</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            {/* STRATEGIC ADD 2: RISK SECTION */}
-            <div className="p-8 bg-[#A6192E]/10 border border-[#A6192E]/20 rounded-2xl mb-10">
-              <h4 className="text-lg font-bold text-white mb-4">Doctor, understand your financial risk clearly:</h4>
-              <ul className="space-y-3 text-gray-300 text-sm">
-                <li className="flex items-center gap-2"><AlertTriangle size={16} className="text-[#A6192E]" /> One machine failure can cost ₹3–5 lakh instantly</li>
-                <li className="flex items-center gap-2"><AlertTriangle size={16} className="text-[#A6192E]" /> 3–5 days downtime = direct revenue loss</li>
-                <li className="flex items-center gap-2"><AlertTriangle size={16} className="text-[#A6192E]" /> Without AMC → unpredictable breakdown cycles</li>
-                <li className="flex items-center gap-2"><AlertTriangle size={16} className="text-[#A6192E]" /> Without insurance → full capital exposure</li>
-              </ul>
-            </div>
-
-            {/* STRATEGIC ADD 3: TURNKEY POSITIONING */}
-            <div className="p-8 bg-[#0D1525] border border-white/5 rounded-2xl mb-10">
-              <h4 className="text-lg font-bold text-white mb-4">Complete dialysis center setup — handled for you</h4>
-              <ul className="space-y-3 text-gray-400 text-sm grid sm:grid-cols-2">
-                <li>• Machine selection & procurement</li>
-                <li>• RO plant design & installation</li>
-                <li>• Civil layout planning</li>
-                <li>• Staff training & SOP setup</li>
-                <li>• PM-JAY & compliance alignment</li>
-              </ul>
-            </div>
-
-            {/* STRATEGIC ADD 4: SALES CONVERSION BLOCK */}
-            <div className="p-8 bg-[#C6A85A]/10 border border-[#C6A85A]/30 rounded-2xl mb-10 text-center shadow-[0_0_30px_rgba(198,168,90,0.1)]">
-              <h3 className="text-xl font-black text-white mb-4">Doctor, the next step is simple.</h3>
-              <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-                We convert this exact projection into a complete Detailed Project Report (DPR) and execution plan for your center.
-              </p>
-              <div className="flex flex-col md:flex-row gap-4 justify-center">
-                <Link href="/loan">
-                  <button className="w-full bg-[#C6A85A] hover:bg-[#D4B970] text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest text-xs transition-all shadow-[0_5px_15px_rgba(198,168,90,0.2)]">
-                    Request Detailed Project Report
-                  </button>
-                </Link>
-                <Link href="/contact">
-                  <button className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-xs transition-all">
-                    Schedule Consultation Call
-                  </button>
-                </Link>
-              </div>
-            </div>
-
-            {/* STRATEGIC ADD 5: NAVIGATION EXPANSION */}
-            <div className="flex flex-wrap gap-4 mt-6 justify-center text-xs font-bold uppercase tracking-widest">
-              <Link href="/solutions" className="text-gray-500 hover:text-[#C6A85A]">Turnkey Setup</Link>
-              <span className="text-gray-700">•</span>
-              <Link href="/service" className="text-gray-500 hover:text-[#C6A85A]">Maintenance Planning</Link>
-              <span className="text-gray-700">•</span>
-              <Link href="/capex" className="text-gray-500 hover:text-[#C6A85A]">Investment Planning</Link>
-              <span className="text-gray-700">•</span>
-              <Link href="/contact" className="text-gray-500 hover:text-[#C6A85A]">Speak to Consultant</Link>
-            </div>
-
-          </div>
-        )}
-
+        </div>
       </div>
     </main>
   );
 }
 
-// --- STRICT SUB-COMPONENTS ---
+// --- HYBRID UI SUB-COMPONENTS ---
 function ConsultationCard({ step, title, children, onNext, onPrev }: ConsultationCardProps) {
   return (
-    <div className="animate-in slide-in-from-right duration-300">
-      <div className="flex items-center gap-3 mb-6">
-        <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">{step}</span>
-        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Financial Assessment</span>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+      className="bg-white/[0.03] backdrop-blur-xl p-10 rounded-[3rem] border border-white/10 shadow-2xl"
+    >
+      <div className="flex items-center gap-3 mb-8">
+        <span className="w-8 h-8 rounded-full bg-[#C6A85A]/20 text-[#C6A85A] flex items-center justify-center text-sm font-black border border-[#C6A85A]/30">{step}</span>
+        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Underwriting Setup</span>
       </div>
-      <h2 className="text-3xl md:text-4xl font-black text-white mb-10 leading-tight">{title}</h2>
+      <h2 className="text-3xl font-black text-white mb-10 leading-tight">{title}</h2>
       {children}
       <div className="flex justify-between items-center mt-12 pt-8 border-t border-white/5">
         <button onClick={onPrev} className="text-xs font-bold text-gray-500 hover:text-white uppercase tracking-widest">Back</button>
-        <button onClick={onNext} className="bg-white text-[#0A0F1C] px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-gray-200 transition-all">
+        <button onClick={onNext} className="bg-white text-[#0A0F1C] px-8 py-4 rounded-xl font-black uppercase tracking-widest text-xs flex items-center gap-2 hover:bg-gray-200 transition-all">
           Continue <ChevronRight size={16} />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
-function DecisionBox({ title, active, onClick, color, impactText }: DecisionBoxProps) {
+function DecisionBox({ title, active, onClick, colorHex, accentTailwind, impactText }: DecisionBoxProps) {
   return (
-    <div className={`p-6 rounded-2xl border transition-all cursor-pointer ${active ? 'bg-white/5 border-white/20' : 'bg-[#0D1525] border-white/5'}`} onClick={onClick}>
-      <div className="flex justify-between items-center mb-4">
+    <motion.div 
+      whileHover={{ scale: 1.02 }}
+      className={`group relative p-6 rounded-2xl border transition-all cursor-pointer bg-white/[0.02] backdrop-blur-md ${active ? 'border-white/30' : 'border-white/10 hover:border-white/20'}`} 
+      onClick={onClick}
+    >
+      {active && <div className={`absolute inset-0 rounded-2xl opacity-100 shadow-[0_0_30px_rgba(${colorHex},0.15)] pointer-events-none`} />}
+      <div className="flex justify-between items-center mb-4 relative z-10">
         <h4 className="text-sm font-bold text-white">{title}</h4>
-        <div className={`w-12 h-6 rounded-full p-1 transition-all ${active ? color : "bg-gray-800"}`}>
+        <div className={`w-12 h-6 rounded-full p-1 transition-all ${active ? accentTailwind : "bg-white/10"}`}>
           <div className={`w-4 h-4 bg-white rounded-full shadow-md transition-all ${active ? 'translate-x-6' : ''}`} />
         </div>
       </div>
-      <p className={`text-xs font-medium leading-relaxed ${active ? 'text-gray-300' : 'text-gray-500'}`}>{impactText}</p>
-    </div>
+      <p className={`text-xs font-medium leading-relaxed relative z-10 ${active ? 'text-gray-300' : 'text-gray-500'}`}>{impactText}</p>
+    </motion.div>
   );
 }
 
@@ -431,9 +428,34 @@ function Slider({ label, value, min = 0, max, step = 1, onChange, suffix = "", c
     <div className="group">
       <div className="flex justify-between items-center mb-4">
         <span className="text-sm font-bold text-gray-300 pr-4">{label}</span>
-        <span className="text-sm font-black text-white bg-white/5 px-3 py-1.5 rounded-lg shrink-0">{value}{suffix}</span>
+        <span className="text-sm font-black text-white bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">{value}{suffix}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className={`w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer ${color}`} />
     </div>
+  );
+}
+
+function GlassCard({ label, value, subText, icon }: { label: string, value: string, subText?: string, icon?: React.ReactNode }) {
+  return (
+    <div className="p-8 bg-white/[0.02] backdrop-blur-md rounded-[2rem] border border-white/10">
+      <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2 flex items-center gap-2">{icon} {label}</p>
+      <p className="text-3xl font-black text-white">{value}</p>
+      {subText && <p className="text-[10px] text-gray-400 mt-1 italic">{subText}</p>}
+    </div>
+  );
+}
+
+function CrossSellCard({ href, icon, title, desc, colorRgb }: { href: string, icon: React.ReactNode, title: string, desc: string, colorRgb: string }) {
+  return (
+    <Link href={href}>
+      <motion.div whileHover={{ scale: 1.03 }} className="group relative p-6 rounded-2xl bg-white/[0.02] backdrop-blur-md border border-white/10 hover:border-white/30 transition-all text-left overflow-hidden">
+        <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-500 shadow-[0_0_50px_rgba(${colorRgb},0.15)] pointer-events-none`} />
+        <div className="relative z-10">
+          {icon}
+          <h4 className="text-white font-bold mb-1">{title}</h4>
+          <p className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors">{desc}</p>
+        </div>
+      </motion.div>
+    </Link>
   );
 }

@@ -9,9 +9,9 @@ import {
 import Link from "next/link";
 
 // 🧠 ARCHITECTURE RULE: Import all business logic from the isolated Advisory Engine
-import { calculateOperationalLeakage, FacilityInputs } from "@/lib/advisory-engine/leakage-engine";
-import { generateActionPlan } from "@/lib/advisory-engine/prioritization";
-import { generateCommercialAdvisory } from "@/lib/advisory-engine/commercial-intelligence";
+import { calculateOperationalLeakage, FacilityInputs } from "@/lib/advisory/leakage-engine";
+import { generateActionPlan } from "@/lib/advisory/prioritization";
+import { generateCommercialAdvisory } from "@/lib/advisory/commercial-intelligence";
 
 export default function RunningCenterAdvisory() {
   const [step, setStep] = useState(1);

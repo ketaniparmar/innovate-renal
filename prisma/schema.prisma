@@ -8,46 +8,49 @@ datasource db {
 }
 
 model Tenant {
-  id        String    @id
+  id        String    @id @default(cuid())
   name      String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   projects  Project[]
-
-  @@map("tenants")
 }
 
 model Project {
   id          String       @id @default(cuid())
-  name        String
-  location    String?
-  machines    Int          @default(0)
-  beds        Int          @default(0)
-  cityTier    Int          @default(2)
-  tdsLevel    Int          @default(500)
-  mode        String?
-  pmjayPct    Float?       @default(0)
-  pvtPct      Float?       @default(0)
   tenantId    String
+  name        String
+  machines    Int?
+  cityTier    Int?
+  tdsLevel    Float?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   tenant      Tenant       @relation(fields: [tenantId], references: [id])
   simulations Simulation[]
-
-  @@map("projects")
 }
 
 model Simulation {
-  id           String   @id @default(cuid())
-  totalCapex   Float
-  annualEbitda Float?
-  irr          Float
-  dscr         Float?
-  creditRating String?
-  npv          Float?   @default(0)
-  projectId    String
-  createdAt    DateTime @default(now())
-  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@map("simulations")
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  viewMode        String?
+  cityTier        String?
+  machineCount    Int?
+  occupancyRate   Float?
+  pmjayMix        Float?
+  cghsMix         Float?
+  cashMix         Float?
+  insuranceMix    Float?
+  includesAMC     Boolean?
+  includesDiacare Boolean?
+  monthlyRevenue  Float?
+  monthlyOpex     Float?
+  monthlyEbitda   Float?
+  ebitdaMargin    Float?
+  paybackMonths   Float?
+  investmentGrade String?
+  workingCapital  Float?
+  status          String   @default("CAPTURED")
+  irr             Float?
+  projectId       String?
+  totalCapex      Float?
+  project         Project? @relation(fields: [projectId], references: [id])
 }
