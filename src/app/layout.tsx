@@ -2,13 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Image from "next/image";
 
-// Absolute path alias
-import "@/app/globals.css"; 
+// FIX: Reverted to relative path to bypass tsconfig alias errors
+import "./globals.css"; 
 
 import { InfraProvider } from "@/context/InfrastructureContext";
 import { Navbar } from "@/components/ui/Navbar";
 import Link from "next/link";
-// Removed unused 'Activity' import
 import { ArrowRight, ShieldCheck } from "lucide-react";
 
 const inter = Inter({

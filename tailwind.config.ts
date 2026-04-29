@@ -9,27 +9,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // --- Added Native Background/Foreground ---
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        
         sovereign: {
           navy: {
-            DEFAULT: '#0A0F1C', // Authority Base (Backgrounds)
-            light: '#141D30',   // Raised Surfaces / Cards
-            border: '#1E2A45',  // Subtle dividers
+            DEFAULT: '#0A0F1C', // Authority Base
+            light: 'var(--color-sovereign-navy-light)',   // Mapped to CSS var
+            border: 'var(--color-sovereign-navy-border)',  // Mapped to CSS var
           },
           teal: {
-            DEFAULT: '#00A8A8', // Intelligence Layer (AI Signals, Active States)
+            DEFAULT: 'var(--color-sovereign-teal)', // Mapped to CSS var
             muted: 'rgba(0, 168, 168, 0.1)',
           },
           gold: {
-            DEFAULT: '#C6A85A', // Web fallback for Pantone 871 C (Wealth, Exit Value)
+            DEFAULT: 'var(--color-sovereign-gold)', // Mapped to CSS var
             muted: 'rgba(198, 168, 90, 0.1)',
           },
           red: {
-            DEFAULT: '#A6192E', // Execution Accent (Micro-usage only: Warnings, Errors)
+            DEFAULT: '#A6192E', 
             muted: 'rgba(166, 25, 46, 0.1)',
           },
           neutral: {
-            white: '#F5F5F2',   // Warm White for primary text
-            gray: '#8A94A6',    // Subtitles and disabled states
+            white: '#F5F5F2',   
+            gray: '#8A94A6',    
           }
         }
       },

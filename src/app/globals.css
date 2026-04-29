@@ -2,21 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* --- 1. CORE THEME --- */
-  /* The Void (Clinical Navy Background) */
-  --background: #0A0F1C;
-  /* Standard legible text */
-  --foreground: #e2e8f0; 
-  
-  /* --- 2. INNOVATE INDIA TOKENS --- */
-  --color-sovereign-gold: #C6A85A;
-  --color-sovereign-teal: #00A8A8;
-  --color-sovereign-navy-light: rgba(20, 29, 48, 0.4);
-  --color-sovereign-navy-border: rgba(255, 255, 255, 0.1);
-}
-
 @layer base {
+  :root {
+    /* --- 1. CORE THEME --- */
+    --background: #0A0F1C;
+    --foreground: #e2e8f0; 
+    
+    /* --- 2. INNOVATE INDIA TOKENS --- */
+    --color-sovereign-gold: #C6A85A;
+    --color-sovereign-teal: #00A8A8;
+    --color-sovereign-navy-light: rgba(20, 29, 48, 0.4);
+    --color-sovereign-navy-border: rgba(255, 255, 255, 0.1);
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
@@ -34,7 +32,8 @@
   }
   
   .text-gradient-gold {
-    background: linear-gradient(to right, #C6A85A, #F1E5AC, #C6A85A);
+    /* Upgraded to use your native CSS variable for consistency */
+    background: linear-gradient(to right, var(--color-sovereign-gold), #F1E5AC, var(--color-sovereign-gold));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
