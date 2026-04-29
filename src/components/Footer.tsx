@@ -62,8 +62,12 @@ export default function Footer() {
           <Link href="/turnkey" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Turnkey Infrastructure</Link>
           <Link href="/execution-partner/diacare" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Execution Stack</Link>
           <Link href="/supply" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Recurring Revenue Engine</Link>
+          
+          {/* NEW: Clinical OS Link Injection */}
+          <Link href="/clinical-os" className="text-[#00A8A8] hover:text-white font-bold transition-colors">Clinical OS (Software)</Link>
+          
           <Link href="/calculator" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">ROI Underwriting Engine</Link>
-          <Link href="/contact" className="text-[#00A8A8] hover:text-white font-bold transition-colors mt-4">Contact Advisory Board</Link>
+          <Link href="/contact" className="text-gray-400 hover:text-white font-bold transition-colors mt-4">Contact Advisory Board</Link>
         </div>
 
         {/* COMPLIANCE STANDARDS */}
@@ -84,7 +88,7 @@ export default function Footer() {
               Operationalize Assets
             </h3>
             <p className="text-xs text-gray-500 mb-6 leading-relaxed font-medium">
-              Convert clinical uncertainty into predictable monthly yield through our proprietary financial modeling engine.
+              Convert clinical uncertainty into predictable monthly yield through the Sovereign Clinical OS.
             </p>
           </div>
 
