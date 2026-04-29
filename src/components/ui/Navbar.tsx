@@ -8,25 +8,28 @@ import { Menu, X, ChevronRight, Phone } from "lucide-react";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // --- FUNNEL LINKS ---
+  // --- FUNNEL LINKS (Added Contact Page!) ---
   const navLinks = [
     { name: "Infrastructure", href: "/turnkey" },
     { name: "Execution Stack", href: "/execution-partner/diacare" },
     { name: "Supply Engine", href: "/supply" },
+    { name: "Advisory Desk", href: "/contact" }, // <-- NEW: Now the Contact page is in the header
   ];
 
   return (
+    // Changed h-20 to h-24 to make the entire header taller so the logo can grow
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#0A0F1C]/90 backdrop-blur-md border-b border-white/5">
-      <div className="max-w-[1280px] mx-auto px-6 h-20 flex items-center justify-between">
+      <div className="max-w-[1280px] mx-auto px-6 h-24 flex items-center justify-between">
         
-        {/* --- BRAND AUTHORITY (Logo - Size Increased) --- */}
-        <Link href="/" className="flex items-center transition-transform hover:scale-105 py-1">
+        {/* --- BRAND AUTHORITY (Logo - Forced Width for Max Size) --- */}
+        <Link href="/" className="flex items-center transition-transform hover:scale-105">
           <Image 
             src="/logo.png" 
             alt="Innovate India - Smart Healthcare Solutions" 
-            width={500} 
-            height={180} 
-            className="object-contain w-auto h-[50px] md:h-[65px]" // Increased height for better visibility
+            width={600} 
+            height={220} 
+            // We force a specific width now, which naturally scales the height up perfectly
+            className="object-contain w-[180px] md:w-[260px] h-auto" 
             priority 
           />
         </Link>
@@ -65,7 +68,7 @@ export function Navbar() {
 
       {/* --- MOBILE DROPDOWN --- */}
       {isOpen && (
-        <div className="md:hidden bg-[#0D1525] border-b border-white/5 p-6 flex flex-col gap-4 shadow-2xl absolute w-full left-0 top-20">
+        <div className="md:hidden bg-[#0D1525] border-b border-white/5 p-6 flex flex-col gap-4 shadow-2xl absolute w-full left-0 top-24">
           {navLinks.map((link) => (
             <Link 
               key={link.name} 
