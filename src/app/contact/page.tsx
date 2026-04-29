@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { 
   MapPin, 
   Phone, 
   Mail, 
-  Clock, 
   MessageSquare, 
   Building2, 
   Wrench, 
@@ -13,6 +13,7 @@ import {
   User,
   ShieldCheck
 } from "lucide-react";
+import { saveUserIntent } from "@/utils/intentTracker";
 
 // --- STRICT TYPES ---
 interface InfoRowProps {
@@ -30,10 +31,13 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    const text = `*New ${formType === "project" ? "Project Advisory" : "AMC & Operations"} Inquiry*%0A%0A*Doctor/Director:* ${formData.name}%0A*Hospital:* ${formData.hospital}%0A*Message:* ${formData.message}`;
+    // Log the conversion intent before routing
+    saveUserIntent("action", `Submitted ${formType} Form`);
+    
+    const text = `*Executive ${formType === "project" ? "Project Advisory" : "AMC & Supply"} Request*%0A%0A*Director/Investor:* ${formData.name}%0A*Facility:* ${formData.hospital}%0A*Objective:* ${formData.message}`;
     
     setTimeout(() => {
-      // Routes directly to your Innovate India advisory line
+      // Routes directly to the Innovate India advisory line
       window.open(`https://wa.me/919879576332?text=${text}`, '_blank');
       setIsSubmitting(false);
     }, 1000);
@@ -48,27 +52,27 @@ export default function ContactPage() {
 
       <div className="max-w-[1280px] mx-auto px-6 relative z-10">
         
-        {/* HEADER SECTION */}
+        {/* HEADER SECTION: Authority & Positioning */}
         <div className="text-center mb-16 max-w-3xl mx-auto animate-in fade-in zoom-in duration-500">
           <div className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-8">
             Executive Advisory Board
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 text-white">
-            Speak directly with a <br/>
-            <span className={`transition-colors duration-500 ${formType === "project" ? "text-[#C6A85A]" : "text-[#00A8A8]"}`}>
-              healthcare infrastructure
-            </span> consultant.
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 text-white leading-tight">
+            Initiate a <br/>
+            <span className={`transition-colors duration-500 ${formType === "project" ? "text-transparent bg-clip-text bg-gradient-to-r from-[#C6A85A] to-[#F1E5AC]" : "text-[#00A8A8]"}`}>
+              Clinical Asset.
+            </span>
           </h1>
-          <p className="text-gray-400 text-lg font-medium">
-            Discuss your upcoming project, financial investment, or risk-control for a running center.
+          <p className="text-gray-400 text-lg font-medium leading-relaxed max-w-2xl mx-auto">
+            Skip the generic sales channels. Speak directly with our infrastructure directors to underwrite your upcoming project or secure your supply chain.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
           
-          {/* LEFT: ADVISORY FORM */}
+          {/* LEFT: ADVISORY FORM (The Qualification Engine) */}
           <div className="lg:col-span-2 animate-in slide-in-from-bottom duration-500 delay-100">
-            <div className="bg-[#0D1525] border border-white/5 rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
+            <div className="bg-[#0D1525] border border-white/5 rounded-[2.5rem] p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
               
               {/* Form Toggles */}
               <div className="flex bg-[#0A0F1C] p-1.5 rounded-xl border border-white/5 mb-10">
@@ -77,20 +81,20 @@ export default function ContactPage() {
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                     formType === "project" 
                       ? "bg-[#C6A85A] text-[#0A0F1C] shadow-[0_5px_15px_rgba(198,168,90,0.2)]" 
-                      : "text-gray-500 hover:text-white"
+                      : "text-gray-500 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <Building2 size={16} /> Project Advisory
+                  <Building2 size={16} /> New Project & DPR
                 </button>
                 <button
                   onClick={() => setFormType("service")}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                     formType === "service" 
                       ? "bg-[#00A8A8] text-white shadow-[0_5px_15px_rgba(0,168,168,0.2)]" 
-                      : "text-gray-500 hover:text-white"
+                      : "text-gray-500 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  <Wrench size={16} /> AMC & Operations
+                  <Wrench size={16} /> Supply & Operations
                 </button>
               </div>
 
@@ -98,7 +102,7 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Doctor / Director Name</label>
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Director / Investor Name</label>
                     <input 
                       required 
                       type="text" 
@@ -108,7 +112,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hospital / Organization</label>
+                    <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Hospital / Entity Name</label>
                     <input 
                       required 
                       type="text" 
@@ -119,14 +123,14 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">How can we structure your setup?</label>
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Strategic Objective</label>
                   <textarea 
                     required 
                     rows={4} 
                     value={formData.message} 
                     onChange={(e) => setFormData({...formData, message: e.target.value})} 
                     className="w-full bg-[#0A0F1C] border border-white/10 rounded-xl py-4 px-4 text-sm font-medium text-white focus:outline-none focus:border-[#C6A85A]/50 transition-all resize-none" 
-                    placeholder={formType === "project" ? "I am evaluating a 10-machine facility and need a DPR..." : "We need to secure an AMC for our existing infrastructure..."} 
+                    placeholder={formType === "project" ? "We are evaluating a 15-bed facility in Surat and require a financial DPR..." : "We need to secure DiaCare supply contracts for our existing infrastructure..."} 
                   />
                 </div>
                 
@@ -134,15 +138,15 @@ export default function ContactPage() {
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className={`w-full mt-8 py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 disabled:opacity-70 ${
+                  className={`w-full mt-8 py-5 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 disabled:opacity-70 ${
                     formType === "project" 
-                      ? "bg-[#C6A85A] hover:bg-[#D4B970] text-[#0A0F1C] shadow-[0_10px_20px_rgba(198,168,90,0.15)]" 
-                      : "bg-[#00A8A8] hover:bg-teal-500 text-white shadow-[0_10px_20px_rgba(0,168,168,0.15)]"
+                      ? "bg-[#C6A85A] hover:bg-[#D4B970] text-[#0A0F1C] shadow-[0_10px_30px_rgba(198,168,90,0.2)]" 
+                      : "bg-[#00A8A8] hover:bg-teal-500 text-white shadow-[0_10px_30px_rgba(0,168,168,0.2)]"
                   }`}
                 >
                   {isSubmitting 
-                    ? "Routing to Advisory Team..." 
-                    : formType === "project" ? "Request Project Proposal" : "Request Service Dispatch"
+                    ? "Routing to Advisory Desk..." 
+                    : formType === "project" ? "Request Underwriting Plan" : "Request Supply Contract"
                   } 
                   <ArrowRight size={16} />
                 </button>
@@ -150,7 +154,7 @@ export default function ContactPage() {
             </div>
           </div>
 
-          {/* RIGHT: CONTACT INFO & QUICK CONNECT */}
+          {/* RIGHT: CONTACT INFO & MONOPOLY AUTHORITY */}
           <aside className="flex flex-col gap-6 animate-in slide-in-from-bottom duration-500 delay-200">
             
             {/* Regional HQ Card */}
@@ -164,46 +168,65 @@ export default function ContactPage() {
                 />
                 <InfoRow 
                   icon={<MapPin />} 
-                  title="Gujarat Office" 
+                  title="Gujarat HQ" 
                   desc={<>135, Soham Arcade, Nr. Baghban Circle, <br/>Green City Road, Pal, Surat 394510</>} 
                 />
                 <InfoRow 
                   icon={<Phone />} 
                   title="Direct Line" 
-                  desc="+91 98795 76332" 
+                  desc={<a href="tel:+919879576332" className="hover:text-[#C6A85A] transition-colors">+91 98795 76332</a>} 
                 />
                 <InfoRow 
                   icon={<Mail />} 
                   title="Email" 
-                  desc="director@innovate-india.com" 
+                  desc={<a href="mailto:director@innovate-india.com" className="hover:text-[#C6A85A] transition-colors">director@innovate-india.com</a>} 
                 />
               </div>
 
               {/* Authority Badge */}
               <div className="mt-8 pt-8 border-t border-white/5 flex items-start gap-3">
-                <ShieldCheck className="text-[#00A8A8] shrink-0" size={18} />
+                <ShieldCheck className="text-[#00A8A8] shrink-0 mt-0.5" size={18} />
                 <p className="text-[10px] text-gray-500 leading-relaxed font-bold uppercase tracking-widest">
                   Innovate India is the exclusive channel partner for DiaCare Solutions in South Gujarat.
                 </p>
               </div>
             </div>
 
-            {/* Direct WhatsApp Box */}
-            <div className="bg-gradient-to-br from-[#0D1525] to-[#0A0F1C] border border-white/5 rounded-[2.5rem] p-8 text-center flex flex-col justify-center items-center shadow-xl">
-              <div className="w-14 h-14 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center mb-4 text-[#25D366]">
+            {/* Direct WhatsApp Box (Bypass Form) */}
+            <div className="bg-gradient-to-br from-[#0D1525] to-[#0A0F1C] border border-white/5 rounded-[2.5rem] p-8 text-center flex flex-col justify-center items-center flex-1 shadow-xl group hover:border-[#25D366]/30 transition-all">
+              <div className="w-14 h-14 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center mb-4 text-[#25D366] group-hover:scale-110 transition-transform">
                 <MessageSquare size={24} />
               </div>
               <h3 className="text-lg font-black text-white mb-2">Fastest Response</h3>
-              <p className="text-xs text-gray-400 mb-6 font-medium">Skip the form and chat directly with our infrastructure specialists.</p>
-              <a href="https://wa.me/919879576332" target="_blank" rel="noreferrer" className="w-full">
+              <p className="text-xs text-gray-400 mb-6 font-medium">Bypass the form. Chat directly with our infrastructure specialists right now.</p>
+              <a 
+                href="https://wa.me/919879576332" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="w-full"
+                onClick={() => saveUserIntent("action", "Clicked Fast WhatsApp Chat")}
+              >
                 <button className="w-full bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-                  WhatsApp Chat
+                  Open WhatsApp Chat
                 </button>
               </a>
             </div>
 
           </aside>
         </div>
+
+        {/* --- BOTTOM: THE SOFT EXIT (Funnel Catcher) --- */}
+        <div className="mt-20 pt-10 border-t border-white/5 text-center">
+          <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">
+            Not ready to talk? Run your own numbers first.
+          </p>
+          <Link href="/calculator">
+            <button className="bg-white/5 border border-white/10 text-white px-8 py-4 rounded-xl font-bold hover:bg-white/10 transition-all flex items-center gap-3 mx-auto text-xs uppercase tracking-widest">
+              Open ROI Calculator <ArrowRight size={14}/>
+            </button>
+          </Link>
+        </div>
+
       </div>
     </main>
   );
@@ -214,12 +237,11 @@ function InfoRow({ icon, title, desc }: InfoRowProps) {
   return (
     <div className="flex gap-4 items-start">
       <div className="text-[#C6A85A] mt-0.5">
-        {/* Safely clone the icon to prevent TypeScript build crashes */}
         {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { size: 18 })}
       </div>
       <div>
         <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">{title}</p>
-        <p className="text-sm font-bold text-gray-200 leading-snug">{desc}</p>
+        <div className="text-sm font-bold text-gray-200 leading-snug">{desc}</div>
       </div>
     </div>
   );
