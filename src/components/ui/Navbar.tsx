@@ -19,14 +19,14 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#0A0F1C]/90 backdrop-blur-md border-b border-white/5">
       <div className="max-w-[1280px] mx-auto px-6 h-20 flex items-center justify-between">
         
-        {/* --- BRAND AUTHORITY (Logo) --- */}
-        <Link href="/" className="flex items-center transition-transform hover:scale-105 py-2">
+        {/* --- BRAND AUTHORITY (Logo - Size Increased) --- */}
+        <Link href="/" className="flex items-center transition-transform hover:scale-105 py-1">
           <Image 
             src="/logo.png" 
             alt="Innovate India - Smart Healthcare Solutions" 
-            width={400} 
-            height={150} 
-            className="object-contain w-auto h-[45px] md:h-[55px]" 
+            width={500} 
+            height={180} 
+            className="object-contain w-auto h-[50px] md:h-[65px]" // Increased height for better visibility
             priority 
           />
         </Link>
