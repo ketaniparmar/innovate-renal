@@ -1,13 +1,24 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapPin, Phone, Mail, Clock, MessageSquare, Building2, Wrench, ArrowRight } from "lucide-react";
+import { 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Clock, 
+  MessageSquare, 
+  Building2, 
+  Wrench, 
+  ArrowRight,
+  User,
+  ShieldCheck
+} from "lucide-react";
 
-// --- STRICT TYPES (Prevents Vercel Build Crashes) ---
+// --- STRICT TYPES ---
 interface InfoRowProps {
   icon: React.ReactNode;
   title: string;
-  desc: string;
+  desc: React.ReactNode;
 }
 
 export default function ContactPage() {
@@ -23,7 +34,7 @@ export default function ContactPage() {
     
     setTimeout(() => {
       // Routes directly to your Innovate India advisory line
-      window.open(`https://wa.me/919879576332?text=${encodeURIComponent(text)}`, '_blank');
+      window.open(`https://wa.me/919879576332?text=${text}`, '_blank');
       setIsSubmitting(false);
     }, 1000);
   };
@@ -33,14 +44,18 @@ export default function ContactPage() {
       
       {/* Dynamic Institutional Background Glow */}
       <div className={`absolute top-20 right-20 w-[600px] h-[600px] blur-[150px] rounded-full pointer-events-none transition-colors duration-700 ${formType === "project" ? "bg-[#C6A85A]/10" : "bg-[#00A8A8]/10"}`} />
+      <div className="absolute bottom-[-100px] left-[-100px] w-[600px] h-[600px] bg-[#00A8A8]/5 blur-[150px] rounded-full pointer-events-none" />
 
       <div className="max-w-[1280px] mx-auto px-6 relative z-10">
         
         {/* HEADER SECTION */}
         <div className="text-center mb-16 max-w-3xl mx-auto animate-in fade-in zoom-in duration-500">
+          <div className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-8">
+            Executive Advisory Board
+          </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 text-white">
             Speak directly with a <br/>
-            <span className={formType === "project" ? "text-[#C6A85A]" : "text-[#00A8A8]"}>
+            <span className={`transition-colors duration-500 ${formType === "project" ? "text-[#C6A85A]" : "text-[#00A8A8]"}`}>
               healthcare infrastructure
             </span> consultant.
           </h1>
@@ -139,18 +154,42 @@ export default function ContactPage() {
           <aside className="flex flex-col gap-6 animate-in slide-in-from-bottom duration-500 delay-200">
             
             {/* Regional HQ Card */}
-            <div className="bg-[#0D1525] border border-white/5 rounded-[2.5rem] p-8 md:p-10 shadow-xl">
-              <h3 className="text-xl font-black text-white mb-8">Regional HQ</h3>
+            <div className="bg-[#0D1525] border border-white/5 rounded-[2.5rem] p-8 md:p-10 shadow-xl flex-1">
+              <h3 className="text-xl font-black text-white mb-8">Corporate Desk</h3>
               <div className="space-y-6">
-                <InfoRow icon={<MapPin />} title="Gujarat Office" desc="Surat, Gujarat, India" />
-                <InfoRow icon={<Phone />} title="Direct Line" desc="+91 98795 76332" />
-                <InfoRow icon={<Mail />} title="Email" desc="contact@innovate-india.com" />
-                <InfoRow icon={<Clock />} title="Operations" desc="24/7 Emergency Support" />
+                <InfoRow 
+                  icon={<User />} 
+                  title="Director" 
+                  desc={<>Ketankumar Parmar <br/><span className="text-xs text-gray-400 font-normal">Hospital Project Consultant</span></>} 
+                />
+                <InfoRow 
+                  icon={<MapPin />} 
+                  title="Gujarat Office" 
+                  desc={<>135, Soham Arcade, Nr. Baghban Circle, <br/>Green City Road, Pal, Surat 394510</>} 
+                />
+                <InfoRow 
+                  icon={<Phone />} 
+                  title="Direct Line" 
+                  desc="+91 98795 76332" 
+                />
+                <InfoRow 
+                  icon={<Mail />} 
+                  title="Email" 
+                  desc="director@innovate-india.com" 
+                />
+              </div>
+
+              {/* Authority Badge */}
+              <div className="mt-8 pt-8 border-t border-white/5 flex items-start gap-3">
+                <ShieldCheck className="text-[#00A8A8] shrink-0" size={18} />
+                <p className="text-[10px] text-gray-500 leading-relaxed font-bold uppercase tracking-widest">
+                  Innovate India is the exclusive channel partner for DiaCare Solutions in South Gujarat.
+                </p>
               </div>
             </div>
 
             {/* Direct WhatsApp Box */}
-            <div className="bg-gradient-to-br from-[#0D1525] to-[#0A0F1C] border border-white/5 rounded-[2.5rem] p-8 text-center flex flex-col justify-center items-center flex-1 shadow-xl">
+            <div className="bg-gradient-to-br from-[#0D1525] to-[#0A0F1C] border border-white/5 rounded-[2.5rem] p-8 text-center flex flex-col justify-center items-center shadow-xl">
               <div className="w-14 h-14 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center mb-4 text-[#25D366]">
                 <MessageSquare size={24} />
               </div>
@@ -174,13 +213,13 @@ export default function ContactPage() {
 function InfoRow({ icon, title, desc }: InfoRowProps) {
   return (
     <div className="flex gap-4 items-start">
-      <div className="text-gray-500 mt-0.5">
+      <div className="text-[#C6A85A] mt-0.5">
         {/* Safely clone the icon to prevent TypeScript build crashes */}
         {React.isValidElement(icon) && React.cloneElement(icon as React.ReactElement<any>, { size: 18 })}
       </div>
       <div>
         <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">{title}</p>
-        <p className="text-sm font-bold text-gray-200">{desc}</p>
+        <p className="text-sm font-bold text-gray-200 leading-snug">{desc}</p>
       </div>
     </div>
   );

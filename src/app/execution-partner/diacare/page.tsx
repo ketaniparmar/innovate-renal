@@ -78,19 +78,19 @@ export default function DiaCareExecutionPage() {
               className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[3rem] p-10 relative overflow-hidden"
             >
               <p className="text-[10px] font-black text-[#00A8A8] uppercase tracking-[0.3em] mb-4">The Clinical Performance Layer</p>
-              <h2 className="text-4xl font-black text-white mb-6">AI-Series Hemodialysis [cite: 182]</h2>
+              <h2 className="text-4xl font-black text-white mb-6">AI-Series Hemodialysis</h2>
               <p className="text-sm text-gray-400 mb-8 leading-relaxed">
-                Hardware engineered to reduce clinical complications and improve patient quality of life through real-time AI monitoring[cite: 182, 206].
+                Hardware engineered to reduce clinical complications and improve patient quality of life through real-time AI monitoring.
               </p>
               
               <div className="grid grid-cols-2 gap-4 mb-8">
-                <FeatureItem label="Ultrapure Dialysis" icon={<Droplets size={14}/>} /> {/* [cite: 194, 205] */}
-                <FeatureItem label="Kt/V Adequate Monitoring" icon={<Activity size={14}/>} /> {/* [cite: 241, 244] */}
-                <FeatureItem label="One-Touch Auto-Priming" icon={<Cpu size={14}/>} /> {/* [cite: 227, 228] */}
-                <FeatureItem label="Online BPM Integration" icon={<ShieldCheck size={14}/>} /> {/* [cite: 207, 208] */}
+                <FeatureItem label="Ultrapure Dialysis" icon={<Droplets size={14}/>} />
+                <FeatureItem label="Kt/V Adequate Monitoring" icon={<Activity size={14}/>} />
+                <FeatureItem label="One-Touch Auto-Priming" icon={<Cpu size={14}/>} />
+                <FeatureItem label="Online BPM Integration" icon={<ShieldCheck size={14}/>} />
               </div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-t border-white/5 pt-6">
-                Modular distributed design for high-speed technical servicing[cite: 191, 195, 256].
+                Modular distributed design for high-speed technical servicing.
               </p>
             </motion.div>
 
@@ -99,11 +99,11 @@ export default function DiaCareExecutionPage() {
               <ul className="space-y-6">
                 <ReasonItem 
                   title="Reduced Complication Risk" 
-                  desc="Ultrapure fluid generation in real-time significantly reduces patient complications, stabilizing occupancy[cite: 206]." 
+                  desc="Ultrapure fluid generation in real-time significantly reduces patient complications, stabilizing occupancy." 
                 />
                 <ReasonItem 
                   title="Simplified Maintenance" 
-                  desc="Unique dual-wing door design and user-friendly interface minimize labor-hours for servicing[cite: 192, 256, 260]." 
+                  desc="Unique dual-wing door design and user-friendly interface minimize labor-hours for servicing." 
                 />
               </ul>
             </div>
@@ -118,11 +118,11 @@ export default function DiaCareExecutionPage() {
               <ul className="space-y-6">
                 <ReasonItem 
                   title="Rapid Asset Recovery" 
-                  desc="Simultaneous reprocessing of two dialyzers in ~12 minutes improves facility throughput[cite: 38, 154]." 
+                  desc="Simultaneous reprocessing of two dialyzers in ~12 minutes improves facility throughput." 
                 />
                 <ReasonItem 
                   title="Optimized Consumable Rail" 
-                  desc="Low sterilant consumption (27ml per dialyzer) protects per-session gross margins[cite: 42, 157]." 
+                  desc="Low sterilant consumption (27ml per dialyzer) protects per-session gross margins." 
                 />
               </ul>
             </div>
@@ -132,19 +132,19 @@ export default function DiaCareExecutionPage() {
               className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[3rem] p-10 relative overflow-hidden order-1 md:order-2"
             >
               <p className="text-[10px] font-black text-[#C6A85A] uppercase tracking-[0.3em] mb-4">The Operational Efficiency Layer</p>
-              <h2 className="text-4xl font-black text-white mb-6">Dialyzer Reprocessing System (DRS) [cite: 8, 21]</h2>
+              <h2 className="text-4xl font-black text-white mb-6">Dialyzer Reprocessing System (DRS)</h2>
               <p className="text-sm text-gray-400 mb-8 leading-relaxed">
-                Automated infrastructure to standardize reuse protocols and ensure AAMI-standard patient safety[cite: 34].
+                Automated infrastructure to standardize reuse protocols and ensure AAMI-standard patient safety.
               </p>
               
               <div className="grid grid-cols-2 gap-4 mb-8">
-                <FeatureItem label="Pressure Leak Test" icon={<BarChart3 size={14}/>} /> {/* [cite: 149] */}
-                <FeatureItem label="Volume (TBV) Testing" icon={<Lock size={14}/>} /> {/* [cite: 152] */}
-                <FeatureItem label="Battery Resilience" icon={<Zap size={14}/>} /> {/* [cite: 107, 143] */}
-                <FeatureItem label="Barcode Serialization" icon={<Server size={14}/>} /> {/* [cite: 112, 142] */}
+                <FeatureItem label="Pressure Leak Test" icon={<BarChart3 size={14}/>} />
+                <FeatureItem label="Volume (TBV) Testing" icon={<Lock size={14}/>} />
+                <FeatureItem label="Battery Resilience" icon={<Zap size={14}/>} />
+                <FeatureItem label="Barcode Serialization" icon={<Server size={14}/>} />
               </div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest border-t border-white/5 pt-6">
-                Medical-grade stainless steel frame for zero-corrosion institutional longevity[cite: 24].
+                Medical-grade stainless steel frame for zero-corrosion institutional longevity.
               </p>
             </motion.div>
           </div>
@@ -169,7 +169,7 @@ export default function DiaCareExecutionPage() {
           <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
             "We don’t just design systems. We provide the execution rails to actually deliver them—faster and better."
           </p>
-          <Link href="/os">
+          <Link href="/calculator">
             <motion.button 
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               className="bg-[#C6A85A] text-[#0A0F1C] px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-[0_0_40px_rgba(198,168,90,0.3)] flex items-center gap-3 mx-auto"
