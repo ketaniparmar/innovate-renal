@@ -3,10 +3,17 @@
 @tailwind utilities;
 
 :root {
+  /* --- 1. CORE THEME --- */
   /* The Void (Clinical Navy Background) */
   --background: #0A0F1C;
   /* Standard legible text */
   --foreground: #e2e8f0; 
+  
+  /* --- 2. INNOVATE INDIA TOKENS --- */
+  --color-sovereign-gold: #C6A85A;
+  --color-sovereign-teal: #00A8A8;
+  --color-sovereign-navy-light: rgba(20, 29, 48, 0.4);
+  --color-sovereign-navy-border: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
@@ -18,13 +25,10 @@
   }
 }
 
-/* You can add any global custom animations, 
-  third-party library overrides, or font imports below this line. 
-*/
 /* --- 3. CUSTOM UTILITIES & COMPONENTS --- */
 @layer components {
   .glass {
-    background: rgba(20, 29, 48, 0.4); /* sovereign-navy-light */
+    background: var(--color-sovereign-navy-light);
     backdrop-filter: blur(12px);
     border: 1px solid var(--color-sovereign-navy-border);
   }

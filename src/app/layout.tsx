@@ -1,11 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css";
+import Image from "next/image";
+
+// FIX: Changed from relative "./globals.css" to absolute alias path
+import "@/app/globals.css"; 
 
 import { InfraProvider } from "@/context/InfrastructureContext";
 import { Navbar } from "@/components/ui/Navbar";
 import Link from "next/link";
-import { ArrowRight, Activity, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, Activity } from "lucide-react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,7 +58,7 @@ export default function RootLayout({
           {/* BRANDED BACKGROUND AMBIENCE */}
           <div className="fixed inset-0 -z-10 pointer-events-none">
             <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#C6A85A]/5 blur-[140px] rounded-full" />
-            {/* Swapped generic blue for Intelligence Teal */}
+            {/* Intelligence Teal Glow */}
             <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#00A8A8]/5 blur-[140px] rounded-full" />
           </div>
 
@@ -74,18 +77,14 @@ export default function RootLayout({
 
               {/* BRAND ARCHITECTURE */}
               <div>
-                <Link href="/" className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-[#C6A85A]/10 border border-[#C6A85A]/30 rounded-xl flex items-center justify-center">
-                    <Activity className="text-[#C6A85A]" size={20} />
-                  </div>
-                  <div>
-                    <h1 className="font-black text-xl tracking-tight text-white uppercase italic">
-                      Innovate India
-                    </h1>
-                    <p className="text-[10px] text-[#00A8A8] font-black uppercase tracking-widest">
-                      Infrastructure Intelligence
-                    </p>
-                  </div>
+                <Link href="/" className="inline-block mb-8 transition-transform hover:scale-105">
+                  <Image 
+                    src="/logo.png" 
+                    alt="Innovate India - Smart Healthcare Solutions" 
+                    width={220} 
+                    height={70} 
+                    className="object-contain"
+                  />
                 </Link>
 
                 <p className="text-sm text-gray-500 leading-relaxed font-medium">
@@ -93,7 +92,7 @@ export default function RootLayout({
                   Providing institutional clarity for nephrologists and hospital owners.
                 </p>
 
-                <div className="mt-6 flex items-center gap-2 text-gray-600 text-xs font-black uppercase tracking-widest">
+                <div className="mt-6 flex items-center gap-2 text-gray-600 text-[10px] font-black uppercase tracking-widest">
                   <ShieldCheck size={14} className="text-[#00A8A8]" />
                   NABH & PM-JAY Compliance Audit
                 </div>
@@ -110,10 +109,10 @@ export default function RootLayout({
                 <Link href="/tools" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
                   Yield & Profit Projections
                 </Link>
-                <Link href="/service" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
-                  Risk & AMC Intel
+                <Link href="/supply" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                  Recurring Revenue Engine
                 </Link>
-                <Link href="/solutions" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                <Link href="/turnkey" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
                   Turnkey Infrastructure
                 </Link>
               </div>
@@ -130,7 +129,7 @@ export default function RootLayout({
               </div>
 
               {/* CONVERSION ENGINE CTA */}
-              <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 flex flex-col justify-between shadow-2xl">
+              <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 flex flex-col justify-between shadow-2xl group hover:border-[#C6A85A]/20 transition-all">
                 <div>
                   <h3 className="text-lg font-black mb-3 text-white">
                     Operationalize Assets
@@ -140,8 +139,8 @@ export default function RootLayout({
                   </p>
                 </div>
 
-                <Link href="/os">
-                  <button className="w-full bg-[#C6A85A] text-[#0A0F1C] py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#D4B970] transition-all shadow-[0_10px_20px_rgba(198,168,90,0.15)]">
+                <Link href="/calculator">
+                  <button className="w-full bg-[#C6A85A] text-[#0A0F1C] py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#D4B970] transition-all shadow-[0_10px_20px_rgba(198,168,90,0.15)] group-hover:scale-[1.02]">
                     Start Underwriting <ArrowRight size={14} />
                   </button>
                 </Link>
@@ -157,18 +156,6 @@ export default function RootLayout({
           </footer>
 
         </InfraProvider>
-
-        {/* CUSTOM BRANDED SCROLLBAR */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-            ::-webkit-scrollbar { width: 5px; }
-            ::-webkit-scrollbar-track { background: #0A0F1C; }
-            ::-webkit-scrollbar-thumb { background: rgba(198,168,90,0.1); border-radius: 10px; }
-            ::-webkit-scrollbar-thumb:hover { background: #C6A85A; }
-          `,
-          }}
-        />
       </body>
     </html>
   );
