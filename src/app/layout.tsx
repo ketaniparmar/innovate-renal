@@ -2,13 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Image from "next/image";
 
-// FIX: Changed from relative "./globals.css" to absolute alias path
+// Absolute path alias
 import "@/app/globals.css"; 
 
 import { InfraProvider } from "@/context/InfrastructureContext";
 import { Navbar } from "@/components/ui/Navbar";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Activity } from "lucide-react";
+// Removed unused 'Activity' import
+import { ArrowRight, ShieldCheck } from "lucide-react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -98,22 +99,22 @@ export default function RootLayout({
                 </div>
               </div>
 
-              {/* STRATEGIC TOOLS */}
+              {/* STRATEGIC TOOLS (Synchronized with new Funnel) */}
               <div className="flex flex-col gap-3 text-sm">
                 <span className="text-gray-600 font-black uppercase tracking-widest text-[10px] mb-4">
                   Planning Hub
                 </span>
-                <Link href="/capex" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
-                  Setup Cost Engine
+                <Link href="/turnkey" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                  Turnkey Infrastructure
                 </Link>
-                <Link href="/tools" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
-                  Yield & Profit Projections
+                <Link href="/execution-partner/diacare" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                  Execution Stack
                 </Link>
                 <Link href="/supply" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
                   Recurring Revenue Engine
                 </Link>
-                <Link href="/turnkey" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
-                  Turnkey Infrastructure
+                <Link href="/calculator" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">
+                  ROI Underwriting Engine
                 </Link>
               </div>
 
