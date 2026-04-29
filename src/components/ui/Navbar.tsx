@@ -19,15 +19,15 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#0A0F1C]/90 backdrop-blur-md border-b border-white/5">
       <div className="max-w-[1280px] mx-auto px-6 h-20 flex items-center justify-between">
         
-        {/* --- BRAND AUTHORITY (Official Logo) --- */}
-        <Link href="/" className="flex items-center transition-transform hover:scale-105">
+        {/* --- BRAND AUTHORITY (Official Logo Fixed) --- */}
+        <Link href="/" className="flex items-center transition-transform hover:scale-105 py-2">
           <Image 
             src="/logo.png" 
             alt="Innovate India - Smart Healthcare Solutions" 
-            width={180} 
-            height={55} 
-            className="object-contain"
-            priority // Forces immediate load so it doesn't pop in late
+            width={400}  // Higher base width for native resolution
+            height={150} // Higher base height to accommodate the tall logo shape
+            className="object-contain w-auto h-[45px] md:h-[55px]" // Forces height limits & auto-calculates width to prevent clipping
+            priority 
           />
         </Link>
 

@@ -1,9 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  
+  // ✅ Required for Hostinger Static Export
+  output: 'export', 
 
-  // ✅ Supabase Image Support
+  // ✅ Merged Image Settings (Supabase + Unoptimized for static export)
   images: {
+    unoptimized: true, // Must be true for 'output: export'
     remotePatterns: [
       {
         protocol: 'https',
@@ -13,7 +17,7 @@ const nextConfig = {
   },
 
   experimental: {
-    // ✅ Prisma Optimization only (appDir is removed because it's now default)
+    // ✅ Prisma Optimization
     serverComponentsExternalPackages: ['@prisma/client'],
   },
 
