@@ -1,220 +1,242 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
+  Calculator, 
   TrendingUp, 
-  ArrowRight, 
-  Zap, 
-  ShieldCheck, 
   Activity, 
-  PieChart,
-  DollarSign,
-  ChevronRight,
-  Info
+  ChevronRight, 
+  ShieldCheck,
+  MessageCircle,
+  ArrowLeft
 } from "lucide-react";
 
-export default function ROICalculator() {
-  // --- INPUT STATE ---
-  const [machines, setMachines] = useState(15);
-  const [sessionsPerDay, setSessionsPerDay] = useState(3.0);
-  const [avgRevenue, setAvgRevenue] = useState(2200);
-  const [cityTier, setCityTier] = useState<"A" | "B" | "C">("B");
+export default function ROICalculatorPage() {
+  // --- STATE: Pulled from Funnel or Defaults ---
+  const [machines, setMachines] = useState<number>(10);
+  const [location, setLocation] = useState<string>("South Gujarat");
+  
+  // --- STATE: Underwriting Variables ---
+  const [sessionsPerDay, setSessionsPerDay] = useState<number>(3);
+  const [avgSessionFee, setAvgSessionFee] = useState<number>(1800);
+  const [consumableCost, setConsumableCost] = useState<number>(850); // DiaCare optimized
 
-  // --- BUSINESS LOGIC ENGINE ---
-  const results = useMemo(() => {
-    const WORKING_DAYS = 26;
-    const monthlySessions = machines * sessionsPerDay * WORKING_DAYS;
+  // --- HYDRATE FROM LEAD CAPTURE ---
+  useEffect(() => {
+    const savedIntent = localStorage.getItem("innovate_dialysis_intent");
+    if (savedIntent) {
+      try {
+        const parsed = JSON.parse(savedIntent);
+        // Extract number from "10–20 Machines" string safely
+        const machineMatch = parsed.machines.match(/\d+/);
+        if (machineMatch) setMachines(parseInt(machineMatch[0]));
+        if (parsed.location) setLocation(parsed.location);
+      } catch (e) {
+        console.error("Failed to parse intent");
+      }
+    }
+  }, []);
+
+  // --- THE CLINICAL MATH (Sovereign OS Logic) ---
+  const economics = useMemo(() => {
+    const workingDays = 26; // Standard clinical month
+    const totalSessionsMonthly = machines * sessionsPerDay * workingDays;
     
-    // Revenue Math
-    const monthlyRevenue = monthlySessions * avgRevenue;
+    // Revenue
+    const grossRevenue = totalSessionsMonthly * avgSessionFee;
     
-    // OPEX Math (Based on Diacare Optimized Supply Rail)
-    // 27ml Sterilant per session [cite: 157] + Med-grade consumables
-    const consumableCostPerSession = 850; 
-    const totalConsumableOpex = monthlySessions * consumableCostPerSession;
+    // OPEX
+    const monthlyConsumablesOpex = totalSessionsMonthly * consumableCost;
+    const fixedOpex = machines * 35000; // Staff, Rent, Utilities baseline
+    const totalOpex = monthlyConsumablesOpex + fixedOpex;
     
-    // Staff & Rent (City Tier Multipliers)
-    const tierMultiplier = cityTier === "A" ? 1.4 : cityTier === "B" ? 1.0 : 0.7;
-    const fixedOpex = (machines * 45000 * tierMultiplier); // Staff, Rent, Utilities
+    // Profit
+    const ebitda = grossRevenue - totalOpex;
+    const ebitdaMargin = (ebitda / grossRevenue) * 100;
     
-    const totalOpex = totalConsumableOpex + fixedOpex;
-    const monthlyEbitda = monthlyRevenue - totalOpex;
-    const ebitdaMargin = (monthlyEbitda / monthlyRevenue) * 100;
-    
-    // CAPEX Modeling (Equipment + Infrastructure)
-    const machineCapex = machines * 1050000; // AI-Series Premium Setup
-    const infraCapex = machines * 350000; 
+    // CAPEX (DiaCare Benchmark)
+    const machineCapex = machines * 650000;
+    const infraCapex = machines * 400000; // RO, beds, civil
     const totalCapex = machineCapex + infraCapex;
     
-    const paybackMonths = monthlyEbitda > 0 ? totalCapex / monthlyEbitda : 0;
+    const paybackMonths = totalCapex / ebitda;
 
     return {
-      monthlySessions: Math.round(monthlySessions),
-      monthlyRevenue,
-      monthlyEbitda,
-      ebitdaMargin: ebitdaMargin.toFixed(1),
+      grossRevenue,
+      ebitda,
+      ebitdaMargin,
       totalCapex,
-      paybackYears: (paybackMonths / 12).toFixed(1),
-      yearlyRecurringRevenue: monthlyRevenue * 12
+      paybackMonths
     };
-  }, [machines, sessionsPerDay, avgRevenue, cityTier]);
+  }, [machines, sessionsPerDay, avgSessionFee, consumableCost]);
 
-  const formatINR = (val: number) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(val));
+  // --- WHATSAPP CONVERSION GENERATOR ---
+  const generateWhatsAppLink = () => {
+    const text = `Hello Innovate India Team,%0A%0AI used your Sovereign OS Calculator for a project in *${location}*.%0A%0A*My Model:*%0A- Machines: ${machines}%0A- Expected Monthly EBITDA: ₹${(economics.ebitda / 100000).toFixed(2)} Lakhs%0A- Est. CAPEX: ₹${(economics.totalCapex / 10000000).toFixed(2)} Cr%0A%0AI want to discuss the Detailed Project Report (DPR) and DiaCare supply contracts.`;
+    return `https://wa.me/919879576332?text=${text}`; 
+  };
 
   return (
     <main className="min-h-screen bg-[#0A0F1C] text-slate-200 pt-24 pb-24 px-6 overflow-hidden">
-      
       {/* 🌌 Background Depth */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute w-[800px] h-[800px] bg-[#C6A85A]/5 blur-[150px] top-[-200px] left-[-200px]" />
-        <div className="absolute w-[600px] h-[600px] bg-[#00A8A8]/5 blur-[150px] bottom-[-100px] right-[-100px]" />
+        <div className="absolute w-[800px] h-[800px] bg-[#C6A85A]/5 blur-[150px] top-[-200px] right-[-200px]" />
+        <div className="absolute w-[600px] h-[600px] bg-[#00A8A8]/5 blur-[150px] bottom-[-100px] left-[-100px]" />
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-5xl mx-auto relative z-10">
         
-        <div className="text-center mb-16">
-          <p className="text-[10px] font-black text-[#C6A85A] uppercase tracking-[0.4em] mb-4">Financial Intelligence Layer</p>
-          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-6">Dialysis Project <br/><span className="text-white/60">ROI Engine.</span></h1>
+        {/* --- HEADER --- */}
+        <Link href="/supply" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-[#C6A85A] transition-colors mb-12">
+          <ArrowLeft size={14}/> Back to Supply Engine
+        </Link>
+        
+        <div className="mb-12">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00A8A8]/10 border border-[#00A8A8]/20 text-[10px] font-black uppercase tracking-[0.2em] text-[#00A8A8] mb-6">
+            <Calculator size={12}/> Sovereign OS v9.0
+          </motion.div>
+          <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4">
+            Financial Underwriting.
+          </h1>
+          <p className="text-gray-400 max-w-2xl text-sm leading-relaxed">
+            Adjust the clinical parameters below. This engine calculates your localized EBITDA and payback horizon based on DiaCare benchmark efficiencies.
+          </p>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-12 items-start">
+        <div className="grid lg:grid-cols-12 gap-8">
           
           {/* --- LEFT: INPUT CONTROLS --- */}
-          <div className="lg:col-span-5 space-y-8 p-10 rounded-[3rem] bg-white/[0.02] border border-white/10 backdrop-blur-xl">
-            
-            <Slider 
-              label="Planned Machines" 
-              value={machines} 
-              min={5} max={50} 
-              onChange={setMachines} 
-              icon={<Activity size={16} className="text-[#00A8A8]"/>}
-            />
-
-            <Slider 
-              label="Sessions per Day" 
-              value={sessionsPerDay} 
-              min={1.0} max={4.0} step={0.5}
-              onChange={setSessionsPerDay} 
-              icon={<Zap size={16} className="text-[#C6A85A]"/>}
-            />
-
-            <Slider 
-              label="Avg. Revenue / Session" 
-              value={avgRevenue} 
-              min={1100} max={4500} step={100}
-              suffix="₹"
-              onChange={setAvgRevenue} 
-              icon={<DollarSign size={16} className="text-[#00A8A8]"/>}
-            />
-
-            <div className="space-y-4">
-               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                 Location Tier (Staff & Rent Impact)
-               </label>
-               <div className="grid grid-cols-3 gap-3">
-                 {(['A', 'B', 'C'] as const).map(tier => (
-                   <button 
-                     key={tier}
-                     onClick={() => setCityTier(tier)}
-                     className={`py-3 rounded-xl font-bold text-xs transition-all border ${cityTier === tier ? 'bg-[#C6A85A] text-[#0A0F1C] border-[#C6A85A]' : 'bg-white/5 text-gray-400 border-white/5 hover:border-white/20'}`}
-                   >
-                     Tier {tier}
-                   </button>
-                 ))}
-               </div>
-            </div>
-          </div>
-
-          {/* --- RIGHT: REAL-TIME OUTPUTS --- */}
-          <div className="lg:col-span-7 space-y-6">
-            
-            <div className="grid md:grid-cols-2 gap-6">
-              <OutputCard 
-                label="Monthly EBITDA" 
-                value={`₹${formatINR(results.monthlyEbitda)}`} 
-                subValue={`${results.ebitdaMargin}% Margin`}
-                highlight
+          <div className="lg:col-span-5 space-y-8">
+            <div className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-md">
+              <h3 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-8 flex items-center gap-2">
+                <Activity size={14}/> Clinical Assumptions
+              </h3>
+              
+              <SliderControl 
+                label="Dialysis Machines" 
+                value={machines} min={5} max={50} step={1} 
+                onChange={setMachines} 
               />
-              <OutputCard 
-                label="Total Project CAPEX" 
-                value={`₹${(results.totalCapex / 10000000).toFixed(2)} Cr`} 
-                subValue="Equip + Infra + Setup"
+              <SliderControl 
+                label="Sessions per Machine / Day" 
+                value={sessionsPerDay} min={1} max={4} step={0.5} 
+                onChange={setSessionsPerDay} 
               />
-              <OutputCard 
-                label="Payback Horizon" 
-                value={`${results.paybackYears} Years`} 
-                subValue="Capital Recovery Period"
+              <SliderControl 
+                label="Avg. Revenue per Session (₹)" 
+                value={avgSessionFee} min={1200} max={4000} step={100} 
+                onChange={setAvgSessionFee} 
               />
-              <OutputCard 
-                label="Sessions / Month" 
-                value={results.monthlySessions.toString()} 
-                subValue={`at ${sessionsPerDay} Utilization`}
-              />
-            </div>
-
-            {/* --- SYSTEM VALIDATION BAR --- */}
-            <div className="p-8 rounded-[2.5rem] bg-[#00A8A8]/10 border border-[#00A8A8]/20 flex items-center gap-6">
-              <div className="hidden md:flex w-12 h-12 rounded-full bg-[#00A8A8]/20 items-center justify-center shrink-0">
-                <ShieldCheck className="text-[#00A8A8]" />
+              
+              <div className="mt-8 pt-8 border-t border-white/5">
+                <h3 className="text-xs font-black uppercase tracking-widest text-[#C6A85A] mb-6">
+                  Innovate India Supply Advantage
+                </h3>
+                <SliderControl 
+                  label="Consumable Cost per Session (₹)" 
+                  value={consumableCost} min={700} max={1500} step={50} 
+                  onChange={setConsumableCost} 
+                  highlight
+                />
+                <p className="text-[9px] text-gray-500 uppercase tracking-widest mt-4 font-bold">
+                  *Lower consumable costs via our exclusive DiaCare supply contracts directly boost EBITDA.
+                </p>
               </div>
-              <p className="text-xs text-gray-300 leading-relaxed">
-                <strong className="text-white">Margin Note:</strong> These projections include the **Diacare 27ml Sterilant Advantage**  and **12-minute dual-station reprocessing**. Optimized throughput increases monthly EBITDA by approximately 18% compared to fragmented setups.
-              </p>
             </div>
-
-            {/* --- FINAL CONVERSION CTA --- */}
-            <Link href="/contact">
-              <motion.button 
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                className="w-full mt-4 p-8 rounded-[2.5rem] bg-gradient-to-r from-[#C6A85A] to-[#D4B970] text-[#0A0F1C] flex items-center justify-between group shadow-[0_20px_50px_rgba(198,168,90,0.2)]"
-              >
-                <div className="text-left">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-70">Next Step</p>
-                  <h3 className="text-2xl font-black tracking-tight">Download Full Feasibility Report</h3>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center group-hover:translate-x-2 transition-transform">
-                  <ChevronRight size={24} />
-                </div>
-              </motion.button>
-            </Link>
-
           </div>
+
+          {/* --- RIGHT: THE OUTPUT TERMINAL --- */}
+          <div className="lg:col-span-7">
+            <div className="p-10 rounded-[3rem] bg-gradient-to-br from-[#0D1525] to-[#121D33] border border-[#C6A85A]/20 shadow-[0_40px_100px_rgba(0,0,0,0.5)] h-full flex flex-col justify-between">
+              
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-8">
+                  Projected Financial Model: <span className="text-white">{location}</span>
+                </p>
+                
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                  <DataReadout 
+                    label="Monthly EBITDA" 
+                    value={`₹${(economics.ebitda / 100000).toFixed(2)}L`} 
+                    subtext={`${economics.ebitdaMargin.toFixed(1)}% Margin`}
+                    primary
+                  />
+                  <DataReadout 
+                    label="Est. Setup CAPEX" 
+                    value={`₹${(economics.totalCapex / 10000000).toFixed(2)}Cr`} 
+                    subtext="Turnkey Infra + DiaCare"
+                  />
+                  <DataReadout 
+                    label="Gross Revenue / Mo" 
+                    value={`₹${(economics.grossRevenue / 100000).toFixed(2)}L`} 
+                    subtext="At 100% Target Utilization"
+                  />
+                  <DataReadout 
+                    label="Payback Horizon" 
+                    value={`${economics.paybackMonths.toFixed(1)} Mo`} 
+                    subtext="Break-even timeline"
+                  />
+                </div>
+              </div>
+
+              {/* --- THE HARD CLOSE --- */}
+              <div className="mt-8 pt-8 border-t border-white/10">
+                <div className="flex items-start gap-4 mb-8">
+                  <ShieldCheck className="text-[#00A8A8] shrink-0 mt-1" size={20}/>
+                  <p className="text-xs text-gray-400 leading-relaxed font-medium">
+                    This is a baseline mathematical model. To finalize this project, you need a <strong className="text-white">Detailed Project Report (DPR)</strong> and a locked-in <strong className="text-white">Supply Contract</strong> for your region.
+                  </p>
+                </div>
+
+                <a href={generateWhatsAppLink()} target="_blank" rel="noreferrer" className="block w-full">
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    className="w-full bg-[#C6A85A] text-[#0A0F1C] py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl flex items-center justify-center gap-3"
+                  >
+                    Send Model via WhatsApp <MessageCircle size={16}/>
+                  </motion.button>
+                </a>
+                <p className="text-center text-[9px] text-gray-500 uppercase tracking-widest mt-4 font-bold">
+                  Connect instantly with our executive team.
+                </p>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </div>
     </main>
   );
 }
 
-/* --- UI SUB-COMPONENTS --- */
+// --- UI SUB-COMPONENTS ---
 
-function Slider({ label, value, min, max, step = 1, onChange, suffix = "", icon }: any) {
+function SliderControl({ label, value, min, max, step, onChange, highlight }: any) {
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
-          {icon} {label}
-        </label>
-        <span className="text-lg font-black text-white">{suffix}{value}</span>
+    <div className="space-y-4 mb-6">
+      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.1em]">
+        <span className="text-gray-400">{label}</span>
+        <span className={`text-base ${highlight ? 'text-[#C6A85A]' : 'text-white'}`}>{value}</span>
       </div>
       <input 
-        type="range" 
-        min={min} max={max} step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#C6A85A]"
+        type="range" min={min} max={max} step={step} 
+        value={value} 
+        onChange={(e) => onChange(parseFloat(e.target.value))} 
+        className={`w-full h-1.5 rounded-full appearance-none bg-white/10 ${highlight ? 'accent-[#C6A85A]' : 'accent-[#00A8A8]'}`} 
       />
     </div>
   );
 }
 
-function OutputCard({ label, value, subValue, highlight = false }: any) {
+function DataReadout({ label, value, subtext, primary }: any) {
   return (
-    <div className={`p-8 rounded-[2.5rem] border ${highlight ? 'bg-[#C6A85A]/10 border-[#C6A85A]/30' : 'bg-white/[0.03] border-white/10'}`}>
-      <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.3em] mb-4">{label}</p>
-      <p className={`text-3xl font-black mb-1 ${highlight ? 'text-[#C6A85A]' : 'text-white'}`}>{value}</p>
-      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{subValue}</p>
+    <div className={`p-6 rounded-[2rem] border ${primary ? 'bg-[#C6A85A]/10 border-[#C6A85A]/30' : 'bg-white/[0.03] border-white/5'}`}>
+      <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">{label}</p>
+      <p className={`text-3xl tracking-tighter font-black ${primary ? 'text-[#C6A85A]' : 'text-white'}`}>{value}</p>
+      <p className="text-[10px] text-gray-500 font-bold mt-2">{subtext}</p>
     </div>
   );
 }
