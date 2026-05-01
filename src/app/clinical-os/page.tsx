@@ -208,6 +208,13 @@ export default function Homepage() {
             <FlowStep num="4" title="Structured Data" desc="Post-dialysis vitals and fluid removal must be recorded before completion." />
             <FlowStep num="5" title="Auto Billing" desc="The moment a session is completed, billing is generated—no manual intervention." isLast />
           </div>
+          <div className="mt-12 text-center col-span-1 lg:col-span-5">
+  <Link href="/clinical-os/technician-portal">
+    <button className="bg-transparent border border-[#00A8A8] text-[#00A8A8] px-8 py-4 rounded-xl text-xs font-black uppercase tracking-[0.2em] hover:bg-[#00A8A8]/10 transition-all shadow-[0_0_20px_rgba(0,168,168,0.15)]">
+      Open Live Floor Simulator 
+    </button>
+  </Link>
+</div>
         </section>
 
         {/* --- DUAL THREAT: ALERTS & REVENUE CONTROL --- */}
