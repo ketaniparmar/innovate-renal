@@ -6,11 +6,11 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { 
   ArrowRight, ShieldCheck, Server, Users, Activity, 
   TrendingUp, AlertTriangle, CheckCircle2, Lock,
-  Stethoscope, FileText, BarChart3, Building2, Terminal
+  Stethoscope, BarChart3, Building2, Terminal
 } from "lucide-react";
 import { saveUserIntent } from "@/utils/intentTracker";
 
-export default function ClinicalOSPage() {
+export default function Homepage() {
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
@@ -49,7 +49,7 @@ export default function ClinicalOSPage() {
               onClick={() => saveUserIntent("action", "Clicked Sticky Demo")}
               className="bg-[#C6A85A] text-[#0A0F1C] px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#D4B970] transition-all shadow-[0_0_15px_rgba(198,168,90,0.3)]"
             >
-              Live System Demo
+              See Live System Demo
             </button>
           </Link>
         </div>
@@ -223,7 +223,7 @@ export default function ClinicalOSPage() {
               The system tells you what needs attention—before it becomes a problem. These are not passive notifications. They are operational signals that require action.
             </p>
             <div className="space-y-4">
-              <AlertItem text="Delayed session starts" />
+              <AlertItem text="Delayed session starts (15+ min)" />
               <AlertItem text="Idle machines during active shifts" />
               <AlertItem text="Technician overload risks" />
               <AlertItem text="Incorrect infection zone assignments" />
@@ -248,7 +248,7 @@ export default function ClinicalOSPage() {
               <div className="flex items-start gap-3"><CheckCircle2 className="text-[#C6A85A] shrink-0 mt-0.5" size={18}/> Claim readiness is visible instantly.</div>
             </div>
             <div className="bg-[#C6A85A]/10 border border-[#C6A85A]/20 p-4 rounded-xl text-center">
-              <p className="text-xs font-black text-[#C6A85A] uppercase tracking-widest">Result: No missed billing opportunities.</p>
+              <p className="text-xs font-black text-[#C6A85A] uppercase tracking-widest">Result: Zero missed billing opportunities.</p>
             </div>
           </div>
         </section>
@@ -268,20 +268,6 @@ export default function ClinicalOSPage() {
             <DictionaryRow term="Alerts" definition="Immediate operational risks" />
             <DictionaryRow term="Completed Session" definition="Ready for billing" highlight />
             <DictionaryRow term="Missing Data" definition="Revenue cannot be captured" warning />
-          </div>
-        </section>
-
-        {/* --- MULTI-CENTER SCALING --- */}
-        <section className="mb-32 text-center max-w-3xl mx-auto">
-          <Building2 size={48} className="text-[#00A8A8] mx-auto mb-6 opacity-80" />
-          <h2 className="text-3xl font-black text-white mb-6 tracking-tighter">Standardize Operations Across Every Center</h2>
-          <p className="text-gray-400 mb-8 font-medium leading-relaxed">
-            Whether you run 1 center or 10: The same protocols apply everywhere. Performance can be compared across locations. Utilization gaps are visible instantly.
-          </p>
-          <div className="flex justify-center gap-4 text-xs font-black uppercase tracking-widest text-white">
-            <span className="px-4 py-2 bg-white/5 rounded-lg border border-white/10">Consistent Quality</span>
-            <span className="px-4 py-2 bg-white/5 rounded-lg border border-white/10">Predictable Revenue</span>
-            <span className="px-4 py-2 bg-white/5 rounded-lg border border-white/10">Scalable Infra</span>
           </div>
         </section>
 
