@@ -22,11 +22,11 @@ export function Navbar() {
         
         <Link href="/" className="flex items-center transition-transform hover:scale-105">
           {/* STRICT AUDIT SIZING: 32px Mobile, 40px Desktop for maximum crispness */}
-          <div className="relative flex items-center h-[32px] md:h-[40px] w-auto">
+          <div className="relative flex items-center h-[32px] md:h-[60px] w-auto">
             <Image 
               src="/logo.png" 
               alt="Innovate India - Sovereign Clinical OS" 
-              width={200} 
+              width={300} 
               height={60} 
               className="object-contain w-auto h-full" 
               priority 
