@@ -12,7 +12,7 @@ export default function Footer() {
           <Link href="/" className="inline-block mb-8 transition-transform hover:scale-105">
             <Image 
               src="/logo.png" 
-              alt="Innovate India - Smart Healthcare Solutions" 
+              alt="Innovate India - Complete Dialysis Setup" 
               width={220} 
               height={70} 
               className="object-contain"
@@ -54,39 +54,39 @@ export default function Footer() {
 
         <div className="flex flex-col gap-3 text-sm md:pl-4">
           <span className="text-gray-600 font-black uppercase tracking-widest text-[10px] mb-4">
-            Planning Hub
+            Quick Links
           </span>
-          <Link href="/turnkey" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Turnkey Infrastructure</Link>
-          <Link href="/execution-partner/diacare" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Execution Stack</Link>
-          <Link href="/supply" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Recurring Revenue Engine</Link>
-          <Link href="/clinical-os" className="text-[#00A8A8] hover:text-white font-bold transition-colors">Clinical OS (Software)</Link>
-          <Link href="/calculator" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">ROI Underwriting Engine</Link>
-          <Link href="/contact" className="text-gray-400 hover:text-white font-bold transition-colors mt-4">Contact Advisory Board</Link>
+          <Link href="/turnkey" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Turnkey Setup</Link>
+          <Link href="/execution-partner/diacare" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Our Equipment</Link>
+          <Link href="/supply" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Medical Supplies</Link>
+          <Link href="/clinical-os" className="text-[#00A8A8] hover:text-white font-bold transition-colors">Smart Software</Link>
+          <Link href="/calculator" className="text-gray-400 hover:text-[#C6A85A] font-bold transition-colors">Profit Calculator</Link>
+          <Link href="/contact" className="text-gray-400 hover:text-white font-bold transition-colors mt-4">Contact Us</Link>
         </div>
 
         <div className="flex flex-col gap-3 text-sm">
           <span className="text-gray-600 font-black uppercase tracking-widest text-[10px] mb-4">
-            Frameworks
+            Standards We Follow
           </span>
-          <span className="text-gray-500 font-bold">NABH Compliance Systems</span>
-          <span className="text-gray-500 font-bold">PM-JAY v2.0 Guidelines</span>
+          <span className="text-gray-500 font-bold">NABH Compliance</span>
+          <span className="text-gray-500 font-bold">PM-JAY Guidelines</span>
           <span className="text-gray-500 font-bold">AAMI Water Standards</span>
-          <span className="text-gray-500 font-bold">Capital Risk Hedging</span>
+          <span className="text-gray-500 font-bold">Investment Protection</span>
         </div>
 
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 flex flex-col justify-between shadow-2xl group hover:border-[#C6A85A]/20 transition-all">
           <div>
             <h3 className="text-lg font-black mb-3 text-white">
-              Operationalize Assets
+              Maximize Your Profit
             </h3>
             <p className="text-xs text-gray-500 mb-6 leading-relaxed font-medium">
-              Convert clinical uncertainty into predictable monthly yield through the Sovereign Clinical OS.
+              Stop guessing. Use our smart software to run a safe, highly profitable dialysis center with zero hidden leaks.
             </p>
           </div>
 
           <Link href="/calculator">
             <button className="w-full bg-[#C6A85A] text-[#0A0F1C] py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#D4B970] transition-all shadow-[0_10px_20px_rgba(198,168,90,0.15)] group-hover:scale-[1.02]">
-              Start Underwriting <ArrowRight size={14} />
+              Calculate Your Profit <ArrowRight size={14} />
             </button>
           </Link>
         </div>
@@ -94,7 +94,7 @@ export default function Footer() {
 
       <div className="border-t border-white/5 py-10 text-center px-6">
         <p className="text-[10px] text-gray-600 font-black uppercase tracking-[0.4em]">
-          © {new Date().getFullYear()} Innovate India — Healthcare Infrastructure Intelligence
+          © {new Date().getFullYear()} Innovate India — Complete Dialysis Setup & Software
         </p>
       </div>
     </footer>
