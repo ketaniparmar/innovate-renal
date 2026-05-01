@@ -4,7 +4,7 @@ import "./globals.css";
 
 import { InfraProvider } from "@/context/InfrastructureContext";
 import { Navbar } from "@/components/ui/Navbar";
-import Footer from "@/components/Footer"; // NOTE: Adjust if your Footer is inside /ui/
+import Footer from "@/components/Footer"; 
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,23 +12,30 @@ const inter = Inter({
   display: "swap",
 });
 
-// --- METADATA (CFO & Institutional Authority) ---
+// --- METADATA (Sovereign OS & Clinical Execution Authority) ---
 export const metadata: Metadata = {
   title: {
-    default: "Innovate India | Dialysis Infrastructure Underwriting",
+    default: "Innovate India | Sovereign Clinical OS",
     template: "%s | Innovate India",
   },
   description:
-    "Institutional-grade financial planning for dialysis centers. Precise CAPEX modeling, EBITDA projections, and risk-hedged operational architecture.",
+    "Turn empty dialysis machines into predictable revenue. Deploy the Sovereign Clinical OS to enforce clinical protocols, control shift operations, and mathematically eliminate PM-JAY claim rejections.",
   keywords: [
-    "Dialysis Infrastructure Underwriting",
+    "Dialysis Operating System",
+    "Clinical Execution System",
     "Sovereign OS Dialysis",
-    "Healthcare CAPEX Modeling",
-    "Dialysis Project Report DPR",
+    "Dialysis Capacity Orchestration",
     "PMJAY Revenue Optimization",
-    "Medical Facility Financial Planning"
+    "Dialysis Center Utilization",
+    "Healthcare Infrastructure Intelligence"
   ],
   authors: [{ name: "Innovate India", url: "https://innovate-india.com" }],
+  openGraph: {
+    title: "Innovate India | Sovereign Clinical OS",
+    description: "From Empty Machines to 90% Utilization. The ultimate execution layer for dialysis centers.",
+    type: "website",
+    locale: "en_IN",
+  }
 };
 
 // --- VIEWPORT (Deep Navy Theme) ---
