@@ -8,12 +8,13 @@ import { Menu, X, ChevronRight, Phone } from "lucide-react";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
+  // PLAIN ENGLISH NAVIGATION
   const navLinks = [
-    { name: "Infrastructure", href: "/turnkey" },
-    { name: "Execution Stack", href: "/execution-partner/diacare" },
-    { name: "Supply Engine", href: "/supply" },
-    { name: "Clinical OS", href: "/clinical-os" }, 
-    { name: "Advisory Desk", href: "/contact" }, 
+    { name: "Turnkey Setup", href: "/turnkey" },
+    { name: "Our Equipment", href: "/execution-partner/diacare" },
+    { name: "Medical Supplies", href: "/supply" },
+    { name: "Smart Software", href: "/clinical-os" }, 
+    { name: "Contact Us", href: "/contact" }, 
   ];
 
   return (
@@ -21,12 +22,11 @@ export function Navbar() {
       <div className="max-w-[1280px] mx-auto px-6 h-24 flex items-center justify-between">
         
         <Link href="/" className="flex items-center transition-transform hover:scale-105">
-          {/* STRICT AUDIT SIZING: 32px Mobile, 40px Desktop for maximum crispness */}
-          <div className="relative flex items-center h-[32px] md:h-[60px] w-auto">
+          <div className="relative flex items-center h-[32px] md:h-[40px] w-auto">
             <Image 
               src="/logo.png" 
-              alt="Innovate India - Sovereign Clinical OS" 
-              width={300} 
+              alt="Innovate India - Complete Dialysis Setup" 
+              width={200} 
               height={60} 
               className="object-contain w-auto h-full" 
               priority 
@@ -52,7 +52,7 @@ export function Navbar() {
             
             <Link href="/calculator">
               <button className="bg-[#C6A85A] text-[#0A0F1C] px-5 xl:px-6 py-2.5 rounded-lg text-[9px] xl:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#D4B970] transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(198,168,90,0.2)] whitespace-nowrap">
-                Simulate Yield <ChevronRight size={14} />
+                Profit Calculator <ChevronRight size={14} />
               </button>
             </Link>
           </div>
@@ -82,7 +82,7 @@ export function Navbar() {
 
           <Link href="/calculator" onClick={() => setIsOpen(false)}>
             <button className="w-full mt-4 bg-[#C6A85A] text-[#0A0F1C] px-6 py-4 rounded-lg text-[11px] font-black uppercase tracking-[0.2em] shadow-lg flex justify-center items-center gap-2">
-              Simulate Yield <ChevronRight size={16} />
+              Calculate Your Profit <ChevronRight size={16} />
             </button>
           </Link>
         </div>

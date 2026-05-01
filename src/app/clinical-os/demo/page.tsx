@@ -1,360 +1,268 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Users, 
-  Activity, 
-  AlertOctagon, 
+  ShieldAlert, 
   CheckCircle2, 
-  Cpu, 
-  Play,
-  RotateCcw,
-  ShieldAlert,
-  Server
+  ArrowRight, 
+  Activity, 
+  Server,
+  AlertTriangle,
+  Lock,
+  IndianRupee,
+  Users,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 
-// --- TYPES & MOCK DATA ---
-type InfectionType = "None" | "HCV+" | "HBsAg+";
-
-interface Patient {
-  id: string;
-  name: string;
-  infection: InfectionType;
-  scheduled: boolean;
-}
-
-interface Machine {
-  id: string;
-  isIsolated: boolean;
-}
-
-const INITIAL_MACHINES: Machine[] = Array.from({ length: 20 }, (_, i) => ({
-  id: `M-${(i + 1).toString().padStart(2, "0")}`,
-  isIsolated: i >= 17, // Last 3 machines are isolated
-}));
-
-const INITIAL_PATIENTS: Patient[] = [
-  ...Array.from({ length: 45 }, (_, i) => ({ id: `P-${i + 1}`, name: `Patient ${i + 1}`, infection: "None" as InfectionType, scheduled: false })),
-  ...Array.from({ length: 4 }, (_, i) => ({ id: `HCV-${i + 1}`, name: `HCV Patient ${i + 1}`, infection: "HCV+" as InfectionType, scheduled: false })),
-  ...Array.from({ length: 3 }, (_, i) => ({ id: `HBS-${i + 1}`, name: `HBsAg Patient ${i + 1}`, infection: "HBsAg+" as InfectionType, scheduled: false })),
-];
-
-export default function ClinicalOSDemo() {
-  const [activeShift, setActiveShift] = useState<1 | 2 | 3>(1);
-  const [patients, setPatients] = useState<Patient[]>(INITIAL_PATIENTS);
-  const [allocations, setAllocations] = useState<Record<number, Record<string, Patient | null>>>({
-    1: {}, 2: {}, 3: {}
-  });
-  
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [alertMsg, setAlertMsg] = useState<{ text: string, type: "error" | "success" | "info" } | null>(null);
-
-  // --- CORE ENGINE METRICS ---
-  const metrics = useMemo(() => {
-    let totalSlots = 20 * 3; // 20 machines * 3 shifts
-    let filledSlots = 0;
-    
-    Object.values(allocations).forEach(shiftData => {
-      Object.values(shiftData).forEach(p => { if (p) filledSlots++; });
-    });
-
-    const utilization = totalSlots > 0 ? Math.round((filledSlots / totalSlots) * 100) : 0;
-    const revenue = filledSlots * 1800; // Base ₹1800 per session
-    const opex = filledSlots * 850; // Optimized consumables OPEX
-    const ebitda = revenue - opex;
-
-    return { utilization, filledSlots, totalSlots, revenue, ebitda };
-  }, [allocations]);
-
-  // --- ACTIONS & LOGIC ---
-
-  const triggerAlert = (text: string, type: "error" | "success" | "info") => {
-    setAlertMsg({ text, type });
-    setTimeout(() => setAlertMsg(null), 4000);
-  };
-
-  const handleMachineClick = (machine: Machine) => {
-    if (!selectedPatient) {
-      // If clicking an assigned machine, unassign it
-      const existingPatient = allocations[activeShift]?.[machine.id];
-      if (existingPatient) {
-        const newAllocations = { ...allocations };
-        delete newAllocations[activeShift][machine.id];
-        setAllocations(newAllocations);
-        
-        setPatients(prev => prev.map(p => p.id === existingPatient.id ? { ...p, scheduled: false } : p));
-        triggerAlert(`Unassigned ${existingPatient.name}`, "info");
-      }
-      return;
-    }
-
-    // --- CONSTRAINT ENGINE (The Moat) ---
-    if (selectedPatient.infection !== "None" && !machine.isIsolated) {
-      triggerAlert(`SYSTEM BLOCK: Cannot assign ${selectedPatient.infection} patient to non-isolated Machine ${machine.id}.`, "error");
-      return;
-    }
-    if (selectedPatient.infection === "None" && machine.isIsolated) {
-      triggerAlert(`WARNING: Machine ${machine.id} is reserved for infectious isolation. Reserving slot.`, "error");
-      return;
-    }
-
-    // Valid Assignment
-    const newAllocations = { ...allocations };
-    if (!newAllocations[activeShift]) newAllocations[activeShift] = {};
-    newAllocations[activeShift][machine.id] = selectedPatient;
-    
-    setAllocations(newAllocations);
-    setPatients(prev => prev.map(p => p.id === selectedPatient.id ? { ...p, scheduled: true } : p));
-    setSelectedPatient(null);
-    triggerAlert(`Assigned ${selectedPatient.name} to ${machine.id}`, "success");
-  };
-
-  // --- THE "SOLVER" ALGORITHM (Auto-Schedule) ---
-  const runAutoScheduler = () => {
-    const newAllocations = { 1: {}, 2: {}, 3: {} } as any;
-    let currentPatients = [...INITIAL_PATIENTS.map(p => ({...p, scheduled: false}))];
-
-    [1, 2, 3].forEach(shift => {
-      INITIAL_MACHINES.forEach(machine => {
-        let assigned = false;
-        
-        if (machine.isIsolated) {
-          // Find an infected patient first
-          const infectedIdx = currentPatients.findIndex(p => !p.scheduled && p.infection !== "None");
-          if (infectedIdx !== -1) {
-            newAllocations[shift][machine.id] = currentPatients[infectedIdx];
-            currentPatients[infectedIdx].scheduled = true;
-            assigned = true;
-          }
-        } else {
-          // Find a stable patient
-          const stableIdx = currentPatients.findIndex(p => !p.scheduled && p.infection === "None");
-          if (stableIdx !== -1) {
-            newAllocations[shift][machine.id] = currentPatients[stableIdx];
-            currentPatients[stableIdx].scheduled = true;
-            assigned = true;
-          }
-        }
-      });
-    });
-
-    setAllocations(newAllocations);
-    setPatients(currentPatients);
-    setSelectedPatient(null);
-    triggerAlert("Constraint-Aware Auto-Scheduling Complete.", "success");
-  };
-
-  const resetEngine = () => {
-    setAllocations({ 1: {}, 2: {}, 3: {} });
-    setPatients(INITIAL_PATIENTS);
-    setSelectedPatient(null);
-    triggerAlert("System Reset.", "info");
-  };
+export default function ClinicalOSDemoStory() {
+  const [step, setStep] = useState(1);
 
   return (
-    <div className="min-h-screen bg-[#05080F] text-slate-200 font-sans flex flex-col">
+    // STRICT OVERFLOW CONTROL: Prevents horizontal scrolling on mobile
+    <main className="min-h-screen bg-[#0A0F1C] text-slate-200 pt-32 pb-24 px-6 overflow-x-hidden w-full relative font-sans">
       
-      {/* --- TOP NAV: THE COMMAND HEADER --- */}
-      <header className="bg-[#0A0F1C] border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-[#00A8A8]/10 rounded-xl flex items-center justify-center text-[#00A8A8] border border-[#00A8A8]/20">
-            <Server size={20} />
-          </div>
-          <div>
-            <h1 className="text-sm font-black uppercase tracking-widest text-white">Sovereign OS <span className="text-[#00A8A8]">v9.0</span></h1>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Capacity Orchestration Demo</p>
-          </div>
-        </div>
-
-        {/* Live Economic Ticker */}
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">System Utilization</p>
-            <p className={`text-xl font-black ${metrics.utilization > 80 ? 'text-[#25D366]' : 'text-[#C6A85A]'}`}>
-              {metrics.utilization}%
-            </p>
-          </div>
-          <div className="h-8 w-px bg-white/10" />
-          <div className="text-right hidden sm:block">
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Daily Revenue</p>
-            <p className="text-xl font-black text-white">₹{metrics.revenue.toLocaleString()}</p>
-          </div>
-          <div className="h-8 w-px bg-white/10 hidden sm:block" />
-          <div className="text-right">
-            <p className="text-[10px] font-bold text-[#C6A85A] uppercase tracking-widest">Daily EBITDA</p>
-            <p className="text-xl font-black text-[#C6A85A]">₹{metrics.ebitda.toLocaleString()}</p>
-          </div>
-        </div>
-      </header>
-
-      {/* --- ALERT BAR --- */}
-      <div className="h-10 w-full flex items-center justify-center">
-        {alertMsg && (
-          <div className={`px-6 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2 animate-in fade-in slide-in-from-top-2 ${
-            alertMsg.type === 'error' ? 'bg-red-950/80 text-red-400 border border-red-900' :
-            alertMsg.type === 'success' ? 'bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20' :
-            'bg-white/10 text-white border border-white/20'
-          }`}>
-            {alertMsg.type === 'error' && <ShieldAlert size={14} />}
-            {alertMsg.type === 'success' && <CheckCircle2 size={14} />}
-            {alertMsg.text}
-          </div>
-        )}
+      {/* 🌌 Background Ambience (Locked inside overflow container) */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute w-[600px] h-[600px] bg-[#00A8A8]/10 blur-[150px] top-[10%] left-[-10%]" />
+        <div className="absolute w-[600px] h-[600px] bg-red-900/10 blur-[150px] bottom-[10%] right-[-10%]" />
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="max-w-5xl mx-auto relative z-10">
         
-        {/* --- LEFT SIDEBAR: PATIENT ROSTER --- */}
-        <aside className="w-80 bg-[#0A0F1C] border-r border-white/10 flex flex-col overflow-hidden">
-          <div className="p-6 border-b border-white/10 flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-white">
-              <Users size={16} className="text-[#00A8A8]"/> Patient Pool
-            </h2>
-            <span className="text-[10px] bg-white/10 px-2 py-1 rounded text-gray-400 font-bold">
-              {patients.filter(p => !p.scheduled).length} Waiting
-            </span>
-          </div>
+        {/* --- HERO: SCENARIO SETTING --- */}
+        <div className="text-center mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00A8A8]/10 border border-[#00A8A8]/20 text-[10px] font-black uppercase tracking-[0.2em] text-[#00A8A8] mb-6 shadow-[0_0_15px_rgba(0,168,168,0.15)]"
+          >
+            Live Scenario Simulation
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] mb-6"
+          >
+            The 06:00 AM <br className="hidden md:block" /> Morning Shift.
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-lg md:text-xl text-gray-400 font-medium max-w-2xl mx-auto leading-relaxed"
+          >
+            Watch the Sovereign OS orchestrate a high-volume clinical environment, block a critical infection error, and automatically capture revenue.
+          </motion.p>
+        </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-            {patients.filter(p => !p.scheduled).map(patient => (
-              <button
-                key={patient.id}
-                onClick={() => setSelectedPatient(patient)}
-                className={`w-full text-left p-3 rounded-xl border flex items-center justify-between transition-all ${
-                  selectedPatient?.id === patient.id 
-                    ? 'border-[#00A8A8] bg-[#00A8A8]/10 shadow-[0_0_15px_rgba(0,168,168,0.2)]' 
-                    : 'border-white/5 bg-white/[0.02] hover:bg-white/5'
+        {/* --- SCENARIO PARAMETERS --- */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20"
+        >
+          <ParamCard label="Active Machines" value="20" icon={<Server size={16}/>} />
+          <ParamCard label="Morning Patients" value="45" icon={<Users size={16}/>} />
+          <ParamCard label="Isolation (HCV+)" value="5" icon={<ShieldAlert size={16}/>} alert />
+          <ParamCard label="Target Yield" value="₹81,000" icon={<IndianRupee size={16}/>} gold />
+        </motion.div>
+
+        {/* --- INTERACTIVE STORYTELLING ENGINE --- */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-[#0D1525]/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-14 shadow-2xl relative overflow-hidden min-h-[600px] flex flex-col justify-between"
+        >
+          
+          {/* Top Event Navigator */}
+          <div className="flex flex-wrap gap-3 mb-12">
+            {[1, 2, 3].map((num) => (
+              <button 
+                key={num}
+                onClick={() => setStep(num)}
+                className={`px-6 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+                  step === num 
+                    ? num === 1 ? 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
+                    : num === 2 ? 'bg-[#00A8A8] text-white shadow-[0_0_15px_rgba(0,168,168,0.4)]'
+                    : 'bg-[#C6A85A] text-[#0A0F1C] shadow-[0_0_15px_rgba(198,168,90,0.4)]'
+                    : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <div>
-                  <p className="text-xs font-bold text-white">{patient.name}</p>
-                  <p className="text-[10px] text-gray-500 font-medium">UHID: {patient.id}</p>
-                </div>
-                {patient.infection !== "None" ? (
-                  <span className="bg-red-950/50 text-red-400 border border-red-900/50 px-2 py-1 rounded text-[9px] font-black tracking-widest flex items-center gap-1">
-                    <AlertOctagon size={10} /> {patient.infection}
-                  </span>
-                ) : (
-                  <span className="bg-white/5 text-gray-400 px-2 py-1 rounded text-[9px] font-black tracking-widest">
-                    STABLE
-                  </span>
-                )}
+                Event 0{num}
               </button>
             ))}
-            {patients.filter(p => !p.scheduled).length === 0 && (
-              <div className="text-center p-6 text-gray-500 text-xs font-bold">
-                All patients scheduled.
-              </div>
-            )}
           </div>
 
-          <div className="p-4 border-t border-white/10 bg-[#05080F]">
-            <p className="text-[10px] text-gray-500 mb-3 text-center">To manually assign: Select a patient, then click an empty machine slot.</p>
-            <button 
-              onClick={runAutoScheduler}
-              className="w-full bg-[#00A8A8] hover:bg-teal-500 text-white py-3 rounded-lg text-[10px] font-black uppercase tracking-[0.1em] transition-all flex items-center justify-center gap-2 shadow-lg mb-2"
-            >
-              <Cpu size={14} /> Run Auto-Solver
-            </button>
-            <button 
-              onClick={resetEngine}
-              className="w-full bg-white/5 hover:bg-white/10 text-white py-3 rounded-lg text-[10px] font-black uppercase tracking-[0.1em] transition-all flex items-center justify-center gap-2"
-            >
-              <RotateCcw size={14} /> Reset Grid
-            </button>
-          </div>
-        </aside>
-
-        {/* --- MAIN AREA: CAPACITY GRID --- */}
-        <main className="flex-1 p-6 md:p-10 overflow-y-auto">
-          
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-black text-white">Live Operations Grid</h2>
-            
-            {/* Shift Selector */}
-            <div className="flex bg-[#0A0F1C] border border-white/10 rounded-xl p-1">
-              {[1, 2, 3].map(shift => (
-                <button
-                  key={shift}
-                  onClick={() => setActiveShift(shift as 1|2|3)}
-                  className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                    activeShift === shift 
-                      ? 'bg-white/10 text-white shadow-md' 
-                      : 'text-gray-500 hover:text-white'
-                  }`}
-                >
-                  Shift 0{shift}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div className="flex gap-6 mb-8 text-[10px] font-bold uppercase tracking-widest text-gray-500">
-            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-white/5 border border-white/10"/> Empty Slot</span>
-            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-[#00A8A8]/20 border border-[#00A8A8]"/> Active (Stable)</span>
-            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-950/40 border border-red-500"/> Active (Isolated)</span>
-          </div>
-
-          {/* The Machine Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {INITIAL_MACHINES.map((machine) => {
-              const assignedPatient = allocations[activeShift]?.[machine.id];
+          <div className="flex-grow flex items-center">
+            <AnimatePresence mode="wait">
               
-              return (
-                <button
-                  key={machine.id}
-                  onClick={() => handleMachineClick(machine)}
-                  className={`relative p-4 rounded-2xl border text-left flex flex-col h-32 transition-all ${
-                    machine.isIsolated ? 'border-red-900/40 bg-red-950/10 hover:border-red-500/50' : 'border-white/10 bg-[#0A0F1C] hover:border-[#00A8A8]/50'
-                  } ${assignedPatient ? (assignedPatient.infection !== 'None' ? 'border-red-500 bg-red-950/30' : 'border-[#00A8A8] bg-[#00A8A8]/10') : ''}`}
+              {/* EVENT 1: THE MANUAL ERROR */}
+              {step === 1 && (
+                <motion.div 
+                  key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}
+                  className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center w-full"
                 >
-                  <div className="flex items-start justify-between mb-auto">
-                    <div>
-                      <p className={`text-sm font-black ${machine.isIsolated ? 'text-red-400' : 'text-gray-300'}`}>{machine.id}</p>
-                      <p className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">
-                        {machine.isIsolated ? 'Isolation Unit' : 'Standard Unit'}
-                      </p>
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-500/10 border border-red-500/20 text-[10px] font-black uppercase tracking-widest text-red-500 mb-6">
+                      <AlertTriangle size={12} /> 06:12 AM • Allocation Conflict
                     </div>
-                    {machine.isIsolated && <AlertOctagon size={16} className="text-red-500 opacity-50" />}
+                    <h3 className="text-3xl md:text-4xl font-black text-white mb-6 tracking-tight">A technician attempts to assign an HCV+ patient to a General Bed.</h3>
+                    <p className="text-sm md:text-base text-gray-400 leading-relaxed font-medium">
+                      In a manual paper-based system, this oversight leads directly to cross-infection, legal liability, and center shutdown. The technician is rushed, the floor is crowded, and the error goes unnoticed.
+                    </p>
                   </div>
-
-                  {assignedPatient ? (
-                    <div className="mt-2 animate-in fade-in zoom-in duration-300">
-                      <p className="text-xs font-bold text-white truncate">{assignedPatient.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Activity size={10} className={assignedPatient.infection !== 'None' ? 'text-red-400' : 'text-[#00A8A8]'} />
-                        <span className="text-[10px] text-gray-400">Dialyzing</span>
+                  <div className="bg-red-950/20 border border-red-900/40 rounded-[2rem] p-8 relative shadow-[0_0_40px_rgba(239,68,68,0.05)]">
+                    <div className="absolute top-6 right-6"><AlertTriangle className="text-red-500 animate-pulse" size={28}/></div>
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Manual Entry Log</p>
+                    <div className="space-y-5">
+                      <div className="flex justify-between items-center pb-3 border-b border-red-900/30">
+                        <span className="text-sm font-bold text-white">Patient: Vikram S.</span>
+                        <span className="text-xs font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded">HCV POSITIVE</span>
+                      </div>
+                      <div className="flex justify-between items-center pb-3 border-b border-red-900/30">
+                        <span className="text-sm font-bold text-white">Assigned Bed</span>
+                        <span className="text-xs font-black text-gray-300">General M-04</span>
+                      </div>
+                      <div className="mt-6 p-4 bg-red-500/10 rounded-xl border border-red-500/30 text-center">
+                        <p className="text-[11px] font-black text-red-400 uppercase tracking-[0.1em]">High Risk: Cross-Infection Imminent</p>
                       </div>
                     </div>
-                  ) : (
-                    <div className="mt-2 text-gray-600 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 opacity-50">
-                      <Play size={10} /> Standby
-                    </div>
-                  )}
+                  </div>
+                </motion.div>
+              )}
 
-                  {/* Highlight overlay when selecting a patient */}
-                  {selectedPatient && !assignedPatient && (
-                    <div className={`absolute inset-0 rounded-2xl border-2 transition-all opacity-0 hover:opacity-100 ${
-                      (selectedPatient.infection !== 'None' && !machine.isIsolated) || (selectedPatient.infection === 'None' && machine.isIsolated)
-                        ? 'border-red-500 bg-red-500/10 cursor-not-allowed'
-                        : 'border-[#00A8A8] bg-[#00A8A8]/10 cursor-pointer'
-                    }`} />
-                  )}
-                </button>
-              );
-            })}
+              {/* EVENT 2: THE SOVEREIGN BLOCK */}
+              {step === 2 && (
+                <motion.div 
+                  key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}
+                  className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center w-full"
+                >
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#00A8A8]/10 border border-[#00A8A8]/20 text-[10px] font-black uppercase tracking-widest text-[#00A8A8] mb-6">
+                      <ShieldAlert size={12} /> 06:12 AM • Sovereign OS Intervention
+                    </div>
+                    <h3 className="text-3xl md:text-4xl font-black text-white mb-6 tracking-tight">The Constraint Engine mathematically blocks the assignment.</h3>
+                    <p className="text-sm md:text-base text-gray-400 leading-relaxed font-medium">
+                      The OS cross-references the patient's UHID serology data against the machine's zoning designation. It physically locks the software, preventing the session from starting until the patient is moved to Isolation Machine M-19.
+                    </p>
+                  </div>
+                  <div className="bg-[#00A8A8]/10 border border-[#00A8A8]/30 rounded-[2rem] p-8 relative shadow-[0_0_50px_rgba(0,168,168,0.1)]">
+                    <div className="absolute top-6 right-6"><Lock className="text-[#00A8A8]" size={28}/></div>
+                    <p className="text-[10px] font-black text-[#00A8A8] uppercase tracking-widest mb-6">System Enforcement Log</p>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4 p-4 bg-black/40 rounded-xl">
+                        <CheckCircle2 size={18} className="text-[#00A8A8] shrink-0"/>
+                        <p className="text-sm font-bold text-white">Serology Check: <span className="text-red-400 ml-1 font-black">HCV+</span></p>
+                      </div>
+                      <div className="flex items-center gap-4 p-4 bg-red-950/40 rounded-xl border border-red-900/50">
+                        <Lock size={18} className="text-red-500 shrink-0"/>
+                        <p className="text-sm font-bold text-red-200">Bed M-04 Status: <span className="text-white ml-1 font-black">GENERAL (BLOCKED)</span></p>
+                      </div>
+                      <div className="flex items-center gap-4 p-4 bg-[#00A8A8]/20 rounded-xl border border-[#00A8A8]/30 shadow-[0_0_15px_rgba(0,168,168,0.2)]">
+                        <ArrowRight size={18} className="text-[#00A8A8] shrink-0"/>
+                        <p className="text-sm font-bold text-[#00A8A8]">Rerouting to: <span className="text-white ml-1 font-black">ISOLATION M-19</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* EVENT 3: AUTOMATED BILLING */}
+              {step === 3 && (
+                <motion.div 
+                  key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}
+                  className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center w-full"
+                >
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#C6A85A]/10 border border-[#C6A85A]/20 text-[10px] font-black uppercase tracking-widest text-[#C6A85A] mb-6">
+                      <Activity size={12} /> 10:15 AM • Automated Revenue Capture
+                    </div>
+                    <h3 className="text-3xl md:text-4xl font-black text-white mb-6 tracking-tight">The session ends. The yield is secured instantly.</h3>
+                    <p className="text-sm md:text-base text-gray-400 leading-relaxed font-medium">
+                      Because the system forced the technician to input post-dialysis vitals (BP, UF removal) before closing the session, there are no missing data points. The PM-JAY claim is generated with 100% compliance. Zero revenue leakage.
+                    </p>
+                  </div>
+                  <div className="bg-gradient-to-br from-[#1A160C] to-[#0A0A0A] border border-[#C6A85A]/30 rounded-[2rem] p-8 relative shadow-[0_0_50px_rgba(198,168,90,0.15)]">
+                    <div className="absolute top-6 right-6"><IndianRupee className="text-[#C6A85A]" size={28}/></div>
+                    <p className="text-[10px] font-black text-[#C6A85A] uppercase tracking-widest mb-6">Yield Capture Log</p>
+                    <div className="space-y-5">
+                      <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Required Vitals</span>
+                        <span className="text-xs font-black text-[#00A8A8] flex items-center gap-1"><CheckCircle2 size={14}/> 100% COMPLETED</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">PM-JAY Audit</span>
+                        <span className="text-xs font-black text-[#00A8A8] flex items-center gap-1"><CheckCircle2 size={14}/> READY FOR CLAIM</span>
+                      </div>
+                      <div className="pt-6 border-t border-[#C6A85A]/20">
+                        <p className="text-[10px] uppercase font-black text-gray-500 mb-2">Session Revenue Captured</p>
+                        <p className="text-4xl md:text-5xl font-black text-white tracking-tighter">₹1,800.00</p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+            </AnimatePresence>
           </div>
 
-        </main>
-      </div>
+          {/* Navigation Controls */}
+          <div className="flex justify-between items-center mt-12 pt-8 border-t border-white/10">
+            <button 
+              onClick={() => setStep(Math.max(1, step - 1))}
+              disabled={step === 1}
+              className="text-[10px] font-black text-gray-500 uppercase tracking-widest hover:text-white disabled:opacity-20 transition-colors flex items-center gap-2"
+            >
+              <ChevronLeft size={16}/> Previous Event
+            </button>
+            <button 
+              onClick={() => setStep(Math.min(3, step + 1))}
+              disabled={step === 3}
+              className={`text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-2 ${step === 3 ? 'text-gray-600 disabled:opacity-20' : 'text-white hover:text-[#C6A85A]'}`}
+            >
+              Next Event <ChevronRight size={16}/>
+            </button>
+          </div>
+        </motion.div>
 
-      {/* Basic CSS injection for scrollbar */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-      `}} />
-    </div>
+        {/* --- CLOSING CTA --- */}
+        <div className="mt-20 text-center">
+          <Link href="/clinical-os/technician-portal">
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-[#C6A85A] text-[#0A0F1C] px-10 py-5 rounded-2xl text-[11px] md:text-xs font-black uppercase tracking-[0.2em] shadow-[0_15px_40px_rgba(198,168,90,0.25)] hover:bg-[#D4B970] transition-all inline-flex items-center gap-3"
+            >
+              Open the Technician Floor UI <ArrowRight size={16}/>
+            </motion.button>
+          </Link>
+        </div>
+
+      </div>
+    </main>
+  );
+}
+
+// --- SUB-COMPONENTS ---
+function ParamCard({ label, value, icon, alert, gold }: { label: string, value: string, icon: React.ReactNode, alert?: boolean, gold?: boolean }) {
+  return (
+    <motion.div 
+      whileHover={{ y: -5 }}
+      className={`p-5 md:p-6 rounded-[2rem] border transition-colors ${
+        alert ? 'bg-red-950/10 border-red-900/30' : 
+        gold ? 'bg-[#C6A85A]/5 border-[#C6A85A]/20' : 
+        'bg-white/[0.02] border-white/10 hover:border-white/20'
+      }`}
+    >
+      <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest mb-4 ${
+        alert ? 'text-red-500' : 
+        gold ? 'text-[#C6A85A]' : 
+        'text-gray-500'
+      }`}>
+        {icon} {label}
+      </div>
+      <p className={`text-3xl md:text-4xl tracking-tighter font-black ${
+        alert ? 'text-red-400' : 
+        gold ? 'text-[#C6A85A]' : 
+        'text-white'
+      }`}>{value}</p>
+    </motion.div>
   );
 }
