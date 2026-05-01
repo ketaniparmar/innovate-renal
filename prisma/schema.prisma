@@ -1,56 +1,194 @@
+// This is your Prisma schema file for the Sovereign Clinical OS & ROI Calculator
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" 
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// ENUMS (Hardcoded Clinical Constraints)
+// ==========================================
+
+enum InfectionStatus {
+  NONE
+  HCV_POSITIVE
+  HBSAG_POSITIVE
+  HIV_POSITIVE
+}
+
+enum MachineZone {
+  GENERAL
+  ISOLATION
+}
+
+enum SessionState {
+  SCHEDULED
+  READY
+  IN_PROGRESS
+  COMPLETED
+  COMPLICATION
+  CANCELLED
+}
+
+enum PayerType {
+  PRIVATE
+  PM_JAY
+  INSURANCE
+}
+
+// ==========================================
+// CORE ENTITIES (CLINICAL OS)
+// ==========================================
+
+model Patient {
+  id              String          @id @default(uuid())
+  uhid            String          @unique // Hospital ID
+  fullName        String
+  infectionStatus InfectionStatus @default(NONE)
+  dialysisType    String          @default("HD") // HD, SLED
+  dryWeightKg     Float?
+  vascularAccess  String?         // AVF, Catheter
+  payerType       PayerType       @default(PRIVATE)
+  
+  // Relations
+  sessions        Session[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Machine {
+  id              String          @id @default(uuid())
+  machineTag      String          @unique // e.g., M-01, M-20
+  zone            MachineZone     @default(GENERAL)
+  isActive        Boolean         @default(true)
+  
+  // Relations
+  sessions        Session[]
+}
+
+model Technician {
+  id                    String    @id @default(uuid())
+  techId                String    @unique // e.g., T-01
+  fullName              String
+  isIsolationQualified  Boolean   @default(false)
+  maxPatientLoad        Int       @default(4) // Hard cap for safety
+  
+  // Relations
+  sessions              Session[]
+}
+
+model Shift {
+  id            String    @id @default(uuid())
+  shiftName     String    // e.g., "Morning", "Afternoon"
+  startTime     DateTime  @db.Time
+  endTime       DateTime  @db.Time
+  
+  // Relations
+  sessions      Session[]
+}
+
+// ==========================================
+// THE EXECUTION LAYER (Events & State)
+// ==========================================
+
+model Session {
+  id              String       @id @default(uuid())
+  date            DateTime     @db.Date
+  currentState    SessionState @default(SCHEDULED)
+  
+  // Foreign Keys
+  patientId       String
+  machineId       String
+  technicianId    String
+  shiftId         String
+  
+  // Relations
+  patient         Patient      @relation(fields: [patientId], references: [id])
+  machine         Machine      @relation(fields: [machineId], references: [id])
+  technician      Technician   @relation(fields: [technicianId], references: [id])
+  shift           Shift        @relation(fields: [shiftId], references: [id])
+  
+  // Clinical Data (One-to-One)
+  clinicalData    ClinicalData?
+  
+  // Audit Trail
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Database-level constraint to prevent double-booking a machine in a shift
+  @@unique([machineId, shiftId, date]) 
+}
+
+model ClinicalData {
+  id              String   @id @default(uuid())
+  sessionId       String   @unique
+  session         Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Pre-Vitals
+  preBpSystolic   Int?
+  preBpDiastolic  Int?
+  preWeightKg     Float?
+  
+  // Post-Vitals
+  postBpSystolic  Int?
+  postBpDiastolic Int?
+  postWeightKg    Float?
+  ufRemovedMl     Int?     // Crucial for PM-JAY billing
+  
+  notes           String?  @db.Text
+  loggedAt        DateTime @default(now())
+}
+
+// ==========================================
+// ROI CALCULATOR & INFRASTRUCTURE MODELS
+// ==========================================
+
 model Tenant {
-  id        String    @id @default(cuid())
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  projects  Project[]
+  id       String    @id
+  name     String
+  projects Project[]
 }
 
 model Project {
-  id          String       @id @default(cuid())
+  id          String       @id
   tenantId    String
   name        String
-  machines    Int?
-  cityTier    Int?
-  tdsLevel    Float?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  machines    Int
+  cityTier    Int
+  tdsLevel    Int
   tenant      Tenant       @relation(fields: [tenantId], references: [id])
   simulations Simulation[]
 }
 
 model Simulation {
-  id              String   @id @default(cuid())
+  id              String   @id @default(uuid())
+  projectId       String
+  viewMode        String
+  cityTier        String
+  machineCount    Int
+  occupancyRate   Float
+  pmjayMix        Float
+  cghsMix         Float
+  cashMix         Float
+  insuranceMix    Float
+  includesAMC     Boolean
+  includesDiacare Boolean
+  monthlyRevenue  Float
+  monthlyOpex     Float
+  monthlyEbitda   Float
+  ebitdaMargin    Float
+  paybackMonths   Float
+  investmentGrade String
+  workingCapital  Float
+  irr             Float
+  totalCapex      Float
+  status          String
   createdAt       DateTime @default(now())
-  viewMode        String?
-  cityTier        String?
-  machineCount    Int?
-  occupancyRate   Float?
-  pmjayMix        Float?
-  cghsMix         Float?
-  cashMix         Float?
-  insuranceMix    Float?
-  includesAMC     Boolean?
-  includesDiacare Boolean?
-  monthlyRevenue  Float?
-  monthlyOpex     Float?
-  monthlyEbitda   Float?
-  ebitdaMargin    Float?
-  paybackMonths   Float?
-  investmentGrade String?
-  workingCapital  Float?
-  status          String   @default("CAPTURED")
-  irr             Float?
-  projectId       String?
-  totalCapex      Float?
-  project         Project? @relation(fields: [projectId], references: [id])
+
+  project         Project  @relation(fields: [projectId], references: [id])
 }

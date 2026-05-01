@@ -10,7 +10,6 @@ import {
   Building2,
   PackageCheck,
   Calculator,
-  MessageCircle,
   Server
 } from "lucide-react";
 import { saveUserIntent } from "@/utils/intentTracker"; 
@@ -29,7 +28,6 @@ export default function Homepage() {
   return (
     <main className="min-h-screen bg-[#0A0F1C] text-slate-200 overflow-hidden relative">
       
-      {/* --- STICKY CONVERSION STRIP --- */}
       <motion.div 
         initial={{ y: -100 }} animate={{ y: showStickyCTA ? 0 : -100 }}
         className="fixed top-20 left-0 w-full z-40 bg-[#0D1525]/95 backdrop-blur-md border-b border-white/10 py-3 px-6 hidden md:flex justify-between items-center shadow-2xl"
@@ -47,7 +45,6 @@ export default function Homepage() {
         </Link>
       </motion.div>
 
-      {/* --- HERO: BLUNT & INVESTOR-CENTRIC --- */}
       <section className="relative pt-32 pb-16 px-6">
         <motion.div style={{ y }} className="absolute inset-0 pointer-events-none opacity-40">
           <div className="absolute top-10 left-10 w-[400px] h-[400px] bg-[#C6A85A]/10 blur-[120px] rounded-full" />
@@ -86,7 +83,6 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* --- COMPACT AUTHORITY BAR --- */}
       <section className="border-y border-white/5 bg-[#0D1525]/50 py-6 px-6">
         <div className="max-w-5xl mx-auto flex flex-wrap justify-center md:justify-between items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
           <span className="flex items-center gap-2"><span className="text-[#00A8A8]">✓</span> 16-Week Execution</span>
@@ -95,11 +91,9 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* --- THE SHIFT: PROBLEM VS SOLUTION --- */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
           
-          {/* THE RISK */}
           <div className="p-10 rounded-[2.5rem] bg-red-950/10 border border-red-900/20">
             <div className="flex items-center gap-3 mb-6">
               <AlertTriangle className="text-red-500" size={24}/>
@@ -115,7 +109,6 @@ export default function Homepage() {
             </ul>
           </div>
 
-          {/* THE SOLUTION (Updated to include Clinical OS) */}
           <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-[#0D1525] to-[#121D33] border border-[#00A8A8]/20 shadow-[0_20px_50px_rgba(0,168,168,0.05)]">
             <div className="flex items-center gap-3 mb-6">
               <ShieldCheck className="text-[#00A8A8]" size={24}/>
@@ -139,7 +132,6 @@ export default function Homepage() {
   );
 }
 
-// --- TIGHT SUB-COMPONENT ---
 function MiniSystem({ icon, title, desc }: any) {
   return (
     <div className="p-4 bg-[#0A0F1C] rounded-xl border border-white/5 hover:border-[#C6A85A]/30 transition-colors group cursor-pointer h-full">

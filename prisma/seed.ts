@@ -1,10 +1,15 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, MachineZone } from '@prisma/client';
 
-// The engine will now smoothly auto-read the %21 password from .env
+// The engine will now smoothly auto-read the database URL from .env
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🧬 Sovereign OS: Starting institutional database seed...\n");
+  console.log("🧬 Sovereign OS: Starting unified institutional database seed...\n");
+
+  // ==========================================
+  // PART 1: ROI CALCULATOR UNDERWRITING DATA
+  // ==========================================
+  console.log("📊 Injecting Underwriting & Infrastructure Data...");
 
   // 1. Establish the Tenant (The Healthcare Group)
   const tenant = await prisma.tenant.upsert({
@@ -40,42 +45,70 @@ async function main() {
   const simulation = await prisma.simulation.create({
     data: {
       projectId: project.id,
-      
-      // User Profile Context
       viewMode: "investor",
       cityTier: "B",
-      
-      // Clinical Inputs (The Scale)
       machineCount: 15,
       occupancyRate: 75.0,
       pmjayMix: 40.0,
       cghsMix: 20.0,
       cashMix: 30.0,
       insuranceMix: 10.0,
-      
-      // Strategy Toggles
       includesAMC: true,
       includesDiacare: true,
-
-      // Financial Underwriting Outputs (The Intelligence)
       monthlyRevenue: 1355000,    // ₹13.55 Lakhs
       monthlyOpex: 890000,        // ₹8.90 Lakhs
       monthlyEbitda: 465000,      // ₹4.65 Lakhs
       ebitdaMargin: 34.3,         // 34.3% Operating Margin
       paybackMonths: 32.2,        // Capital Recovery Horizon
       investmentGrade: "A",       // Institutional Grade
-      workingCapital: 1650000,    // ₹16.5L Survival Buffer (Death Valley)
-      
-      // High-Level Overrides
+      workingCapital: 1650000,    // ₹16.5L Survival Buffer
       irr: 28.4,                  // Internal Rate of Return
       totalCapex: 15000000,       // ₹1.5 Cr (Machines + Infra)
-      
       status: "CAPTURED"
     },
   });
   console.log(`✅ Simulation injected: ID ${simulation.id} | Grade: ${simulation.investmentGrade}`);
 
-  console.log("\n🚀 SUCCESS: Full V2.0 Infrastructure data is now live in Supabase.");
+  // ==========================================
+  // PART 2: CLINICAL OS OPERATIONAL BASELINE
+  // ==========================================
+  console.log("\n🏥 Injecting Clinical OS Execution Baseline...");
+
+  // 4. Create Shifts
+  await prisma.shift.createMany({
+    skipDuplicates: true,
+    data: [
+      { id: 'shift-1', shiftName: 'Morning (06:00-10:00)', startTime: new Date('1970-01-01T06:00:00Z'), endTime: new Date('1970-01-01T10:00:00Z') },
+      { id: 'shift-2', shiftName: 'Afternoon (11:00-15:00)', startTime: new Date('1970-01-01T11:00:00Z'), endTime: new Date('1970-01-01T15:00:00Z') },
+    ]
+  });
+  console.log(`✅ Shifts verified`);
+
+  // 5. Create Technicians
+  await prisma.technician.createMany({
+    skipDuplicates: true,
+    data: [
+      { techId: 'T-01', fullName: 'Rajesh Kumar', isIsolationQualified: true, maxPatientLoad: 4 },
+      { techId: 'T-02', fullName: 'Priya Patel', isIsolationQualified: false, maxPatientLoad: 4 },
+    ]
+  });
+  console.log(`✅ Technicians verified`);
+
+  // 6. Create 20 Machines (18 General, 2 Isolation)
+  const machines = [];
+  for(let i=1; i<=20; i++) {
+    machines.push({
+      machineTag: `M-${i.toString().padStart(2, '0')}`,
+      zone: i > 18 ? MachineZone.ISOLATION : MachineZone.GENERAL
+    });
+  }
+  await prisma.machine.createMany({
+    skipDuplicates: true,
+    data: machines
+  });
+  console.log(`✅ 20 Machines verified (Zoned for Infection Control)`);
+
+  console.log("\n🚀 SUCCESS: Full Sovereign OS Architecture (Underwriting + Clinical) is now live.");
 }
 
 main()

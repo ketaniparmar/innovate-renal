@@ -8,7 +8,6 @@ import { Menu, X, ChevronRight, Phone } from "lucide-react";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // --- FUNNEL LINKS ---
   const navLinks = [
     { name: "Infrastructure", href: "/turnkey" },
     { name: "Execution Stack", href: "/execution-partner/diacare" },
@@ -21,20 +20,17 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 w-full z-50 bg-[#0A0F1C]/90 backdrop-blur-md border-b border-white/5">
       <div className="max-w-[1280px] mx-auto px-6 h-24 flex items-center justify-between">
         
-        {/* --- BRAND AUTHORITY (Logo - FIXED SIZING) --- */}
         <Link href="/" className="flex items-center transition-transform hover:scale-105">
           <Image 
             src="/logo.png" 
             alt="Innovate India - Smart Healthcare Solutions" 
             width={400} 
             height={120} 
-            /* FIX: We constrain the height to 70px maximum so it never hits the top edge, and let the width adjust automatically */
             className="object-contain h-[50px] md:h-[70px] w-auto py-1" 
             priority 
           />
         </Link>
 
-        {/* --- DESKTOP ROUTING --- */}
         <div className="hidden lg:flex items-center gap-6 xl:gap-8">
           {navLinks.map((link) => (
             <Link 
@@ -46,7 +42,6 @@ export function Navbar() {
             </Link>
           ))}
           
-          {/* DIRECT CALL TO ACTION */}
           <div className="flex items-center gap-4 xl:gap-6 pl-4 border-l border-white/10">
             <a href="tel:+919879576332" className="flex items-center gap-2 text-[10px] xl:text-xs font-bold text-gray-300 hover:text-[#C6A85A] transition-colors group whitespace-nowrap">
               <Phone size={14} className="group-hover:animate-pulse" /> +91 98795 76332
@@ -60,13 +55,11 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* --- MOBILE MENU TOGGLE --- */}
         <button className="lg:hidden text-white" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* --- MOBILE DROPDOWN --- */}
       {isOpen && (
         <div className="lg:hidden bg-[#0D1525] border-b border-white/5 p-6 flex flex-col gap-4 shadow-2xl absolute w-full left-0 top-24">
           {navLinks.map((link) => (
