@@ -1,269 +1,283 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Calculator, 
-  TrendingUp, 
+  Building2, 
+  PackageCheck, 
+  ArrowRight, 
+  ArrowLeft,
+  Calculator,
+  IndianRupee,
+  TrendingUp,
   ShieldCheck,
-  MessageCircle,
-  Lock,
-  AlertTriangle,
-  Activity,
-  IndianRupee
+  MessageSquare
 } from "lucide-react";
 
+type CalcMode = "selection" | "capex" | "opex";
+
 export default function ROICalculatorPage() {
-  // --- STATE: Underwriting Variables ---
-  const [machines, setMachines] = useState<number>(10);
-  const [location, setLocation] = useState<string>("South Gujarat");
-  const [sessionsPerDay, setSessionsPerDay] = useState<number>(3);
-  const [pmjayMix, setPmjayMix] = useState<number>(40); // % PM-JAY
-  const [avgSessionFee, setAvgSessionFee] = useState<number>(1800);
-  const [consumableCost, setConsumableCost] = useState<number>(850); 
+  const [mode, setMode] = useState<CalcMode>("selection");
 
-  // --- HYDRATE FROM LEAD CAPTURE ---
-  useEffect(() => {
-    const savedIntent = localStorage.getItem("innovate_dialysis_intent");
-    if (savedIntent) {
-      try {
-        const parsed = JSON.parse(savedIntent);
-        const machineMatch = parsed.machines?.match(/\d+/);
-        if (machineMatch) setMachines(parseInt(machineMatch[0]));
-        if (parsed.location) setLocation(parsed.location);
-      } catch (e) {
-        console.error("Failed to parse intent");
-      }
+  // CAPEX STATE (New Setup)
+  const [newMachines, setNewMachines] = useState(10);
+  
+  // OPEX STATE (Existing Setup)
+  const [existingMachines, setExistingMachines] = useState(10);
+  const [currentSupplyCost, setCurrentSupplyCost] = useState(1200);
+
+  // --- CAPEX MATH (Estimates) ---
+  const machineCost = newMachines * 650000; // ₹6.5L per machine avg
+  const roPlantCost = newMachines > 10 ? 850000 : 550000;
+  const civilCost = newMachines * 200000; // ₹2L per bed avg
+  const totalCapex = machineCost + roPlantCost + civilCost;
+  
+  // Projected Monthly Revenue (Assuming 2 shifts, 26 days, 80% utilization, ₹1800 per session)
+  const monthlySessionsNew = Math.floor(newMachines * 2 * 26 * 0.8);
+  const projectedRevenue = monthlySessionsNew * 1800;
+  const projectedProfit = monthlySessionsNew * (1800 - 850); // ₹850 wholesale supply cost
+
+  // --- OPEX MATH (Savings) ---
+  const wholesaleCost = 850; // Our locked-in price
+  const monthlySessionsExisting = Math.floor(existingMachines * 2 * 26 * 0.85);
+  const currentMonthlyExpense = monthlySessionsExisting * currentSupplyCost;
+  const optimizedMonthlyExpense = monthlySessionsExisting * wholesaleCost;
+  const monthlySavings = currentMonthlyExpense - optimizedMonthlyExpense;
+
+  const handleWhatsApp = (type: "capex" | "opex") => {
+    let text = "";
+    if (type === "capex") {
+      text = `*New Setup Inquiry*%0A%0A*Machines:* ${newMachines}%0A*Est. Budget:* ₹${(totalCapex / 100000).toFixed(2)} Lakhs%0A%0AI'd like to discuss a formal DPR.`;
+    } else {
+      text = `*Supply Optimization Inquiry*%0A%0A*Machines:* ${existingMachines}%0A*Current Cost/Session:* ₹${currentSupplyCost}%0A*Potential Savings:* ₹${(monthlySavings / 100000).toFixed(2)} Lakhs/month%0A%0AI want to discuss wholesale pricing.`;
     }
-  }, []);
-
-  // --- THE CLINICAL & FINANCIAL MATH (OS vs MANUAL) ---
-  const economics = useMemo(() => {
-    const workingDays = 26; 
-    const maxCapacity = machines * sessionsPerDay * workingDays;
-    
-    // --- MANUAL OPERATIONS (The Bleed) ---
-    const manualUtilization = 0.65;
-    const manualRejectionRate = 0.12;
-    const manualGrossSessions = maxCapacity * manualUtilization;
-    const manualPmjaySessions = manualGrossSessions * (pmjayMix / 100);
-    const manualRejectedSessions = manualPmjaySessions * manualRejectionRate;
-    const manualNetSessions = manualGrossSessions - manualRejectedSessions;
-    const manualRevenue = manualNetSessions * avgSessionFee;
-
-    // --- SOVEREIGN OS (The Yield) ---
-    const osUtilization = 0.90;
-    const osGrossSessions = maxCapacity * osUtilization;
-    const osRevenue = osGrossSessions * avgSessionFee;
-
-    // The Delta
-    const monthlyBleed = osRevenue - manualRevenue;
-    
-    // OPEX (Based on OS Volume)
-    const monthlyConsumablesOpex = osGrossSessions * consumableCost;
-    const fixedOpex = machines * 35000; 
-    const totalOpex = monthlyConsumablesOpex + fixedOpex;
-    
-    // Profit
-    const ebitda = osRevenue - totalOpex;
-    
-    // CAPEX (DiaCare Benchmark + Turnkey Civil)
-    const machineCapex = machines * 650000;
-    const infraCapex = machines * 400000; 
-    const totalCapex = machineCapex + infraCapex;
-    
-    const paybackMonths = totalCapex / ebitda;
-
-    return {
-      osRevenue,
-      ebitda,
-      totalCapex,
-      paybackMonths,
-      monthlyBleed
-    };
-  }, [machines, sessionsPerDay, pmjayMix, avgSessionFee, consumableCost]);
-
-  // --- WHATSAPP CONVERSION GENERATOR ---
-  const handleUnlock = () => {
-    const text = `*DPR & ROI Request*%0A%0A*Location:* ${location || "Not Specified"}%0A*Model:* ${machines} Machines @ ${sessionsPerDay} shifts/day%0A*Current Bleed:* Losing ₹${(economics.monthlyBleed / 100000).toFixed(2)}L/mo to manual operations%0A*Projected CAPEX:* ₹${(economics.totalCapex / 10000000).toFixed(2)} Cr%0A%0AI want to unlock my Sovereign OS EBITDA projections and discuss the Detailed Project Report.`;
-    window.open(`https://wa.me/919879576332?text=${text}`, "_blank");
+    window.open(`https://wa.me/919879576332?text=${text}`, '_blank');
   };
 
   return (
-    <main className="min-h-screen bg-[#0A0F1C] text-slate-200 pt-32 pb-24 px-6 overflow-hidden relative">
+    <main className="min-h-screen bg-[#0A0F1C] pt-32 pb-24 text-slate-200 overflow-x-hidden font-sans relative">
       
-      {/* 🌌 Ambient Background */}
-      <div className="absolute inset-0 pointer-events-none opacity-40">
-        <div className="absolute top-0 right-20 w-[500px] h-[500px] bg-red-900/10 blur-[150px] rounded-full" />
-        <div className="absolute bottom-[-100px] left-[-100px] w-[600px] h-[600px] bg-[#C6A85A]/10 blur-[150px] rounded-full" />
+      {/* Background Glow */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute top-[10%] left-[50%] -translate-x-1/2 w-[800px] h-[800px] bg-[#C6A85A]/10 blur-[150px] rounded-full" />
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-5xl mx-auto px-6 relative z-10">
         
-        {/* --- HERO: BLUNT FINANCIAL TRUTH --- */}
-        <div className="mb-16 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-red-400 mb-6">
-            <AlertTriangle size={14}/> Operational Bleed vs. Sovereign Yield
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#C6A85A]/10 border border-[#C6A85A]/20 text-[10px] font-black uppercase tracking-[0.2em] text-[#C6A85A] mb-6">
+            <Calculator size={14}/> ROI & Profit Engine
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4">
-            Calculate Your <span className="text-red-400">Hidden Losses.</span>
+            Stop Guessing. <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C6A85A] to-[#F1E5AC]">Run The Math.</span>
           </h1>
-          <p className="text-gray-400 max-w-2xl text-lg font-medium">
-            "Rule of thumb" math bankrupts hospitals. See exactly how much revenue you lose to manual inefficiencies, then unlock your exact EBITDA and Break-even horizon under the Sovereign OS.
-          </p>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
+        <AnimatePresence mode="wait">
           
-          {/* --- LEFT: INPUT CONTROLS --- */}
-          <div className="lg:col-span-5 space-y-8">
-            <div className="p-8 md:p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/5 shadow-2xl backdrop-blur-sm">
-              <div className="flex items-center gap-3 mb-8">
-                <Activity className="text-[#00A8A8]" size={20}/>
-                <h3 className="text-sm font-black uppercase tracking-widest text-white">Facility Parameters</h3>
-              </div>
-              
-              <div className="space-y-8">
-                {/* Location Input */}
-                <div>
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.1em] mb-3">
-                    <span className="text-gray-400">Target Location</span>
+          {/* ========================================== */}
+          {/* STEP 1: THE FORK (Select Journey)            */}
+          {/* ========================================== */}
+          {mode === "selection" && (
+            <motion.div 
+              key="selection"
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -50 }}
+              className="grid md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto"
+            >
+              {/* CAPEX PATH */}
+              <button 
+                onClick={() => setMode("capex")}
+                className="p-10 md:p-12 rounded-[3rem] bg-gradient-to-br from-[#1A160C] to-[#0A0F1C] border border-[#C6A85A]/30 shadow-2xl hover:scale-105 transition-all text-left group relative overflow-hidden"
+              >
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#C6A85A]/20 blur-[50px] rounded-full group-hover:bg-[#C6A85A]/40 transition-colors" />
+                <Building2 size={40} className="text-[#C6A85A] mb-6" />
+                <h3 className="text-2xl font-black text-white mb-3 tracking-tight">I want to build a <br/>NEW Dialysis Center</h3>
+                <p className="text-gray-400 font-medium text-sm leading-relaxed mb-8">Calculate exact machine costs, RO plant setup, civil work, and your break-even timeline.</p>
+                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#C6A85A]">
+                  Calculate Setup Cost <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
+                </div>
+              </button>
+
+              {/* OPEX PATH */}
+              <button 
+                onClick={() => setMode("opex")}
+                className="p-10 md:p-12 rounded-[3rem] bg-gradient-to-br from-[#0D1525] to-[#0A0F1C] border border-[#00A8A8]/30 shadow-2xl hover:scale-105 transition-all text-left group relative overflow-hidden"
+              >
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#00A8A8]/20 blur-[50px] rounded-full group-hover:bg-[#00A8A8]/40 transition-colors" />
+                <PackageCheck size={40} className="text-[#00A8A8] mb-6" />
+                <h3 className="text-2xl font-black text-white mb-3 tracking-tight">I want to optimize an <br/>EXISTING Center</h3>
+                <p className="text-gray-400 font-medium text-sm leading-relaxed mb-8">Lock in wholesale supply prices, stop hidden financial leaks, and boost monthly profit.</p>
+                <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#00A8A8]">
+                  Calculate Supply Savings <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
+                </div>
+              </button>
+            </motion.div>
+          )}
+
+          {/* ========================================== */}
+          {/* STEP 2A: CAPEX CALCULATOR (New Setup)        */}
+          {/* ========================================== */}
+          {mode === "capex" && (
+            <motion.div 
+              key="capex"
+              initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, y: 20 }}
+              className="max-w-4xl mx-auto"
+            >
+              <button onClick={() => setMode("selection")} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-xs font-black uppercase tracking-widest mb-8">
+                <ArrowLeft size={14}/> Back
+              </button>
+
+              <div className="bg-[#0D1525]/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                <div className="grid md:grid-cols-2 gap-12">
+                  
+                  {/* Controls */}
+                  <div>
+                    <h3 className="text-2xl font-black text-white mb-2">Hospital Setup Plan</h3>
+                    <p className="text-sm text-gray-400 font-medium mb-10">Adjust the machine count to see your estimated turnkey capital requirement.</p>
+                    
+                    <div className="mb-10">
+                      <div className="flex justify-between items-end mb-4">
+                        <label className="text-[10px] font-black text-[#C6A85A] uppercase tracking-widest">Number of Dialysis Machines</label>
+                        <span className="text-3xl font-black text-white">{newMachines}</span>
+                      </div>
+                      <input 
+                        type="range" min="5" max="40" step="1" 
+                        value={newMachines} 
+                        onChange={(e) => setNewMachines(parseInt(e.target.value))}
+                        className="w-full accent-[#C6A85A] h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between mt-2 text-[10px] font-bold text-gray-600">
+                        <span>5</span><span>40</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <CostRow label="Machines & Equipment" value={`₹ ${(machineCost / 100000).toFixed(2)} L`} />
+                      <CostRow label="AAMI RO Water Plant" value={`₹ ${(roPlantCost / 100000).toFixed(2)} L`} />
+                      <CostRow label="Civil & Interiors (Est)" value={`₹ ${(civilCost / 100000).toFixed(2)} L`} />
+                    </div>
                   </div>
-                  <input 
-                    type="text" 
-                    value={location} 
-                    onChange={(e) => setLocation(e.target.value)} 
-                    placeholder="e.g., Surat, Gujarat"
-                    className="w-full bg-[#0A0F1C] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#C6A85A] transition-colors"
-                  />
-                </div>
 
-                <SliderControl label="Total Dialysis Machines" value={machines} min={5} max={40} step={1} onChange={setMachines} />
-                <SliderControl label="Expected Shifts / Day" value={sessionsPerDay} min={2} max={4} step={1} onChange={setSessionsPerDay} />
-                <SliderControl label="PM-JAY Patient Mix (%)" value={pmjayMix} min={0} max={100} step={5} onChange={setPmjayMix} color="accent-red-500" />
-                <SliderControl label="Avg. Fee per Session (₹)" value={avgSessionFee} min={1200} max={4000} step={100} onChange={setAvgSessionFee} />
-                
-                <div className="pt-6 border-t border-white/5">
-                  <SliderControl label="Consumable OPEX Cost (₹)" value={consumableCost} min={700} max={1500} step={50} onChange={setConsumableCost} highlight />
-                  <p className="text-[10px] text-gray-500 font-bold mt-3 leading-relaxed">
-                    *Slide this down to see how DiaCare supply contracts accelerate your payback horizon.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+                  {/* Output Panel */}
+                  <div className="bg-[#1A160C] border border-[#C6A85A]/30 rounded-[2rem] p-8 flex flex-col justify-center relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#C6A85A]/10 blur-[50px] rounded-full" />
+                    
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#C6A85A] mb-2">Estimated Setup Cost (CAPEX)</p>
+                    <h4 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tighter">
+                      ₹ {(totalCapex / 100000).toFixed(2)} Lakhs
+                    </h4>
 
-          {/* --- RIGHT: THE OUTPUT TERMINAL --- */}
-          <div className="lg:col-span-7 flex flex-col gap-6">
-            
-            {/* THE BLEED (Unlocks urgency) */}
-            <div className="p-8 rounded-[2rem] bg-red-950/20 border border-red-900/40 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
-              <AlertTriangle className="absolute -right-4 -top-4 text-red-500/10" size={120} />
-              <div className="relative z-10">
-                <p className="text-[10px] font-black uppercase tracking-widest text-red-400 mb-2">Monthly Revenue Lost to Manual Inefficiency</p>
-                <p className="text-4xl md:text-5xl font-black text-white flex items-center gap-1 tracking-tighter">
-                  <IndianRupee size={32} className="text-red-500"/>
-                  {Math.round(economics.monthlyBleed).toLocaleString('en-IN')}
-                </p>
-                <p className="text-xs font-medium text-gray-400 mt-2">Due to 65% utilization gaps & PM-JAY rejections.</p>
-              </div>
-            </div>
+                    <div className="bg-[#0A0F1C]/50 border border-[#C6A85A]/20 rounded-xl p-5 mb-8">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Projected Monthly Profit</p>
+                      <p className="text-2xl font-black text-[#C6A85A]">₹ {(projectedProfit / 100000).toFixed(2)} L / mo</p>
+                      <p className="text-[9px] text-gray-500 mt-2 uppercase font-bold">Assuming 80% occupancy & wholesale supplies.</p>
+                    </div>
 
-            {/* THE LOCK & OS DATA */}
-            <div className="p-10 md:p-12 rounded-[3rem] bg-gradient-to-br from-[#0D1525] to-[#121D33] border border-[#00A8A8]/20 shadow-[0_20px_50px_rgba(0,168,168,0.05)] h-full flex flex-col relative overflow-hidden">
-              
-              {/* Unlocked Top Section (Sovereign Yield) */}
-              <div className="mb-10 relative z-10">
-                <div className="flex items-center justify-between mb-8">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#00A8A8] flex items-center gap-2">
-                    <ShieldCheck size={14}/> Sovereign OS Yield
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  <DataReadout 
-                    label="Est. Setup CAPEX" 
-                    value={`₹${(economics.totalCapex / 10000000).toFixed(2)} Cr`} 
-                    subtext="DiaCare Machines + Infra"
-                  />
-                  <DataReadout 
-                    label="Gross OS Revenue" 
-                    value={`₹${(economics.osRevenue / 100000).toFixed(2)} L`} 
-                    subtext="At 90% enforced utilization"
-                  />
+                    <button 
+                      onClick={() => handleWhatsApp("capex")}
+                      className="w-full bg-[#C6A85A] text-[#0A0F1C] py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-[#D4B970] hover:scale-105 transition-all flex items-center justify-center gap-2"
+                    >
+                      <MessageSquare size={16}/> Discuss Floor Plan
+                    </button>
+                  </div>
                 </div>
               </div>
+            </motion.div>
+          )}
 
-              {/* Locked Bottom Section (The Lead Magnet) */}
-              <div className="relative flex-grow mt-4 pt-10 border-t border-white/10 z-10">
-                
-                {/* The Blur Overlay */}
-                <div className="absolute inset-0 z-20 backdrop-blur-md bg-[#0D1525]/70 flex flex-col items-center justify-center rounded-2xl border border-white/5 p-6 text-center">
-                  <Lock className="text-[#C6A85A] mb-4" size={32}/>
-                  <h4 className="text-xl font-black text-white mb-2 tracking-tight">Unlock EBITDA & Payback</h4>
-                  <p className="text-xs text-gray-400 mb-8 font-medium max-w-sm leading-relaxed">
-                    Net profit margins require a brief structural review of your specific location. Unlock the exact break-even horizon with our team.
-                  </p>
-                  <button 
-                    onClick={handleUnlock}
-                    className="bg-[#C6A85A] text-[#0A0F1C] px-8 py-4 rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-[0_10px_30px_rgba(198,168,90,0.3)] hover:bg-[#D4B970] hover:scale-105 transition-all flex items-center gap-2"
-                  >
-                    Unlock DPR via WhatsApp <MessageCircle size={16}/>
-                  </button>
-                </div>
+          {/* ========================================== */}
+          {/* STEP 2B: OPEX CALCULATOR (Existing Center)   */}
+          {/* ========================================== */}
+          {mode === "opex" && (
+            <motion.div 
+              key="opex"
+              initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, y: 20 }}
+              className="max-w-4xl mx-auto"
+            >
+              <button onClick={() => setMode("selection")} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-xs font-black uppercase tracking-widest mb-8">
+                <ArrowLeft size={14}/> Back
+              </button>
 
-                {/* The Teaser Data (Blurred underneath) */}
-                <div className="grid grid-cols-2 gap-6 opacity-30 select-none">
-                  <DataReadout 
-                    label="Net Monthly EBITDA" 
-                    value={`₹${(economics.ebitda / 100000).toFixed(2)} L`} 
-                    subtext="Protected Margins"
-                    primary
-                  />
-                  <DataReadout 
-                    label="Payback Horizon" 
-                    value={`${economics.paybackMonths.toFixed(1)} Mo`} 
-                    subtext="Months to break-even"
-                    primary
-                  />
+              <div className="bg-[#0D1525]/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                <div className="grid md:grid-cols-2 gap-12">
+                  
+                  {/* Controls */}
+                  <div>
+                    <h3 className="text-2xl font-black text-white mb-2">Stop Supply Leakage</h3>
+                    <p className="text-sm text-gray-400 font-medium mb-10">See how much money you lose by buying from multiple small vendors.</p>
+                    
+                    <div className="mb-8">
+                      <div className="flex justify-between items-end mb-4">
+                        <label className="text-[10px] font-black text-[#00A8A8] uppercase tracking-widest">Active Machines</label>
+                        <span className="text-3xl font-black text-white">{existingMachines}</span>
+                      </div>
+                      <input 
+                        type="range" min="5" max="40" step="1" 
+                        value={existingMachines} 
+                        onChange={(e) => setExistingMachines(parseInt(e.target.value))}
+                        className="w-full accent-[#00A8A8] h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="mb-8">
+                      <div className="flex justify-between items-end mb-4">
+                        <label className="text-[10px] font-black text-red-400 uppercase tracking-widest">Your Current Supply Cost / Session</label>
+                        <span className="text-3xl font-black text-white flex items-center"><IndianRupee size={24}/>{currentSupplyCost}</span>
+                      </div>
+                      <input 
+                        type="range" min="800" max="1800" step="50" 
+                        value={currentSupplyCost} 
+                        onChange={(e) => setCurrentSupplyCost(parseInt(e.target.value))}
+                        className="w-full accent-red-500 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between mt-2 text-[10px] font-bold text-gray-600">
+                        <span>₹800</span><span>₹1800</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Output Panel */}
+                  <div className="bg-[#061818] border border-[#00A8A8]/30 rounded-[2rem] p-8 flex flex-col justify-center relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#00A8A8]/10 blur-[50px] rounded-full" />
+                    
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#00A8A8] mb-2">Our Wholesale Lock-in Price</p>
+                    <h4 className="text-3xl font-black text-gray-300 mb-8 tracking-tighter flex items-center opacity-80">
+                      <IndianRupee size={24}/> 850 / Session
+                    </h4>
+
+                    <div className="bg-[#00A8A8]/10 border border-[#00A8A8]/30 rounded-xl p-5 mb-8">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Money Saved Every Month</p>
+                      <p className="text-3xl font-black text-[#00A8A8] mb-1">
+                        + ₹ {(monthlySavings / 100000).toFixed(2)} Lakhs
+                      </p>
+                      <p className="text-[9px] text-gray-400 uppercase font-bold">This is pure profit added back to your center.</p>
+                    </div>
+
+                    <button 
+                      onClick={() => handleWhatsApp("opex")}
+                      className="w-full bg-[#00A8A8] text-white py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-teal-500 hover:scale-105 transition-all flex items-center justify-center gap-2"
+                    >
+                      <MessageSquare size={16}/> Secure Wholesale Contract
+                    </button>
+                  </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            </div>
-          </div>
-
-        </div>
       </div>
     </main>
   );
 }
 
-// --- UI SUB-COMPONENTS ---
-
-function SliderControl({ label, value, min, max, step, onChange, highlight, color }: any) {
-  const accentColor = color ? color : (highlight ? 'accent-[#C6A85A]' : 'accent-[#00A8A8]');
-  
+// Sub-component for neat cost rows
+function CostRow({ label, value }: { label: string, value: string }) {
   return (
-    <div>
-      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.1em] mb-4">
-        <span className="text-gray-400">{label}</span>
-        <span className={`text-base font-black ${highlight ? 'text-[#C6A85A]' : 'text-white'}`}>{value}</span>
-      </div>
-      <input 
-        type="range" min={min} max={max} step={step} 
-        value={value} 
-        onChange={(e) => onChange(parseFloat(e.target.value))} 
-        className={`w-full h-1.5 rounded-full appearance-none bg-white/10 ${accentColor} cursor-pointer`} 
-      />
-    </div>
-  );
-}
-
-function DataReadout({ label, value, subtext, primary }: any) {
-  return (
-    <div className={`p-5 rounded-[2rem] border ${primary ? 'bg-[#C6A85A]/5 border-[#C6A85A]/20' : 'bg-white/[0.02] border-white/5'}`}>
-      <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-2">{label}</p>
-      <p className={`text-2xl md:text-3xl tracking-tighter font-black ${primary ? 'text-[#C6A85A]' : 'text-white'}`}>{value}</p>
-      <p className="text-[10px] text-gray-500 font-bold mt-2 leading-tight">{subtext}</p>
+    <div className="flex justify-between items-center py-3 border-b border-white/5">
+      <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">{label}</span>
+      <span className="text-base font-black text-white">{value}</span>
     </div>
   );
 }

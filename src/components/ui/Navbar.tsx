@@ -8,6 +8,7 @@ import { Menu, X, ChevronRight, Phone } from "lucide-react";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
+  // PLAIN ENGLISH NAVIGATION
   const navLinks = [
     { name: "Turnkey Setup", href: "/turnkey" },
     { name: "Our Equipment", href: "/execution-partner/diacare" },
@@ -21,7 +22,7 @@ export function Navbar() {
 
       <div className="max-w-[1400px] mx-auto px-6 h-[88px] flex items-center justify-between">
 
-        {/* 🔶 LOGO (LEFT-ALIGNED FIXED) */}{/* 🔶 LOGO (INCREASED SIZE) */}
+        {/* 🔶 LOGO (RESTORED MASSIVE SIZE) */}
         <Link href="/" className="flex items-center shrink-0">
           <Image
             src="/logo.png"
@@ -49,7 +50,7 @@ export function Navbar() {
         {/* 🔶 RIGHT SECTION (CONTACT & CTA) */}
         <div className="hidden lg:flex items-center gap-6">
 
-          {/* 📞 GOLDEN GLOW PULSING PHONE NUMBER */}
+          {/* 📞 RESTORED GOLDEN GLOW PULSING PHONE NUMBER */}
           <a
             href="tel:+919879576332"
             className="group flex items-center gap-2 text-xs xl:text-sm font-black text-[#C6A85A] transition-all duration-300 hover:scale-105"
@@ -95,6 +96,7 @@ export function Navbar() {
             </Link>
           ))}
 
+          {/* Restored Mobile Pulse */}
           <a
             href="tel:+919879576332"
             className="flex items-center gap-2 text-sm font-black text-[#C6A85A] py-3 border-b border-white/5 animate-pulse drop-shadow-[0_0_8px_rgba(198,168,90,0.6)]"
