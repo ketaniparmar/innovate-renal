@@ -2,72 +2,91 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image"; 
-import { Menu, X, ChevronRight, Phone } from "lucide-react"; 
+import Image from "next/image";
+import { Menu, X, ChevronRight, Phone } from "lucide-react";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // PLAIN ENGLISH NAVIGATION
   const navLinks = [
     { name: "Turnkey Setup", href: "/turnkey" },
     { name: "Our Equipment", href: "/execution-partner/diacare" },
     { name: "Medical Supplies", href: "/supply" },
-    { name: "Smart Software", href: "/clinical-os" }, 
-    { name: "Contact Us", href: "/contact" }, 
+    { name: "Smart Software", href: "/clinical-os" },
+    { name: "Contact Us", href: "/contact" },
   ];
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-[#0A0F1C]/90 backdrop-blur-md border-b border-white/5">
-      <div className="max-w-[1280px] mx-auto px-6 h-24 flex items-center justify-between">
-        
-        <Link href="/" className="flex items-center transition-transform hover:scale-105">
-          <div className="relative flex items-center h-[32px] md:h-[40px] w-auto">
-            <Image 
-              src="/logo.png" 
-              alt="Innovate India - Complete Dialysis Setup" 
-              width={200} 
-              height={60} 
-              className="object-contain w-auto h-full" 
-              priority 
-            />
-          </div>
+    <nav className="fixed top-0 left-0 w-full z-50 bg-[#0A0F1C]/85 backdrop-blur-xl border-b border-white/10 shadow-lg">
+
+      <div className="max-w-[1400px] mx-auto px-6 h-[88px] flex items-center justify-between">
+
+        {/* 🔶 LOGO (LEFT-ALIGNED FIXED) */}{/* 🔶 LOGO (INCREASED SIZE) */}
+        <Link href="/" className="flex items-center shrink-0">
+          <Image
+            src="/logo.png"
+            alt="Innovate India"
+            width={300}
+            height={90}
+            className="object-contain h-[55px] md:h-[75px] w-auto transform origin-left transition-transform hover:scale-105"
+            priority
+          />
         </Link>
 
-        <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+        {/* 🔷 NAV LINKS */}
+        <div className="hidden lg:flex items-center gap-8 xl:gap-10">
           {navLinks.map((link) => (
-            <Link 
-              key={link.name} 
+            <Link
+              key={link.name}
               href={link.href}
-              className="text-[10px] xl:text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#C6A85A] transition-colors"
+              className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.18em] hover:text-[#C6A85A] transition-colors"
             >
               {link.name}
             </Link>
           ))}
-          
-          <div className="flex items-center gap-4 xl:gap-6 pl-4 border-l border-white/10">
-            <a href="tel:+919879576332" className="flex items-center gap-2 text-[10px] xl:text-xs font-bold text-gray-300 hover:text-[#C6A85A] transition-colors group whitespace-nowrap">
-              <Phone size={14} className="group-hover:animate-pulse" /> +91 98795 76332
-            </a>
-            
-            <Link href="/calculator">
-              <button className="bg-[#C6A85A] text-[#0A0F1C] px-5 xl:px-6 py-2.5 rounded-lg text-[9px] xl:text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#D4B970] transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(198,168,90,0.2)] whitespace-nowrap">
-                Profit Calculator <ChevronRight size={14} />
-              </button>
-            </Link>
-          </div>
         </div>
 
-        <button className="lg:hidden text-white" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        {/* 🔶 RIGHT SECTION (CONTACT & CTA) */}
+        <div className="hidden lg:flex items-center gap-6">
+
+          {/* 📞 GOLDEN GLOW PULSING PHONE NUMBER */}
+          <a
+            href="tel:+919879576332"
+            className="group flex items-center gap-2 text-xs xl:text-sm font-black text-[#C6A85A] transition-all duration-300 hover:scale-105"
+          >
+            <Phone
+              size={16}
+              className="animate-pulse drop-shadow-[0_0_8px_rgba(198,168,90,0.8)]"
+            />
+            <span className="tracking-widest animate-pulse drop-shadow-[0_0_8px_rgba(198,168,90,0.5)] group-hover:animate-none group-hover:drop-shadow-[0_0_15px_rgba(198,168,90,1)] transition-all">
+              +91 98795 76332
+            </span>
+          </a>
+
+          <Link href="/calculator">
+            <button className="bg-[#C6A85A] text-[#0A0F1C] px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-2 shadow-[0_0_15px_rgba(198,168,90,0.2)] hover:bg-[#D4B970] hover:scale-105 transition-all">
+              Profit Calculator
+              <ChevronRight size={14} />
+            </button>
+          </Link>
+
+        </div>
+
+        {/* 📱 MOBILE TOGGLE */}
+        <button
+          className="lg:hidden text-white"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
       </div>
 
+      {/* 📱 MOBILE PANEL */}
       {isOpen && (
-        <div className="lg:hidden bg-[#0D1525] border-b border-white/5 p-6 flex flex-col gap-4 shadow-2xl absolute w-full left-0 top-24">
+        <div className="lg:hidden bg-[#0D1525] border-b border-white/5 p-6 flex flex-col gap-4 shadow-2xl absolute w-full left-0 top-[88px]">
           {navLinks.map((link) => (
-            <Link 
-              key={link.name} 
+            <Link
+              key={link.name}
               href={link.href}
               onClick={() => setIsOpen(false)}
               className="text-xs font-bold text-gray-300 uppercase tracking-widest py-3 border-b border-white/5 hover:text-[#C6A85A] transition-colors"
@@ -75,13 +94,16 @@ export function Navbar() {
               {link.name}
             </Link>
           ))}
-          
-          <a href="tel:+919879576332" className="text-xs font-bold text-[#C6A85A] py-3 border-b border-white/5 flex items-center gap-2">
-            <Phone size={14} /> Call: +91 98795 76332
+
+          <a
+            href="tel:+919879576332"
+            className="flex items-center gap-2 text-sm font-black text-[#C6A85A] py-3 border-b border-white/5 animate-pulse drop-shadow-[0_0_8px_rgba(198,168,90,0.6)]"
+          >
+            <Phone size={16} /> +91 98795 76332
           </a>
 
           <Link href="/calculator" onClick={() => setIsOpen(false)}>
-            <button className="w-full mt-4 bg-[#C6A85A] text-[#0A0F1C] px-6 py-4 rounded-lg text-[11px] font-black uppercase tracking-[0.2em] shadow-lg flex justify-center items-center gap-2">
+            <button className="w-full bg-[#C6A85A] text-[#0A0F1C] px-6 py-4 rounded-lg text-[11px] font-black uppercase tracking-[0.2em] shadow-lg flex justify-center items-center gap-2 mt-2">
               Calculate Your Profit <ChevronRight size={16} />
             </button>
           </Link>
