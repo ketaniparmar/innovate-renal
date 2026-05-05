@@ -80,6 +80,7 @@ model Facility {
   machines    Machine[]
   patients    Patient[]
   sessions    Session[]
+  leads       Lead[]     // Tracks leads generated for or assigned to this facility
 }
 
 model User {
@@ -225,17 +226,22 @@ model ClinicalData {
 // ==========================================
 
 model Lead {
-  id              String   @id @default(uuid())
+  id              String    @id // Accepting client-generated crypto.randomUUID()
+  facilityId      String?
   directorName    String?
   hospitalName    String?
   location        String
-  intentType      String   // "CAPEX_NEW_SETUP" or "OPEX_SUPPLY"
+  intentType      String    // "CAPEX_NEW_SETUP" or "OPEX_SUPPLY"
   machineCount    Int
   currentCost     Float?   
   projectedCapex  Float?   
-  status          String   @default("NEW") 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status          String    @default("WHATSAPP_INITIATED") 
+  userAgent       String?   // Tracks device/browser for funnel analytics
+  ipAddress       String?   // Tracks regional origin
+  
+  facility        Facility? @relation(fields: [facilityId], references: [id])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt // Critical for tracking offline retries
 }
 
 model RegionalPolicy {
