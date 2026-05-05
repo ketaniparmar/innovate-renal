@@ -61,12 +61,36 @@ export default function ROICalculatorPage() {
   const optimizedMonthlyExpense = monthlySessionsExisting * wholesaleCost;
   const monthlySavings = currentMonthlyExpense - optimizedMonthlyExpense;
 
-  const handleWhatsApp = (type: "capex" | "opex") => {
+  // ==========================================
+  // IRONCLAD LEAD CAPTURE & WHATSAPP ROUTING
+  // ==========================================
+  const handleWhatsApp = async (type: "capex" | "opex") => {
+    // 1. Prepare Intent Data
+    const leadData = {
+      type: type === "capex" ? "CAPEX_NEW_SETUP" : "OPEX_SUPPLY",
+      machines: type === "capex" ? newMachines : existingMachines,
+      currentCost: type === "opex" ? currentSupplyCost : null,
+      projectedCapex: type === "capex" ? totalCapex : null,
+      location: region 
+    };
+
+    try {
+      // 2. Wait for the server to secure the lead in PostgreSQL
+      await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(leadData)
+      });
+    } catch (e) {
+      console.error("Silent capture failed, proceeding to WhatsApp anyway");
+    }
+
+    // 3. Execute the WhatsApp Handoff
     let text = "";
     if (type === "capex") {
       text = `*New Hospital Underwriting*%0A%0A*Machines:* ${newMachines}%0A*Est. CAPEX:* ₹${(totalCapex / 100000).toFixed(2)} Lakhs%0A%0AI'd like to discuss a formal DPR.`;
     } else {
-      text = `*Supply Optimization & Compliance*%0A%0A*Region:* ${region}%0A*Policy Mode:* ${isReuseAllowed ? "Reuse Allowed" : "Single-Use Mandated"}%0A*Machines:* ${existingMachines}%0A*Potential Savings:* ₹${(monthlySavings / 100000).toFixed(2)} Lakhs/month%0A%0AI want to lock in wholesale supply pricing.`;
+      text = `*Supply Optimization & Compliance*%0A%0A*Region:* ${region}%0A*Machines:* ${existingMachines}%0A*Potential Savings:* ₹${(monthlySavings / 100000).toFixed(2)} Lakhs/month%0A%0AI want to lock in wholesale supply pricing.`;
     }
     window.open(`https://wa.me/919879576332?text=${text}`, '_blank');
   };
@@ -118,6 +142,64 @@ export default function ROICalculatorPage() {
                   Calculate Supply Savings <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform"/>
                 </div>
               </button>
+            </motion.div>
+          )}
+
+          {/* ========================================== */}
+          {/* STEP 2A: CAPEX CALCULATOR (Standard)         */}
+          {/* ========================================== */}
+          {mode === "capex" && (
+            <motion.div key="capex" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, y: 20 }} className="max-w-4xl mx-auto">
+               <button onClick={() => setMode("selection")} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-xs font-black uppercase tracking-widest mb-8">
+                <ArrowLeft size={14}/> Back
+              </button>
+
+              <div className="bg-[#0D1525]/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl">
+                <div className="grid md:grid-cols-2 gap-12">
+                  <div>
+                    <h3 className="text-2xl font-black text-white mb-2">Hospital Setup Plan</h3>
+                    <p className="text-sm text-gray-400 font-medium mb-10">Adjust the machine count to see your estimated turnkey capital requirement.</p>
+                    
+                    <div className="mb-10">
+                      <div className="flex justify-between items-end mb-4">
+                        <label className="text-[10px] font-black text-[#C6A85A] uppercase tracking-widest">Number of Dialysis Machines</label>
+                        <span className="text-3xl font-black text-white">{newMachines}</span>
+                      </div>
+                      <input 
+                        type="range" min="5" max="40" step="1" 
+                        value={newMachines} 
+                        onChange={(e) => setNewMachines(parseInt(e.target.value))}
+                        className="w-full accent-[#C6A85A] h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <CostRow label="Machines & Equipment" value={`₹ ${(machineCost / 100000).toFixed(2)} L`} />
+                      <CostRow label="AAMI RO Water Plant" value={`₹ ${(roPlantCost / 100000).toFixed(2)} L`} />
+                      <CostRow label="Civil & Interiors (Est)" value={`₹ ${(civilCost / 100000).toFixed(2)} L`} />
+                    </div>
+                  </div>
+
+                  <div className="bg-[#1A160C] border border-[#C6A85A]/30 rounded-[2rem] p-8 flex flex-col justify-center relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#C6A85A]/10 blur-[50px] rounded-full" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#C6A85A] mb-2">Estimated Setup Cost (CAPEX)</p>
+                    <h4 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tighter">
+                      ₹ {(totalCapex / 100000).toFixed(2)} L
+                    </h4>
+                    <div className="bg-[#0A0F1C]/50 border border-[#C6A85A]/20 rounded-xl p-5 mb-8">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Projected Monthly Profit</p>
+                      <p className="text-2xl font-black text-[#C6A85A]">₹ {(projectedProfit / 100000).toFixed(2)} L / mo</p>
+                      <p className="text-[9px] text-gray-500 mt-2 uppercase font-bold">Assuming 80% occupancy & wholesale supplies.</p>
+                    </div>
+                    <button 
+                      onClick={() => handleWhatsApp("capex")}
+                      className="w-full bg-[#C6A85A] text-[#0A0F1C] py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-[#D4B970] hover:scale-105 transition-all flex items-center justify-center gap-2"
+                    >
+                      <MessageSquare size={16}/> Discuss Floor Plan
+                    </button>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -231,66 +313,8 @@ export default function ROICalculatorPage() {
               </div>
             </motion.div>
           )}
-
-          {/* ========================================== */}
-          {/* STEP 2A: CAPEX CALCULATOR (Standard)         */}
-          {/* ========================================== */}
-          {mode === "capex" && (
-            <motion.div key="capex" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, y: 20 }} className="max-w-4xl mx-auto">
-               <button onClick={() => setMode("selection")} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-xs font-black uppercase tracking-widest mb-8">
-                <ArrowLeft size={14}/> Back
-              </button>
-
-              <div className="bg-[#0D1525]/80 backdrop-blur-2xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl">
-                <div className="grid md:grid-cols-2 gap-12">
-                  <div>
-                    <h3 className="text-2xl font-black text-white mb-2">Hospital Setup Plan</h3>
-                    <p className="text-sm text-gray-400 font-medium mb-10">Adjust the machine count to see your estimated turnkey capital requirement.</p>
-                    
-                    <div className="mb-10">
-                      <div className="flex justify-between items-end mb-4">
-                        <label className="text-[10px] font-black text-[#C6A85A] uppercase tracking-widest">Number of Dialysis Machines</label>
-                        <span className="text-3xl font-black text-white">{newMachines}</span>
-                      </div>
-                      <input 
-                        type="range" min="5" max="40" step="1" 
-                        value={newMachines} 
-                        onChange={(e) => setNewMachines(parseInt(e.target.value))}
-                        className="w-full accent-[#C6A85A] h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                      <CostRow label="Machines & Equipment" value={`₹ ${(machineCost / 100000).toFixed(2)} L`} />
-                      <CostRow label="AAMI RO Water Plant" value={`₹ ${(roPlantCost / 100000).toFixed(2)} L`} />
-                      <CostRow label="Civil & Interiors (Est)" value={`₹ ${(civilCost / 100000).toFixed(2)} L`} />
-                    </div>
-                  </div>
-
-                  <div className="bg-[#1A160C] border border-[#C6A85A]/30 rounded-[2rem] p-8 flex flex-col justify-center relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#C6A85A]/10 blur-[50px] rounded-full" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#C6A85A] mb-2">Estimated Setup Cost (CAPEX)</p>
-                    <h4 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tighter">
-                      ₹ {(totalCapex / 100000).toFixed(2)} L
-                    </h4>
-                    <div className="bg-[#0A0F1C]/50 border border-[#C6A85A]/20 rounded-xl p-5 mb-8">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Projected Monthly Profit</p>
-                      <p className="text-2xl font-black text-[#C6A85A]">₹ {(projectedProfit / 100000).toFixed(2)} L / mo</p>
-                      <p className="text-[9px] text-gray-500 mt-2 uppercase font-bold">Assuming 80% occupancy & wholesale supplies.</p>
-                    </div>
-                    <button 
-                      onClick={() => handleWhatsApp("capex")}
-                      className="w-full bg-[#C6A85A] text-[#0A0F1C] py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-[#D4B970] hover:scale-105 transition-all flex items-center justify-center gap-2"
-                    >
-                      <MessageSquare size={16}/> Discuss Floor Plan
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
         </AnimatePresence>
+
       </div>
     </main>
   );

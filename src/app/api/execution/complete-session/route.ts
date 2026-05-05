@@ -100,7 +100,7 @@ export async function POST(request: Request) {
           machineId: session.machine.machineTag
         }
       };
-    } else if (session.patient.payerType === PayerType.PRIVATE) {
+  } else if (session.patient.payerType === PayerType.CASH || session.patient.payerType === PayerType.CORPORATE) {
       realizedYield = 2200; // Standard Private Rate
       billingStatus = "INVOICE_GENERATED";
     }

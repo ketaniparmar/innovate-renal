@@ -55,9 +55,10 @@ export async function POST(request: Request) {
             return true;
           });
 
-          if (availableTech) {
+if (availableTech) {
             // ALL CONSTRAINTS PASSED - Draft the Session
             proposedSessions.push({
+              facilityId: machine.facilityId, // <--- ADD THIS LINE!
               patientId: patient.id,
               machineId: machine.id,
               technicianId: availableTech.id,
@@ -65,7 +66,6 @@ export async function POST(request: Request) {
               date: parsedDate,
               currentState: SessionState.SCHEDULED
             });
-
             // Update local trackers
             techLoadTracker.set(availableTech.id, (techLoadTracker.get(availableTech.id) || 0) + 1);
             pendingPatients.splice(patientIndex, 1); // Remove patient from queue
