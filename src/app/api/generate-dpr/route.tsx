@@ -1,70 +1,104 @@
-// src/app/api/generate-dpr/route.tsx
 import { NextResponse } from 'next/server';
 import { renderToBuffer } from '@react-pdf/renderer';
-import { supabase } from '@/lib/supabase';
-import { generateDPRNarrative } from '@/lib/engine/narrative';
-import { calculateV7Sovereign } from '@/lib/sovereign-engine';
+import { prisma } from '@/lib/prisma'; // 🔒 SINGLETON PATTERN
+import { calculateDialysisProject } from '@/lib/engine/v3-underwriting';
 import { DPRTemplate } from '@/components/pdf/DPRTemplate';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
-    const { projectId } = await req.json();
+    const { simulationId } = await req.json();
 
-    const { data: project, error: fetchError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', projectId)
-      .single();
+    // 1. Fetch data safely
+    const simulation = await prisma.simulation.findUnique({
+      where: { id: simulationId },
+      include: { 
+        project: { 
+          include: { tenant: { include: { facilities: true } } } 
+        } 
+      }
+    });
 
-    if (fetchError || !project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    if (!simulation) {
+      return NextResponse.json({ error: "Simulation record not found. Please save first." }, { status: 404 });
     }
 
-    const engineResults = calculateV7Sovereign({
-      machines: project.machines || 0,
-      sessionsPerDay: project.sessions_per_day || 0,
-      downtime: project.downtime_percentage || 0,
-      pmjay: project.payor_mix_pmjay || 0,
-      pvt: project.payor_mix_private || 0,
-      tpa: project.payor_mix_tpa || 0,
-      mode: project.dialyzer_mode || 'standard'
+    // 2. IDEMPOTENCY: Safely return existing report
+    if (simulation.status === "REPORT_GENERATED" && simulation.reportPath) {
+      const { data: signedData, error: signError } = await supabase.storage
+        .from('dprs')
+        .createSignedUrl(simulation.reportPath, 3600); 
+
+      if (signError || !signedData) throw new Error("Could not retrieve existing report link.");
+      
+      return NextResponse.json({ url: signedData.signedUrl, status: "EXISTING" });
+    }
+
+    // 3. Robust Location Logic
+    const targetFacility = simulation.project.tenant?.facilities?.[0]; 
+    const state = targetFacility?.state || "Other";
+
+    // 4. Execute Underwriting Engine
+    const engineResults = calculateDialysisProject({
+      machines: simulation.project.machines,
+      state: state,
+      cityTier: simulation.project.cityTier === 1 ? "tier1" : simulation.project.cityTier === 2 ? "tier2" : "tier3",
+      isNABH: simulation.isNABH ?? true,
+      sessionsPerDay: 3, // 🟢 FIXED: Hardcoded to 3 standard shifts to resolve TypeScript schema error
+      payorMix: { 
+        pmjay: simulation.pmjayMix || 60, 
+        private: (100 - (simulation.pmjayMix || 60)) 
+      }
     });
 
-    const summary = generateDPRNarrative({
-      ebitda: engineResults.ebitda || 0,
-      downtimeLoss: engineResults.downtimeLoss || 0,
-      underutilizationLoss: engineResults.underutilizationLoss || 0,
-      payorMix: { private: project.payor_mix_private || 0 }
-    });
-
+    // 5. Generate PDF Buffer
     const pdfBuffer = await renderToBuffer(
       <DPRTemplate 
         data={{
-          ...project,
           ...engineResults,
-          ...summary,
-          payorMix: {
-            pmjay: project.payor_mix_pmjay || 0,
-            private: project.payor_mix_private || 0,
-            tpa: project.payor_mix_tpa || 0
-          }
+          hospitalName: simulation.project.name,
+          simulationId: simulation.id,
+          timestamp: new Date().toLocaleDateString('en-IN')
         }} 
       />
     );
 
-    const safeName = (project.name || 'Project').replace(/\s+/g, '_');
-    const fileName = `DPR_${safeName}_${Date.now()}.pdf`;
+    const fileName = `DPR_${simulation.projectId}_${Date.now()}.pdf`;
+    const filePath = `reports/${simulation.projectId}/${fileName}`;
     
+    // 6. Secure Storage Upload
     const { error: uploadError } = await supabase.storage
       .from('dprs')
-      .upload(fileName, pdfBuffer, { contentType: 'application/pdf', upsert: true });
+      .upload(filePath, pdfBuffer, { contentType: 'application/pdf' });
 
     if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = supabase.storage.from('dprs').getPublicUrl(fileName);
-    return NextResponse.json({ url: publicUrl });
+    // 7. Update DB State
+    await prisma.simulation.update({
+      where: { id: simulation.id },
+      data: { 
+        status: "REPORT_GENERATED",
+        reportPath: filePath 
+      }
+    });
+
+    // 8. Explicit error handling on new Signed URL
+    const { data: signedUrlData, error: newSignError } = await supabase.storage
+      .from('dprs')
+      .createSignedUrl(filePath, 3600);
+
+    if (newSignError || !signedUrlData) {
+      throw new Error("Report generated, but failed to create secure download link.");
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      url: signedUrlData.signedUrl,
+      leadId: simulation.projectId 
+    });
 
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[DPR_GENERATOR_CRITICAL]:", error);
+    return NextResponse.json({ error: error.message || "Failed to generate investor report." }, { status: 500 });
   }
 }

@@ -62,25 +62,30 @@ enum DialyzerStatus {
 model Tenant {
   id          String     @id @default(uuid())
   name        String     // e.g., "Innovate India Renal Network"
+  
   facilities  Facility[]
   projects    Project[]
   users       User[]
+  
   createdAt   DateTime   @default(now())
 }
 
 model Facility {
   id          String     @id @default(uuid())
   tenantId    String
-  name        String     // e.g., "Dahej Public Hospital"
+  name        String     // e.g., "Nova Lifeline Super Speciality"
   location    String
-  state       String     // For regional compliance limits
+  state       String     // Crucial for regional single-use compliance
   
   tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
   users       User[]
   machines    Machine[]
   patients    Patient[]
   sessions    Session[]
-  leads       Lead[]     // Tracks leads generated for or assigned to this facility
+  leads       Lead[]     
+
+  @@index([tenantId]) // ⚡ Speed upgrade for multi-tenant queries
 }
 
 model User {
@@ -90,13 +95,16 @@ model User {
   role        UserRole   @default(TECHNICIAN)
   
   tenantId    String
-  facilityId  String?    // Null if it's a multi-center Director/Admin
+  facilityId  String?    // Null for multi-center Directors
   
-  tenant      Tenant     @relation(fields: [tenantId], references: [id])
-  facility    Facility?  @relation(fields: [facilityId], references: [id])
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  facility    Facility?  @relation(fields: [facilityId], references: [id], onDelete: SetNull)
   
   isActive    Boolean    @default(true)
   createdAt   DateTime   @default(now())
+
+  @@index([tenantId])
+  @@index([facilityId])
 }
 
 // ==========================================
@@ -109,17 +117,20 @@ model Patient {
   uhid            String          @unique // Hospital ID
   fullName        String
   infectionStatus InfectionStatus @default(NONE)
-  dialysisType    String          @default("HD") // HD, SLED
+  dialysisType    String          @default("HD") 
   dryWeightKg     Float?
-  vascularAccess  String?         // AVF, Catheter
+  vascularAccess  String?         
   payerType       PayerType       @default(CASH)
   
-  facility        Facility        @relation(fields: [facilityId], references: [id])
+  facility        Facility        @relation(fields: [facilityId], references: [id], onDelete: Cascade)
   sessions        Session[]
-  dialyzers       Dialyzer[]      // Tracks historical and active dialyzers
+  dialyzers       Dialyzer[]      
   
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+
+  @@index([facilityId])
+  @@index([uhid]) // ⚡ Speed upgrade for patient lookups
 }
 
 model Machine {
@@ -129,10 +140,11 @@ model Machine {
   zone            MachineZone @default(GENERAL)
   isActive        Boolean     @default(true)
   
-  facility        Facility    @relation(fields: [facilityId], references: [id])
+  facility        Facility    @relation(fields: [facilityId], references: [id], onDelete: Cascade)
   sessions        Session[]
 
-  @@unique([facilityId, machineTag]) // M-01 is unique per facility
+  @@unique([facilityId, machineTag]) 
+  @@index([facilityId])
 }
 
 model Dialyzer {
@@ -143,10 +155,12 @@ model Dialyzer {
   maxAllowedUses  Int            // Enforced by RegionalPolicy/Payer rules
   status          DialyzerStatus @default(SAFE)
   
-  patient         Patient        @relation(fields: [patientId], references: [id])
+  patient         Patient        @relation(fields: [patientId], references: [id], onDelete: Cascade)
   
   createdAt       DateTime       @default(now())
   discardedAt     DateTime?
+
+  @@index([patientId])
 }
 
 model Technician {
@@ -154,7 +168,7 @@ model Technician {
   techId               String    @unique // e.g., T-01
   fullName             String
   isIsolationQualified Boolean   @default(false)
-  maxPatientLoad       Int       @default(4) // Hard cap for safety
+  maxPatientLoad       Int       @default(4) // NABH standard cap
   
   sessions             Session[]
 }
@@ -178,27 +192,25 @@ model Session {
   date          DateTime     @db.Date
   currentState  SessionState @default(SCHEDULED)
   
-  // Foreign Keys
   patientId     String
   machineId     String
   technicianId  String
   shiftId       String
   
-  // Relations
-  facility      Facility     @relation(fields: [facilityId], references: [id])
-  patient       Patient      @relation(fields: [patientId], references: [id])
-  machine       Machine      @relation(fields: [machineId], references: [id])
-  technician    Technician   @relation(fields: [technicianId], references: [id])
-  shift         Shift        @relation(fields: [shiftId], references: [id])
+  facility      Facility     @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  patient       Patient      @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  machine       Machine      @relation(fields: [machineId], references: [id], onDelete: Restrict)
+  technician    Technician   @relation(fields: [technicianId], references: [id], onDelete: Restrict)
+  shift         Shift        @relation(fields: [shiftId], references: [id], onDelete: Restrict)
   
-  // Clinical Data (One-to-One)
   clinicalData  ClinicalData?
   
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
-  // Database-level constraint to prevent double-booking a machine in a shift
   @@unique([machineId, shiftId, date]) 
+  @@index([facilityId, date]) // ⚡ Crucial for generating daily shift rosters quickly
+  @@index([patientId])
 }
 
 model ClinicalData {
@@ -206,18 +218,17 @@ model ClinicalData {
   sessionId       String   @unique
   session         Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   
-  // Pre-Vitals (Required to start)
   preBpSystolic   Int?
   preBpDiastolic  Int?
   preWeightKg     Float?
   
-  // Post-Vitals (Required to finish / claim)
   postBpSystolic  Int?
   postBpDiastolic Int?
   postWeightKg    Float?
-  ufRemovedMl     Int?     // Crucial for PM-JAY billing
   
+  ufRemovedMl     Int?     
   notes           String?  @db.Text
+  
   loggedAt        DateTime @default(now())
 }
 
@@ -226,22 +237,23 @@ model ClinicalData {
 // ==========================================
 
 model Lead {
-  id              String    @id // Accepting client-generated crypto.randomUUID()
+  id              String    @id @default(uuid()) // Added secure fallback
   facilityId      String?
   directorName    String?
   hospitalName    String?
   location        String
-  intentType      String    // "CAPEX_NEW_SETUP" or "OPEX_SUPPLY"
+  intentType      String    
   machineCount    Int
-  currentCost     Float?   
+  currentCost     Float?
   projectedCapex  Float?   
   status          String    @default("WHATSAPP_INITIATED") 
-  userAgent       String?   // Tracks device/browser for funnel analytics
-  ipAddress       String?   // Tracks regional origin
+  userAgent       String?
+  ipAddress       String?
   
-  facility        Facility? @relation(fields: [facilityId], references: [id])
+  facility        Facility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  
   createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt // Critical for tracking offline retries
+  updatedAt       DateTime  @updatedAt 
 }
 
 model RegionalPolicy {
@@ -269,6 +281,8 @@ model Project {
   simulations   Simulation[]
   
   createdAt     DateTime     @default(now())
+
+  @@index([tenantId])
 }
 
 model Simulation {
@@ -284,6 +298,7 @@ model Simulation {
   insuranceMix    Float
   includesAMC     Boolean
   includesDiacare Boolean
+  isNABH          Boolean  @default(true) // ⚡ Required for accurate CAPEX math
   
   monthlyRevenue  Float
   monthlyOpex     Float
@@ -294,8 +309,13 @@ model Simulation {
   workingCapital  Float
   irr             Float
   totalCapex      Float
-  status          String
+  
+  status          String   @default("PENDING")
+  reportPath      String?  // ⚡ Required to store the generated DPR PDF link
   
   project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
   createdAt       DateTime @default(now())
+
+  @@index([projectId])
 }

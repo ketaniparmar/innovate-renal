@@ -1,259 +1,250 @@
 "use client";
 
 import React, { useState } from "react";
-// FIXED: Added ArrowRight to the import list
+import { motion, AnimatePresence } from "framer-motion";
 import { 
-  LayoutDashboard, Zap, Users, Wrench, BarChart3, 
-  Search, Bell, Settings, TrendingUp, Activity, 
-  ChevronRight, MoreVertical, IndianRupee, Clock, ArrowRight
+  Building2, Activity, TrendingUp, AlertOctagon, 
+  FileText, ArrowRight, MapPin, BarChart3, Clock,
+  ShieldCheck, LayoutDashboard, Settings
 } from "lucide-react";
-import { motion } from "framer-motion";
 
-export default function SaasDashboard() {
-  const [activeTab, setActiveTab] = useState("Overview");
+// --- MOCK DATA (Mapped to your Supabase Schema) ---
+// In natural English, representing real Indian dialysis scenarios
+const PORTFOLIO_METRICS = {
+  totalDeployed: "₹ 6.4 Cr",
+  activeProjects: 3,
+  blendedPayback: "28 Months",
+  monthlyEbitda: "₹ 11.2 L"
+};
 
-  const sidebarLinks = [
-    { name: "Overview", icon: <LayoutDashboard size={18} /> },
-    { name: "AI Engine", icon: <Zap size={18} /> },
-    { name: "Leads Pipeline", icon: <Users size={18} /> },
-    { name: "AMC Tracking", icon: <Wrench size={18} /> },
-    { name: "Reports", icon: <BarChart3 size={18} /> },
-  ];
+const PROJECTS = [
+  {
+    id: "PRJ-SURAT-01",
+    name: "Surat Central Superspeciality",
+    location: "Gujarat • Tier 1",
+    machines: 20,
+    status: "HEALTHY",
+    capex: "₹ 2.8 Cr",
+    ebitda: "₹ 5.8 L",
+    occupancy: 85,
+    insight: "Operating at optimal capacity. High private payor mix is driving strong EBITDA margins.",
+    compliance: "Single-Use Mandated (Audit Safe)",
+  },
+  {
+    id: "PRJ-VAPI-02",
+    name: "Vapi Industrial Healthcare",
+    location: "Gujarat • Tier 2",
+    machines: 10,
+    status: "RAMP_UP",
+    capex: "₹ 1.4 Cr",
+    ebitda: "₹ 1.2 L",
+    occupancy: 45,
+    insight: "Currently in the 6-month ramp-up window. Utilizing working capital buffer. Marketing intervention recommended to boost footfall.",
+    compliance: "Single-Use Mandated",
+  },
+  {
+    id: "PRJ-NASHIK-03",
+    name: "Nashik Municipal Dialysis Unit",
+    location: "Maharashtra • Tier 2",
+    machines: 15,
+    status: "OPTIMIZED",
+    capex: "₹ 2.2 Cr",
+    ebitda: "₹ 4.2 L",
+    occupancy: 78,
+    insight: "Dialyzer reuse protocol is active and compliant. Lowest per-session operating cost in the current portfolio.",
+    compliance: "Reuse Protocol Active",
+  }
+];
+
+export default function PortfolioDashboard() {
+  const [activeTab, setActiveTab] = useState<"OVERVIEW" | "COMPARE">("OVERVIEW");
 
   return (
-    <div className="min-h-screen bg-[#010810] text-white flex font-sans selection:bg-[#D4AF37] selection:text-[#010810]">
-      
-      {/* ================= LEFT SIDEBAR ================= */}
-      <aside className="w-64 bg-[#0A1118] border-r border-white/5 flex flex-col hidden md:flex">
-        {/* Brand */}
-        <div className="h-20 flex items-center px-6 border-b border-white/5">
-          <div className="w-8 h-8 rounded bg-gradient-to-br from-[#D4AF37] to-yellow-600 flex items-center justify-center text-[#010810] font-bold text-sm shadow-[0_0_15px_rgba(212,175,55,0.3)] mr-3">
-            II
-          </div>
-          <span className="font-bold text-lg tracking-tight">Innovate OS</span>
-        </div>
-
-        {/* Nav Links */}
-        <nav className="flex-1 px-4 py-8 space-y-2">
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-2 mb-4">Main Menu</p>
-          {sidebarLinks.map((link) => {
-            const isActive = activeTab === link.name;
-            return (
-              <button
-                key={link.name}
-                onClick={() => setActiveTab(link.name)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  isActive 
-                    ? "bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/20 shadow-[0_0_15px_rgba(212,175,55,0.05)]" 
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {link.icon}
-                {link.name}
-                {isActive && <motion.div layoutId="sidebar-indicator" className="absolute left-0 w-1 h-8 bg-[#D4AF37] rounded-r-full" />}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* User Profile */}
-        <div className="p-4 border-t border-white/5">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-700 flex items-center justify-center font-bold">
-              KP
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-bold">Ketan Parmar</p>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">Super Admin</p>
-            </div>
-            <Settings size={16} className="text-gray-400" />
-          </div>
-        </div>
-      </aside>
-
-      {/* ================= MAIN CONTENT AREA ================= */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+    <main className="min-h-screen bg-[#0A0F1C] pt-24 pb-24 text-slate-200 font-sans">
+      <div className="max-w-7xl mx-auto px-6">
         
-        {/* Top Header */}
-        <header className="h-20 flex items-center justify-between px-8 bg-[#010810]/80 backdrop-blur-md border-b border-white/5 sticky top-0 z-10">
-          <div className="flex items-center gap-4 text-sm text-gray-400 font-medium">
-            <span>Dashboard</span>
-            <ChevronRight size={14} />
-            <span className="text-white">{activeTab}</span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <div className="relative group hidden lg:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search leads, hospitals..." 
-                className="bg-[#0A1118] border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all w-64"
-              />
+        {/* --- 1. DASHBOARD HEADER --- */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 rounded-full bg-[#C6A85A]/10 border border-[#C6A85A]/20 text-[10px] font-black uppercase tracking-widest text-[#C6A85A] flex items-center gap-2">
+                <LayoutDashboard size={12}/> Executive View
+              </span>
+              <span className="text-xs text-gray-500 font-medium">Welcome back, Director</span>
             </div>
-            <button className="relative text-gray-400 hover:text-white transition-colors">
-              <Bell size={20} />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
+              Portfolio <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00A8A8] to-[#6EE7B7]">Intelligence.</span>
+            </h1>
+          </div>
+
+          <div className="flex bg-[#121A2F] p-1.5 rounded-2xl border border-white/5">
+            <button 
+              onClick={() => setActiveTab("OVERVIEW")}
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "OVERVIEW" ? 'bg-[#00A8A8] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+            >
+              Overview
             </button>
-            <button className="bg-[#D4AF37] hover:bg-yellow-500 text-[#010810] px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(212,175,55,0.2)] flex items-center gap-2">
-              <Zap size={14} /> New DPR
+            <button 
+              onClick={() => setActiveTab("COMPARE")}
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "COMPARE" ? 'bg-[#00A8A8] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+            >
+              Compare Assets
             </button>
           </div>
-        </header>
+        </div>
 
-        {/* Scrollable Workspace */}
-        <div className="flex-1 overflow-y-auto p-8">
-          
-          {/* Dashboard Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-extrabold tracking-tight">System Overview</h1>
-            <p className="text-gray-400 mt-1">Real-time intelligence on your dialysis infrastructure pipeline.</p>
-          </div>
-
-          {/* 1. KPI TOP ROW */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <KpiCard title="Active Deals Value" value="₹ 4.2 Cr" trend="+12%" icon={<IndianRupee />} accent="gold" />
-            <KpiCard title="Avg. Profit Margin" value="28.4%" trend="+2.1%" icon={<TrendingUp />} accent="blue" />
-            <KpiCard title="Avg. Break-even" value="14.2 Mo" trend="-1.5 Mo" icon={<Clock />} accent="white" />
-            <KpiCard title="Qualified Leads" value="24" trend="+4" icon={<Users />} accent="white" />
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* 2. CHART AREA */}
-            <div className="lg:col-span-2 bg-[#0A1118] border border-white/5 rounded-3xl p-6 relative overflow-hidden">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="font-bold text-lg">Projected ROI vs Capital Recovery</h3>
-                  <p className="text-xs text-gray-500">Aggregate timeline across all active 10+ bed proposals.</p>
-                </div>
-                <button className="text-gray-400 hover:text-white"><MoreVertical size={16}/></button>
-              </div>
+        <AnimatePresence mode="wait">
+          {activeTab === "OVERVIEW" && (
+            <motion.div key="overview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               
-              <div className="h-64 w-full relative flex items-end">
-                <div className="absolute inset-0 flex flex-col justify-between border-b border-l border-white/10 pb-6 pl-6">
-                  {[1,2,3,4].map(i => <div key={i} className="w-full border-t border-white/5 border-dashed" />)}
-                  <div className="flex justify-between w-full absolute bottom-0 left-6 text-[10px] text-gray-500 px-2 mt-2">
-                    <span>Month 0</span><span>Month 6</span><span>Month 12</span><span>Month 18</span>
-                  </div>
-                </div>
-                
-                <svg className="w-full h-full absolute inset-0 pl-6 pb-6 overflow-visible" preserveAspectRatio="none">
-                  <path 
-                    d="M 0 200 Q 100 200, 300 100 T 800 20" 
-                    fill="none" 
-                    stroke="#D4AF37" 
-                    strokeWidth="3"
-                    className="drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]"
-                  />
-                  <circle cx="300" cy="100" r="6" fill="#0A1118" stroke="#D4AF37" strokeWidth="2" className="drop-shadow-[0_0_8px_rgba(212,175,55,1)]" />
-                  <text x="320" y="95" fill="white" fontSize="12" fontWeight="bold">Break-even</text>
-                </svg>
+              {/* --- 2. HERO METRICS (CFO LAYER) --- */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <MetricCard title="Total Capital Deployed" value={PORTFOLIO_METRICS.totalDeployed} icon={<Building2 />} trend="+12% YoY" />
+                <MetricCard title="Active Clinical Assets" value={PORTFOLIO_METRICS.activeProjects.toString()} icon={<Activity />} />
+                <MetricCard title="Blended Payback Horizon" value={PORTFOLIO_METRICS.blendedPayback} icon={<Clock />} />
+                <MetricCard title="Monthly Portfolio EBITDA" value={PORTFOLIO_METRICS.monthlyEbitda} icon={<TrendingUp />} highlight />
               </div>
-            </div>
 
-            {/* AI Assistant Quick Panel */}
-            <div className="bg-gradient-to-b from-[#3B82F6]/10 to-[#0A1118] border border-[#3B82F6]/20 rounded-3xl p-6 flex flex-col">
-              <div className="flex items-center gap-2 mb-6">
-                <Zap className="text-[#3B82F6]" size={20} />
-                <h3 className="font-bold text-lg">AI Co-Pilot</h3>
-              </div>
-              <div className="flex-1 bg-[#010810] rounded-2xl border border-white/5 p-4 mb-4 flex flex-col gap-3">
-                <div className="bg-white/5 self-start px-3 py-2 rounded-xl text-sm text-gray-300 max-w-[85%]">
-                  Nova Lifeline just updated their target to 20 beds. Should I recalculate their DPR?
-                </div>
-                <div className="bg-[#3B82F6]/20 text-white self-end px-3 py-2 rounded-xl text-sm max-w-[85%]">
-                  Yes, run the model and send to my WhatsApp.
+              {/* --- 3. AI PORTFOLIO INSIGHT --- */}
+              <div className="bg-[#121A2F]/80 border border-[#C6A85A]/30 rounded-[2rem] p-6 mb-10 flex items-start gap-4">
+                <BarChart3 className="text-[#C6A85A] shrink-0 mt-1" />
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-[#C6A85A] mb-1">Automated Analyst Note</h4>
+                  <p className="text-sm text-gray-300 font-medium leading-relaxed">
+                    Your capital allocation is currently weighted heavily towards Tier 1 & Tier 2 urban centers. While the Surat unit is yielding high margins, the Vapi facility requires a temporary injection from your 6-month working capital buffer to sustain operations until patient volume stabilizes.
+                  </p>
                 </div>
               </div>
-              <div className="relative mt-auto">
-                <input type="text" placeholder="Ask AI to run a simulation..." className="w-full bg-[#010810] border border-white/10 rounded-xl py-3 pl-4 pr-10 text-sm text-white focus:outline-none focus:border-[#3B82F6]/50" />
-                <button className="absolute right-3 top-1/2 -translate-y-1/2 text-[#3B82F6] hover:text-white transition-colors">
-                  <ArrowRight size={16} />
+
+              {/* --- 4. PROJECT GRID --- */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-black text-white">Active Deployments</h3>
+                <button className="text-[10px] font-black uppercase tracking-widest text-[#00A8A8] hover:text-teal-400 flex items-center gap-1">
+                  View All <ArrowRight size={14}/>
                 </button>
               </div>
-            </div>
-          </div>
 
-          {/* 3. PIPELINE TABLE */}
-          <div className="bg-[#0A1118] border border-white/5 rounded-3xl overflow-hidden">
-            <div className="p-6 border-b border-white/5 flex justify-between items-center">
-              <h3 className="font-bold text-lg">Active Deals Pipeline</h3>
-              <button className="text-xs font-bold uppercase tracking-widest text-[#D4AF37] hover:text-yellow-400">View All</button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-white/[0.02] text-[10px] uppercase tracking-widest text-gray-500">
-                  <tr>
-                    <th className="px-6 py-4 font-bold">Hospital / Client</th>
-                    <th className="px-6 py-4 font-bold">Capacity</th>
-                    <th className="px-6 py-4 font-bold">Est. CAPEX</th>
-                    <th className="px-6 py-4 font-bold">Status</th>
-                    <th className="px-6 py-4 font-bold text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  <TableRow name="Dahej Public Hospital" capacity="50 Beds" capex="₹ 1.8 Cr" status="Hot" />
-                  <TableRow name="Nova Lifeline" capacity="18 Beds" capex="₹ 65 L" status="Negotiation" />
-                  <TableRow name="Sanjeevani Care" capacity="10 Beds" capex="₹ 42 L" status="DPR Sent" />
-                  <TableRow name="City Nephro Clinic" capacity="5 Beds" capex="₹ 22 L" status="Warm" />
-                </tbody>
-              </table>
-            </div>
-          </div>
+              <div className="grid lg:grid-cols-3 gap-6">
+                {PROJECTS.map((project) => (
+                  <ProjectCard key={project.id} data={project} />
+                ))}
+                
+                {/* Add New Project Ghost Card */}
+                <button className="bg-transparent border-2 border-dashed border-white/10 rounded-[2.5rem] p-8 flex flex-col items-center justify-center text-gray-500 hover:text-white hover:border-[#00A8A8]/50 hover:bg-[#00A8A8]/5 transition-all group min-h-[400px]">
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-[#00A8A8]/20 transition-colors">
+                    <Building2 size={24} className="group-hover:text-[#00A8A8]" />
+                  </div>
+                  <h4 className="text-sm font-black uppercase tracking-widest mb-2">Simulate New Facility</h4>
+                  <p className="text-xs text-center font-medium opacity-70">Run the underwriting engine to evaluate a new geographical market.</p>
+                </button>
+              </div>
 
-        </div>
-      </main>
-    </div>
+            </motion.div>
+          )}
+
+          {activeTab === "COMPARE" && (
+            <motion.div key="compare" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-[#121A2F]/50 border border-white/5 rounded-[2.5rem] p-12 flex flex-col items-center justify-center min-h-[500px] text-center">
+              <FileText size={48} className="text-[#00A8A8] mb-6 opacity-50" />
+              <h2 className="text-2xl font-black text-white mb-4">Comparison Matrix Active</h2>
+              <p className="text-gray-400 max-w-md mx-auto mb-8 font-medium">
+                Select up to 3 projects from your portfolio to view a side-by-side financial breakdown, including CAPEX variance and state-level compliance impacts.
+              </p>
+              <button className="bg-[#00A8A8] text-white px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_15px_30px_rgba(0,168,168,0.2)] hover:bg-teal-500 hover:scale-105 transition-all">
+                Select Projects to Compare
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
+    </main>
   );
 }
 
-/* ================= SUB-COMPONENTS ================= */
+// --- SUB-COMPONENTS ---
 
-function KpiCard({ title, value, trend, icon, accent }: any) {
-  const isGold = accent === "gold";
-  const isBlue = accent === "blue";
-  
+function MetricCard({ title, value, icon, trend, highlight = false }: any) {
   return (
-    <div className={`p-6 rounded-3xl border bg-[#0A1118] relative overflow-hidden group transition-all duration-300 ${isGold ? "border-[#D4AF37]/20 hover:border-[#D4AF37]/40 shadow-[0_0_20px_rgba(212,175,55,0.05)]" : isBlue ? "border-[#3B82F6]/20 hover:border-[#3B82F6]/40 shadow-[0_0_20px_rgba(59,130,246,0.05)]" : "border-white/5 hover:border-white/10"}`}>
-      <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-[50px] -translate-y-1/2 translate-x-1/2 pointer-events-none transition-opacity duration-500 opacity-20 group-hover:opacity-50 ${isGold ? "bg-[#D4AF37]" : isBlue ? "bg-[#3B82F6]" : "bg-white"}`} />
-      
-      <div className="flex justify-between items-start mb-4 relative z-10">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${isGold ? "bg-[#D4AF37]/10 border-[#D4AF37]/20 text-[#D4AF37]" : isBlue ? "bg-[#3B82F6]/10 border-[#3B82F6]/20 text-[#3B82F6]" : "bg-white/5 border-white/10 text-gray-400"}`}>
+    <div className={`p-6 rounded-3xl border relative overflow-hidden ${highlight ? 'bg-[#00A8A8]/10 border-[#00A8A8]/30' : 'bg-[#121A2F] border-white/5'}`}>
+      {highlight && <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#00A8A8]/20 blur-[40px] rounded-full" />}
+      <div className="flex justify-between items-start mb-4">
+        <div className={`p-2 rounded-xl ${highlight ? 'bg-[#00A8A8]/20 text-[#00A8A8]' : 'bg-white/5 text-gray-400'}`}>
           {icon}
         </div>
-        <span className={`text-xs font-bold px-2 py-1 rounded bg-white/5 ${trend.startsWith('+') ? "text-green-400" : "text-red-400"}`}>
-          {trend}
-        </span>
+        {trend && <span className="text-[10px] font-black text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-md">{trend}</span>}
       </div>
-      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1 relative z-10">{title}</p>
-      <h3 className="text-2xl font-black relative z-10">{value}</h3>
+      <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">{title}</p>
+      <h3 className={`text-2xl font-black ${highlight ? 'text-white' : 'text-slate-200'}`}>{value}</h3>
     </div>
   );
 }
 
-function TableRow({ name, capacity, capex, status }: any) {
-  const getStatusColor = (s: string) => {
-    if(s === "Hot") return "text-orange-400 bg-orange-400/10 border-orange-400/20";
-    if(s === "Negotiation") return "text-[#3B82F6] bg-[#3B82F6]/10 border-[#3B82F6]/20";
-    if(s === "DPR Sent") return "text-[#D4AF37] bg-[#D4AF37]/10 border-[#D4AF37]/20";
-    return "text-gray-400 bg-white/5 border-white/10";
-  };
-
+function ProjectCard({ data }: { data: any }) {
+  const isWarning = data.status === "RAMP_UP";
+  
   return (
-    <tr className="hover:bg-white/[0.02] transition-colors group">
-      <td className="px-6 py-4 font-bold">{name}</td>
-      <td className="px-6 py-4 text-gray-400"><span className="flex items-center gap-2"><Activity size={14}/> {capacity}</span></td>
-      <td className="px-6 py-4 text-white font-mono">{capex}</td>
-      <td className="px-6 py-4">
-        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${getStatusColor(status)}`}>
-          {status}
-        </span>
-      </td>
-      <td className="px-6 py-4 text-right">
-        <button className="text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-white transition-colors opacity-0 group-hover:opacity-100">
-          Open Details
+    <div className="bg-[#121A2F] border border-white/5 rounded-[2.5rem] p-8 flex flex-col justify-between hover:border-white/10 transition-colors relative overflow-hidden group">
+      
+      {/* Status Glow */}
+      <div className={`absolute top-0 right-0 w-40 h-40 blur-[60px] rounded-full opacity-20 pointer-events-none ${isWarning ? 'bg-amber-500' : 'bg-[#00A8A8]'}`} />
+
+      <div>
+        <div className="flex justify-between items-start mb-6">
+          <span className={`px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${isWarning ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-[#00A8A8]/10 text-[#00A8A8] border border-[#00A8A8]/20'}`}>
+            {data.status.replace("_", " ")}
+          </span>
+          <span className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1">
+            <MapPin size={10}/> {data.location}
+          </span>
+        </div>
+
+        <h3 className="text-xl font-black text-white mb-2 leading-tight">{data.name}</h3>
+        <p className="text-xs text-gray-400 font-medium mb-6">{data.machines} Active Machines</p>
+
+        {/* Financial Mini-Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-6 p-4 rounded-2xl bg-white/5 border border-white/5">
+          <div>
+            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Setup CAPEX</p>
+            <p className="text-sm font-black text-white">{data.capex}</p>
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1">Monthly EBITDA</p>
+            <p className="text-sm font-black text-[#6EE7B7]">{data.ebitda}</p>
+          </div>
+        </div>
+
+        {/* Occupancy Bar */}
+        <div className="mb-6">
+          <div className="flex justify-between items-end mb-2">
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Occupancy Rate</span>
+            <span className="text-xs font-black text-white">{data.occupancy}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div 
+              className={`h-full rounded-full ${isWarning ? 'bg-amber-500' : 'bg-[#00A8A8]'}`} 
+              style={{ width: `${data.occupancy}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Natural English Insight */}
+        <p className="text-[11px] text-gray-400 font-medium leading-relaxed mb-6 italic border-l-2 border-white/10 pl-3">
+          "{data.insight}"
+        </p>
+      </div>
+
+      <div>
+        <div className="flex items-center gap-2 mb-6">
+          {data.compliance.includes("Single-Use") ? <AlertOctagon size={14} className="text-red-400"/> : <ShieldCheck size={14} className="text-[#00A8A8]"/>}
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${data.compliance.includes("Single-Use") ? 'text-red-400' : 'text-[#00A8A8]'}`}>
+            {data.compliance}
+          </span>
+        </div>
+
+        <button className="w-full py-3.5 rounded-xl border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors flex items-center justify-center gap-2 text-white group-hover:border-white/20">
+          <FileText size={14} /> View Latest DPR
         </button>
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }
